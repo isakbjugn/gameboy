@@ -8,8 +8,13 @@ impl MemoryBus {
     }
     pub fn read_byte(&self, address: u16) -> u8 {
         self.memory[address as usize]
+        // todo: Det er en rekke lokasjoner i minnet, som koder for forskjellige enheter
+        // f.eks. MBC, GPU, keypad, timer, lydenhet
     }
     pub fn write_byte(&mut self, address: u16, byte: u8) {
         self.memory[address as usize] = byte;
+    }
+    pub fn read_word(&self, address: u16) -> u16 {
+        (self.read_byte(address) as u16) | ((self.read_byte(address + 1) as u16) << 8)
     }
 }

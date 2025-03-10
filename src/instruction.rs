@@ -1,8 +1,14 @@
 
 pub enum Instruction {
+    // https://rgbds.gbdev.io/docs/v0.9.1/gbz80.7
+    
+    // Load instructions
+    LD(LoadType),
+    
+    // 8-bit arithmetic instructions
+    
     ADD(ArithmeticTarget),
     JP(JumpTest),
-    LD(LoadType),
     CALL(JumpTest),
     REST(JumpTest),
     NOP,
@@ -21,6 +27,9 @@ impl Instruction {
         Some(Instruction::ADD(ArithmeticTarget::C))
     }
     fn from_byte_not_prefixed(byte: u8) -> Option<Instruction> {
+        match byte {
+            
+        }
         Some(Instruction::ADD(ArithmeticTarget::C))
     }
 }

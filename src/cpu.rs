@@ -1,3 +1,6 @@
+mod decode;
+mod execute;
+
 use crate::instruction::{ArithmeticTarget, Instruction, JumpTest, LoadByteSource, LoadByteTarget, LoadType};
 use crate::memory_bus::MemoryBus;
 use crate::registers::Registers;
@@ -11,6 +14,19 @@ struct CPU {
 }
 
 impl CPU {
+    fn cycle(&mut self) -> u32 {
+        self.call()
+    }
+    fn fetch_byte(&mut self) -> u8 {
+        let byte = self.bus.read_byte(self.pc);
+        self.pc = self.pc.wrapping_add(1);
+        byte
+    }
+    fn fetch_word(&mut self) -> u16 {
+        let word = self.bus.read_word(self.pc);
+        self.pc = self.pc.wrapping_add(2);
+        word
+    }
     fn step(&mut self) {
         let mut instruction_byte = self.bus.read_byte(self.pc);
         let prefixed = instruction_byte == 0xCB;
@@ -78,7 +94,7 @@ impl CPU {
                     JumpTest::NotZero => !self.registers.f.zero,
                     _ => todo!("Implement more conditions")
                 };
-                self.call(jump_condition)
+                self.call_instruction(jump_condition)
             },
             Instruction::REST(test) => {
                 let jump_condition = match test {
@@ -142,7 +158,7 @@ impl CPU {
             | least_significant_byte
     }
 
-    fn call(&mut self, should_jump: bool) -> u16 {
+    fn call_instruction(&mut self, should_jump: bool) -> u16 {
         let next_pc = self.pc.wrapping_add(3);
         if should_jump {
             self.push(next_pc);
