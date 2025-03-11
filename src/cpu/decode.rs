@@ -12,7 +12,7 @@ impl CPU {
             0x03 => { self.inc_16(BC); 2 }
             0x04 => { self.inc(B); 1 }
             0x05 => { self.dec(B); 1 }
-            0x06 => { let byte = self.fetch_byte(); self.registers.b = byte; 2 }
+            0x06 => { self.registers.b = self.fetch_byte(); 2 }
             0x07 => { self.rlca(); 1 }
             0x08 => { let address = self.fetch_word(); self.bus.write_word(address, self.sp); 5 }
             0x09 => { self.add_16(BC); 2 }
@@ -20,7 +20,7 @@ impl CPU {
             0x0b => { self.dec_16(BC); 2 }
             0x0c => { self.inc(C); 1 }
             0x0d => { self.dec(C); 1 }
-            0x0e => { let byte = self.fetch_byte(); self.registers.c = byte; 2 }
+            0x0e => { self.registers.c = self.fetch_byte(); 2 }
             0x0f => { self.rrca(); 1 }
             0x10 => { panic!("STOP") }
             0x11 => { let word = self.fetch_word(); self.registers.write_16(DE, word); 3 }
@@ -28,7 +28,7 @@ impl CPU {
             0x13 => { self.inc_16(DE); 2 }
             0x14 => { self.inc(D); 1 }
             0x15 => { self.dec(D); 1 }
-            0x16 => { let byte = self.fetch_byte(); self.registers.d = byte; 2 }
+            0x16 => { self.registers.d = self.fetch_byte(); 2 }
             0x17 => { self.rla(); 1 }
             0x18 => { self.jr(); 3 }
             0x19 => { self.add_16(DE); 2 }
@@ -36,6 +36,7 @@ impl CPU {
             0x1b => { self.dec_16(DE); 2 }
             0x1c => { self.inc(E); 1 }
             0x1d => { self.dec(E); 1 }
+            0x1e => { self.registers.e = self.fetch_byte(); 2 }
             _ => todo!("Instruksjonen er ikke støttet!")
         }
     }
