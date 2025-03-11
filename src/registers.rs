@@ -11,6 +11,7 @@ pub struct Registers {
     pub l: u8,
 }
 
+#[derive(Copy, Clone)]
 pub enum Reg16 {
     AF,
     BC,
