@@ -37,6 +37,14 @@ impl CPU {
         self.registers.f.subtract = false;
         self.registers.f.half_carry = false;
     }
+    pub fn rrca(&mut self) {
+        self.registers.f.carry = (self.registers.a & 0x01) != 0;
+        self.registers.a = self.registers.a.rotate_right(1);
+        
+        self.registers.f.zero = false;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = false;
+    }
     pub fn add_16(&mut self, reg: Reg16) {
         let a = self.registers.read_16(reg);
         let b = self.registers.read_16(HL);

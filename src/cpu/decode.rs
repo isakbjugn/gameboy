@@ -21,6 +21,7 @@ impl CPU {
             0x0c => { self.inc(C); 1 }
             0x0d => { self.dec(C); 1 }
             0x0e => { let byte = self.fetch_byte(); self.registers.c = byte; 2 }
+            0x0f => { self.rrca(); 1 }
             _ => todo!("Instruksjonen er ikke støttet!")
         }
     }
