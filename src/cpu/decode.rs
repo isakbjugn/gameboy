@@ -1,5 +1,5 @@
 use crate::cpu::CPU;
-use crate::registers::Reg8::B;
+use crate::registers::Reg8::{A, B};
 use crate::registers::Reg16::BC;
 
 impl CPU {
@@ -16,6 +16,7 @@ impl CPU {
             0x07 => { self.rlca(); 1 }
             0x08 => { let address = self.fetch_word(); self.bus.write_word(address, self.sp); 5 }
             0x09 => { self.add_16(BC); 2 }
+            0x0a => { self.registers.a = self.bus.read_byte(self.registers.read_16(BC)); 2 }
             _ => todo!("Instruksjonen er ikke støttet!")
         }
     }
