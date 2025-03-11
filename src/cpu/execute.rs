@@ -97,4 +97,10 @@ impl CPU {
         self.registers.f.zero = self.registers.a == 0;
         self.registers.f.half_carry = false;
     }
+    pub fn cpl(&mut self) {
+        self.registers.a = !self.registers.a;
+        
+        self.registers.f.subtract = true;
+        self.registers.f.half_carry = true;
+    }
 }
