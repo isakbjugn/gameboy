@@ -65,4 +65,8 @@ impl CPU {
         self.registers.f.half_carry = false;
         self.registers.f.carry = carry;
     }
+    pub fn jr(&mut self) {
+        let offset = self.fetch_byte() as i8;
+        self.pc = self.pc.wrapping_add(offset as u16)
+    }
 }
