@@ -8,7 +8,6 @@ use crate::registers::Registers;
 struct CPU {
     registers: Registers,
     pc: u16,
-    sp: u16,
     bus: MemoryBus,
     is_halted: bool,
 }

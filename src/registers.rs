@@ -9,6 +9,7 @@ pub struct Registers {
     pub f: FlagsRegister,
     pub h: u8,
     pub l: u8,
+    pub sp: u16,
 }
 
 #[derive(Copy, Clone)]
@@ -29,6 +30,7 @@ pub enum Reg16 {
     BC,
     DE,
     HL,
+    SP,
 }
 
 impl Registers {
@@ -62,6 +64,7 @@ impl Registers {
             Reg16::BC => ((self.b as u16) << 8) | (self.c as u16),
             Reg16::DE => ((self.d as u16) << 8) | (self.e as u16),
             Reg16::HL => ((self.h as u16) << 8) | (self.l as u16),
+            Reg16::SP => self.sp,
         }
     }
     pub fn write_16(&mut self, reg: Reg16, value: u16) {
@@ -82,11 +85,17 @@ impl Registers {
                 self.h = ((value & 0xFF00) >> 8) as u8;
                 self.l = (value & 0xFF ) as u8;
             }
+            Reg16::SP => { self.sp = value }
         }
     }
     pub fn hli(&mut self) -> u16 {
         let address = self.read_16(Reg16::HL);
         self.write_16(Reg16::HL, address.wrapping_add(1));
+        address
+    }
+    pub fn hld(&mut self) -> u16 {
+        let address = self.read_16(Reg16::HL);
+        self.write_16(Reg16::HL, address.wrapping_sub(1));
         address
     }
 }

@@ -2,6 +2,10 @@ use crate::cpu::CPU;
 use crate::registers::{Reg16, Reg8};
 use crate::registers::Reg16::HL;
 
+pub enum Address {
+    HL,
+}
+
 impl CPU {
     pub fn inc_16(&mut self, reg: Reg16) {
         let value = self.registers.read_16(reg).wrapping_add(1);
@@ -13,12 +17,8 @@ impl CPU {
     }
     pub fn inc(&mut self, reg: Reg8) {
         let value = self.registers.read_8(reg);
-        let incremented_value = value.wrapping_add(1);
+        let incremented_value = self.alu_inc(value);
         self.registers.write_8(reg, incremented_value);
-        
-        self.registers.f.zero = incremented_value == 0;
-        self.registers.f.subtract = false;
-        self.registers.f.half_carry = value & 0x0f == 0x0f;
     }
     pub fn dec(&mut self, reg: Reg8) {
         let value = self.registers.read_8(reg);
@@ -102,5 +102,21 @@ impl CPU {
         
         self.registers.f.subtract = true;
         self.registers.f.half_carry = true;
+    }
+    pub fn alu_inc(&mut self, value: u8) -> u8 {
+        let incremented_value = value.wrapping_add(1);
+
+        self.registers.f.zero = incremented_value == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = value & 0x0f == 0x0f;
+        
+        incremented_value
+    }
+    pub fn inc_addr(&mut self, addr: Address) {
+        let address = match addr {
+            Address::HL => self.registers.read_16(HL),
+        };
+        let incremented_value = self.alu_inc(self.bus.read_byte(address));
+        self.bus.write_byte(address, incremented_value);
     }
 }

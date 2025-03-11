@@ -1,6 +1,7 @@
 use crate::cpu::CPU;
+use crate::cpu::execute::Address;
 use crate::registers::Reg8::{B, C, D, E, H, L};
-use crate::registers::Reg16::{BC, DE, HL};
+use crate::registers::Reg16::{BC, DE, HL, SP};
 
 impl CPU {
     pub fn call(&mut self) -> u32 {
@@ -14,7 +15,7 @@ impl CPU {
             0x05 => { self.dec(B); 1 }
             0x06 => { self.registers.b = self.fetch_byte(); 2 }
             0x07 => { self.rlca(); 1 }
-            0x08 => { let address = self.fetch_word(); self.bus.write_word(address, self.sp); 5 }
+            0x08 => { let address = self.fetch_word(); self.bus.write_word(address, self.registers.sp); 5 }
             0x09 => { self.add_16(BC); 2 }
             0x0a => { self.registers.a = self.bus.read_byte(self.registers.read_16(BC)); 2 }
             0x0b => { self.dec_16(BC); 2 }
@@ -54,6 +55,11 @@ impl CPU {
             0x2d => { self.dec(L); 1 }
             0x2e => { self.registers.l = self.fetch_byte(); 2 }
             0x2f => { self.cpl(); 1 }
+            0x30 => { if !self.registers.f.carry { self.jr(); 3 } else { 2 } }
+            0x31 => { self.registers.sp = self.fetch_word(); 3 }
+            0x32 => { self.bus.write_byte(self.registers.hld(), self.registers.a); 2 }
+            0x33 => { self.inc_16(SP); 2 }
+            0x34 => { self.inc_addr(Address::HL); 3 }
             _ => todo!("Instruksjonen er ikke støttet!")
         }
     }
