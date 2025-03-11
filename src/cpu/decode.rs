@@ -1,5 +1,5 @@
 use crate::cpu::CPU;
-use crate::registers::Reg8::{B, C, D, E};
+use crate::registers::Reg8::{B, C, D, E, H};
 use crate::registers::Reg16::{BC, DE, HL};
 
 impl CPU {
@@ -41,6 +41,11 @@ impl CPU {
             0x20 => { if self.registers.f.zero { self.jr(); 3 } else { 2 } }
             0x21 => { let word = self.fetch_word(); self.registers.write_16(HL, word); 3 }
             0x22 => { self.bus.write_byte(self.registers.hli(), self.registers.a); 2 }
+            0x23 => { self.inc_16(HL); 2 }
+            0x24 => { self.inc(H); 1 }
+            0x25 => { self.dec(H); 1 }
+            0x26 => { self.registers.h = self.fetch_byte(); 2 }
+            0x27 => { self.daa(); 1 }
             _ => todo!("Instruksjonen er ikke støttet!")
         }
     }

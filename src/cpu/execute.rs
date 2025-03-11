@@ -79,4 +79,22 @@ impl CPU {
         let offset = self.fetch_byte() as i8;
         self.pc = self.pc.wrapping_add(offset as u16)
     }
+    pub fn daa(&mut self) {
+        let mut adjustment = 0;
+        match self.registers.f.subtract {
+            true => {
+                if self.registers.f.half_carry { adjustment += 0x6 }
+                if self.registers.f.carry { adjustment += 0x60 }
+                self.registers.a = self.registers.a.wrapping_sub(adjustment);
+            }
+            false => {
+                if self.registers.f.half_carry || self.registers.a & 0xf > 0x9 { adjustment += 0x6 }
+                if self.registers.f.carry || self.registers.a > 0x99 { adjustment += 0x60; self.registers.f.carry = true }
+                self.registers.a = self.registers.a.wrapping_add(adjustment);
+            }
+        }
+        
+        self.registers.f.zero = self.registers.a == 0;
+        self.registers.f.half_carry = false;
+    }
 }
