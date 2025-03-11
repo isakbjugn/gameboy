@@ -12,6 +12,7 @@ impl CPU {
             0x03 => { self.inc_16(BC); 2 }
             0x04 => { self.inc(B); 1 }
             0x05 => { self.dec(B); 1 }
+            0x06 => { let byte = self.fetch_byte(); self.registers.write_8(B, byte); 2 }
             _ => todo!("Instruksjonen er ikke støttet!")
         }
     }
