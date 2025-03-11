@@ -6,6 +6,14 @@ pub struct FlagsRegister {
     pub carry: bool,
 }
 
+impl FlagsRegister {
+    pub fn scf(&mut self) {
+        self.subtract = false;
+        self.half_carry = false;
+        self.carry = true;
+    }
+}
+
 const ZERO_FLAG_BYTE_POSITION: u8 = 7;
 const SUBTRACT_FLAG_BYTE_POSITION: u8 = 6;
 const HALF_CARRY_FLAG_BYTE_POSITION: u8 = 5;

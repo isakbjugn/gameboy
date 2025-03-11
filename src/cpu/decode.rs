@@ -1,6 +1,6 @@
 use crate::cpu::CPU;
 use crate::cpu::execute::Address;
-use crate::registers::Reg8::{B, C, D, E, H, L};
+use crate::registers::Reg8::{A, B, C, D, E, H, L};
 use crate::registers::Reg16::{BC, DE, HL, SP};
 
 impl CPU {
@@ -60,6 +60,17 @@ impl CPU {
             0x32 => { self.bus.write_byte(self.registers.hld(), self.registers.a); 2 }
             0x33 => { self.inc_16(SP); 2 }
             0x34 => { self.inc_addr(Address::HL); 3 }
+            0x35 => { self.dec_addr(Address::HL); 3 }
+            0x36 => { let d8 = self.fetch_byte(); self.bus.write_byte(self.registers.read_16(HL), d8); 3 }
+            0x37 => { self.registers.f.scf(); 1 }
+            0x38 => { if self.registers.f.carry { self.jr(); 3 } else { 2 } }
+            0x39 => { self.add_16(SP); 2 }
+            0x3a => { self.registers.a = self.bus.read_byte(self.registers.hld()); 2 }
+            0x3b => { self.dec_16(SP); 2 }
+            0x3c => { self.inc(A); 1 }
+            0x3d => { self.dec(A); 1 }
+            0x3e => { self.registers.a = self.fetch_byte(); 2 }
+            0x3f => { self.ccf(); 1 }
             _ => todo!("Instruksjonen er ikke støttet!")
         }
     }
