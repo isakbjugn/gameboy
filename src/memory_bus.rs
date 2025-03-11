@@ -17,4 +17,8 @@ impl MemoryBus {
     pub fn read_word(&self, address: u16) -> u16 {
         (self.read_byte(address) as u16) | ((self.read_byte(address + 1) as u16) << 8)
     }
+    pub fn write_word(&mut self, address: u16, word: u16) {
+        self.write_byte(address, (word & 0xff) as u8);
+        self.write_byte(address + 1, (word >> 8) as u8);
+    }
 }
