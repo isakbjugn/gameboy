@@ -1,5 +1,6 @@
 use crate::cpu::CPU;
 use crate::registers::{Reg16, Reg8};
+use crate::registers::Reg16::HL;
 
 impl CPU {
     pub fn inc_16(&mut self, reg: Reg16) {
@@ -29,5 +30,15 @@ impl CPU {
         self.registers.f.zero = false;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = false;
+    }
+    pub fn add_16(&mut self, reg: Reg16) {
+        let a = self.registers.read_16(reg);
+        let b = self.registers.read_16(HL);
+        let (sum, carry) = a.overflowing_add(b);
+        self.registers.write_16(HL, sum);
+        
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = (((a & 0xfff) + (b & 0xfff)) & 0x1000) == 0x1000;
+        self.registers.f.carry = carry;
     }
 }
