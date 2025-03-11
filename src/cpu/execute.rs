@@ -7,6 +7,10 @@ impl CPU {
         let value = self.registers.read_16(reg).wrapping_add(1);
         self.registers.write_16(reg, value);
     }
+    pub fn dec_16(&mut self, reg: Reg16) {
+        let value = self.registers.read_16(reg).wrapping_sub(1);
+        self.registers.write_16(reg, value);
+    }
     pub fn inc(&mut self, reg: Reg8) {
         let value = self.registers.read_8(reg);
         let incremented_value = value.wrapping_add(1);
