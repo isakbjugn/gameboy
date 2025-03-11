@@ -12,6 +12,18 @@ pub struct Registers {
 }
 
 #[derive(Copy, Clone)]
+pub enum Reg8 {
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    H,
+    L,
+}
+
+#[derive(Copy, Clone)]
 pub enum Reg16 {
     AF,
     BC,
@@ -20,6 +32,30 @@ pub enum Reg16 {
 }
 
 impl Registers {
+    pub fn read_8(&self, reg: Reg8) -> u8 {
+        match reg {
+            Reg8::A => self.a,
+            Reg8::B => self.b,
+            Reg8::C => self.c,
+            Reg8::D => self.d,
+            Reg8::E => self.e,
+            Reg8::F => u8::from(self.f),
+            Reg8::H => self.h,
+            Reg8::L => self.l,
+        }
+    }
+    pub fn write_8(&mut self, reg: Reg8, value: u8) {
+        match reg {
+            Reg8::A => self.a = value,
+            Reg8::B => self.b = value,
+            Reg8::C => self.c = value,
+            Reg8::D => self.d = value,
+            Reg8::E => self.e = value,
+            Reg8::F => self.f = FlagsRegister::from(value),
+            Reg8::H => self.h = value,
+            Reg8::L => self.l = value,
+        }
+    }
     pub fn read_16(&self, reg: Reg16) -> u16 {
         match reg {
             Reg16::AF => ((self.a as u16) << 8) | (u8::from(self.f) as u16),
