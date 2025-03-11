@@ -71,6 +71,22 @@ impl CPU {
             0x3d => { self.dec(A); 1 }
             0x3e => { self.registers.a = self.fetch_byte(); 2 }
             0x3f => { self.ccf(); 1 }
+            0x40 => { 1 }
+            0x41 => { self.registers.b = self.registers.c; 1 }
+            0x42 => { self.registers.b = self.registers.d; 1 }
+            0x43 => { self.registers.b = self.registers.e; 1 }
+            0x44 => { self.registers.b = self.registers.h; 1 }
+            0x45 => { self.registers.b = self.registers.l; 1 }
+            0x46 => { self.registers.b = self.bus.read_byte(self.registers.read_16(HL)); 2 }
+            0x47 => { self.registers.b = self.registers.a; 1 }
+            0x48 => { self.registers.c = self.registers.b; 1 }
+            0x49 => { 1 }
+            0x4a => { self.registers.c = self.registers.d; 1 }
+            0x4b => { self.registers.c = self.registers.e; 1 }
+            0x4c => { self.registers.c = self.registers.h; 1 }
+            0x4d => { self.registers.c = self.registers.l; 1 }
+            0x4e => { self.registers.c = self.bus.read_byte(self.registers.read_16(HL)); 2 }
+            0x4f => { self.registers.c = self.registers.a; 1 }
             _ => todo!("Instruksjonen er ikke støttet!")
         }
     }
