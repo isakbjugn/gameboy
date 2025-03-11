@@ -1,6 +1,6 @@
 use crate::cpu::CPU;
 use crate::registers::Reg8::{B, C, D, E};
-use crate::registers::Reg16::{BC, DE};
+use crate::registers::Reg16::{BC, DE, HL};
 
 impl CPU {
     pub fn call(&mut self) -> u32 {
@@ -38,6 +38,9 @@ impl CPU {
             0x1d => { self.dec(E); 1 }
             0x1e => { self.registers.e = self.fetch_byte(); 2 }
             0x1f => { self.rra(); 1 }
+            0x20 => { if self.registers.f.zero { self.jr(); 3 } else { 2 } }
+            0x21 => { let word = self.fetch_word(); self.registers.write_16(HL, word); 3 }
+            0x22 => { self.bus.write_byte(self.registers.hli(), self.registers.a); 2 }
             _ => todo!("Instruksjonen er ikke støttet!")
         }
     }

@@ -84,4 +84,9 @@ impl Registers {
             }
         }
     }
+    pub fn hli(&mut self) -> u16 {
+        let address = self.read_16(Reg16::HL);
+        self.write_16(Reg16::HL, address.wrapping_add(1));
+        address
+    }
 }
