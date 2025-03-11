@@ -1,5 +1,5 @@
 use crate::cpu::CPU;
-use crate::registers::Reg8::{A, B};
+use crate::registers::Reg8::{B, C};
 use crate::registers::Reg16::BC;
 
 impl CPU {
@@ -18,6 +18,9 @@ impl CPU {
             0x09 => { self.add_16(BC); 2 }
             0x0a => { self.registers.a = self.bus.read_byte(self.registers.read_16(BC)); 2 }
             0x0b => { self.dec_16(BC); 2 }
+            0x0c => { self.inc(C); 1 }
+            0x0d => { self.dec(C); 1 }
+            0x0e => { let byte = self.fetch_byte(); self.registers.c = byte; 2 }
             _ => todo!("Instruksjonen er ikke støttet!")
         }
     }
