@@ -55,4 +55,14 @@ impl CPU {
         self.registers.f.half_carry = (((a & 0xfff) + (b & 0xfff)) & 0x1000) == 0x1000;
         self.registers.f.carry = carry;
     }
+    pub fn rla(&mut self) {
+        let previous_carry = self.registers.f.carry;
+        let (result, carry) = self.registers.a.overflowing_shl(1);
+        self.registers.a = result | (if previous_carry { 1 } else { 0 });
+        
+        self.registers.f.zero = false;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = false;
+        self.registers.f.carry = carry;
+    }
 }
