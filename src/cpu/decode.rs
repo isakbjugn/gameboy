@@ -87,6 +87,38 @@ impl CPU {
             0x4d => { self.registers.c = self.registers.l; 1 }
             0x4e => { self.registers.c = self.bus.read_byte(self.registers.read_16(HL)); 2 }
             0x4f => { self.registers.c = self.registers.a; 1 }
+            0x50 => { self.registers.d = self.registers.b; 1 }
+            0x51 => { self.registers.d = self.registers.c; 1 }
+            0x52 => { 1 }
+            0x53 => { self.registers.d = self.registers.e; 1 }
+            0x54 => { self.registers.d = self.registers.h; 1 }
+            0x55 => { self.registers.d = self.registers.l; 1 }
+            0x56 => { self.registers.d = self.bus.read_byte(self.registers.read_16(HL)); 2 }
+            0x57 => { self.registers.d = self.registers.a; 1 }
+            0x58 => { self.registers.e = self.registers.b; 1 }
+            0x59 => { self.registers.e = self.registers.c; 1 }
+            0x5a => { self.registers.e = self.registers.d; 1 }
+            0x5b => { 1 }
+            0x5c => { self.registers.e = self.registers.h; 1 }
+            0x5d => { self.registers.e = self.registers.l; 1 }
+            0x5e => { self.registers.e = self.bus.read_byte(self.registers.read_16(HL)); 2 }
+            0x5f => { self.registers.e = self.registers.a; 1 }
+            0x60 => { self.registers.h = self.registers.b; 1 }
+            0x61 => { self.registers.h = self.registers.c; 1 }
+            0x62 => { self.registers.h = self.registers.d; 1 }
+            0x63 => { self.registers.h = self.registers.e; 1 }
+            0x64 => { 1 }
+            0x65 => { self.registers.h = self.registers.l; 1 }
+            0x66 => { self.registers.h = self.bus.read_byte(self.registers.read_16(HL)); 2 }
+            0x67 => { self.registers.h = self.registers.a; 1 }
+            0x68 => { self.registers.l = self.registers.b; 1 }
+            0x69 => { self.registers.l = self.registers.c; 1 }
+            0x6a => { self.registers.l = self.registers.d; 1 }
+            0x6b => { self.registers.l = self.registers.e; 1 }
+            0x6c => { self.registers.l = self.registers.h; 1 }
+            0x6d => { 1 }
+            0x6e => { self.registers.l = self.bus.read_byte(self.registers.read_16(HL)); 2 }
+            0x6f => { self.registers.l = self.registers.a; 1 }
             _ => todo!("Instruksjonen er ikke støttet!")
         }
     }
