@@ -37,6 +37,7 @@ impl CPU {
             0x1c => { self.inc(E); 1 }
             0x1d => { self.dec(E); 1 }
             0x1e => { self.registers.e = self.fetch_byte(); 2 }
+            0x1f => { self.rra(); 1 }
             _ => todo!("Instruksjonen er ikke støttet!")
         }
     }

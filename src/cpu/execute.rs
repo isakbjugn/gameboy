@@ -65,6 +65,16 @@ impl CPU {
         self.registers.f.half_carry = false;
         self.registers.f.carry = carry;
     }
+    pub fn rra(&mut self) {
+        let previous_carry = self.registers.f.carry;
+        let (result, carry) = self.registers.a.overflowing_shr(1);
+        self.registers.a = result | (if previous_carry { 0x80 } else { 0 });
+
+        self.registers.f.zero = false;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = false;
+        self.registers.f.carry = carry;
+    }
     pub fn jr(&mut self) {
         let offset = self.fetch_byte() as i8;
         self.pc = self.pc.wrapping_add(offset as u16)
