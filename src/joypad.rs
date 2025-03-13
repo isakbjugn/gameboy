@@ -10,4 +10,7 @@ impl Joypad {
     pub fn read_byte(&self) -> u8 {
         self.data
     }
+    pub fn write_byte(&self, value: u8) {
+        todo!()
+    }
 }
