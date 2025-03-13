@@ -37,6 +37,7 @@ impl MemoryBus {
     }
     pub fn read_byte(&self, address: u16) -> u8 {
         match address {
+            0x0000 ..= 0x00ff if self.bootrom.is_active() => self.bootrom[address],
             0x0000 ..= 0x7fff => self.mbc.read_rom(address),
             0x8000 ..= 0x9fff => self.ppu.read_byte(address),
             0xa000 ..= 0xbfff => todo!("Have not implemented extra RAM at 0xA000 to 0xBFFF"),
@@ -60,12 +61,14 @@ impl MemoryBus {
             0x30 ..= 0x3f => panic!("Wave pattern not implemented"),
             0x40 ..= 0x4b => todo!("Implement LCD Control"),
             0x4f => panic!("VRAM Bank Select is CGB feature"),
-            _ => unreachable!("Game Boy Color feature")
+            0x50 => panic!("write-only"),
+            0x51 ..= 0x70 => panic!("Game Boy Color feature"),
+            _ => unreachable!()
         }
     }
     pub fn write_byte(&mut self, address: u16, byte: u8) {
         match address {
-            0x0000 if self.bootrom.is_active() => (),
+            0x0000 ..= 0x00ff if self.bootrom.is_active() => (),
             0x0000 ..= 0x7fff => panic!("MBC0 is read-only"),
             0x8000 ..= 0x9fff => self.ppu.write_byte(address, byte),
             0xa000 ..= 0xbfff => panic!("MBC0 is read-only"),
@@ -89,7 +92,9 @@ impl MemoryBus {
             0x30 ..= 0x3f => panic!("Wave pattern not implemented"),
             0x40 ..= 0x4b => todo!("Implement LCD Control"),
             0x4f => panic!("VRAM Bank Select is CGB feature"),
-            _ => unreachable!("Game Boy Color feature")
+            0x50 => self.bootrom.deactivate(),
+            0x51 ..= 0x70 => panic!("Game Boy Color feature"),
+            _ => unreachable!()
         }
     }
     pub fn read_word(&self, address: u16) -> u16 {
