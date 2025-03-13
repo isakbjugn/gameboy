@@ -14,6 +14,7 @@ mod mbc;
 mod ppu;
 mod joypad;
 mod bootrom;
+mod timer;
 
 const SCREEN_WIDTH: u32 = 160;
 const SCREEN_HEIGHT: u32 = 144;

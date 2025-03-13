@@ -2,6 +2,7 @@ use crate::bootrom::Bootrom;
 use crate::joypad::Joypad;
 use crate::mbc::MBC;
 use crate::ppu::PPU;
+use crate::timer::Timer;
 
 const WORK_RAM_SIZE: usize = 0x8000;
 const HIGH_RAM_SIZE: usize = 0x7f;
@@ -16,6 +17,7 @@ pub struct MemoryBus {
     interrupt_flag: u8,
     joypad: Joypad,
     bootrom: Bootrom,
+    timer: Timer,
 }
 
 impl MemoryBus {
@@ -30,6 +32,7 @@ impl MemoryBus {
             interrupt_flag: 0,
             joypad: Joypad::new(),
             bootrom: Bootrom::new(),
+            timer: Timer::new(),
         }
     }
     pub fn read_byte(&self, address: u16) -> u8 {
@@ -51,7 +54,7 @@ impl MemoryBus {
         match address {
             0x00 => self.joypad.read_byte(),
             0x01 ..= 0x02 => panic!("Serial transfer not implemented"),
-            0x04 ..= 0x07 => todo!("Implement timer and divider"),
+            0x04 ..= 0x07 => self.timer.read_byte(address),
             0x0f => self.interrupt_flag,
             0x10 ..= 0x26 => panic!("Audio not implemented"),
             0x30 ..= 0x3f => panic!("Wave pattern not implemented"),
@@ -80,7 +83,7 @@ impl MemoryBus {
         match address {
             0x00 => self.joypad.write_byte(byte),
             0x01 ..= 0x02 => panic!("Serial transfer not implemented"),
-            0x04 ..= 0x07 => todo!("Implement timer and divider"),
+            0x04 ..= 0x07 => self.timer.write_byte(address, byte),
             0x0f => self.interrupt_flag = byte,
             0x10 ..= 0x26 => panic!("Audio not implemented"),
             0x30 ..= 0x3f => panic!("Wave pattern not implemented"),
