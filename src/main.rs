@@ -12,6 +12,8 @@ mod memory_bus;
 mod registers;
 mod mbc;
 mod ppu;
+mod joypad;
+mod bootrom;
 
 const SCREEN_WIDTH: u32 = 160;
 const SCREEN_HEIGHT: u32 = 144;

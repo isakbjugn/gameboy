@@ -1,3 +1,5 @@
+use crate::bootrom::Bootrom;
+use crate::joypad::Joypad;
 use crate::mbc::MBC;
 use crate::ppu::PPU;
 
@@ -10,7 +12,10 @@ pub struct MemoryBus {
     ppu: PPU,
     work_ram: [u8; WORK_RAM_SIZE],
     high_ram: [u8; HIGH_RAM_SIZE],
-    interrupt: u8,
+    interrupt_enable_register: u8,
+    interrupt_flag: u8,
+    joypad: Joypad,
+    bootrom: Bootrom,
 }
 
 impl MemoryBus {
@@ -21,7 +26,10 @@ impl MemoryBus {
             ppu: PPU::new(),
             work_ram: [0; WORK_RAM_SIZE],
             high_ram: [0; HIGH_RAM_SIZE],
-            interrupt: 0,
+            interrupt_enable_register: 0,
+            interrupt_flag: 0,
+            joypad: Joypad::new(),
+            bootrom: Bootrom::new(),
         }
     }
     pub fn read_byte(&self, address: u16) -> u8 {
@@ -35,12 +43,22 @@ impl MemoryBus {
             0xfea0 ..= 0xfeff => panic!("Not usable!"),
             0xff00 ..= 0xff7f => self.io_read_byte((address & 0x00ff) as u8),
             0xff80 ..= 0xfffe => self.high_ram[address as usize & 0x007F],
-            0xffff => self.interrupt,
+            0xffff => self.interrupt_enable_register,
             _ => unreachable!()
         }
     }
     pub fn io_read_byte(&self, address: u8) -> u8 {
-        todo!()
+        match address {
+            0x00 => self.joypad.read_byte(),
+            0x01 ..= 0x02 => panic!("Serial transfer not implemented"),
+            0x04 ..= 0x07 => todo!("Implement timer and divider"),
+            0x0f => self.interrupt_flag,
+            0x10 ..= 0x26 => panic!("Audio not implemented"),
+            0x30 ..= 0x3f => panic!("Wave pattern not implemented"),
+            0x40 ..= 0x4b => todo!("Implement LCD Control"),
+            0x4f => panic!("VRAM Bank Select is CGB feature"),
+            _ => unreachable!("Game Boy Color feature")
+        }
     }
     pub fn write_byte(&mut self, address: u16, byte: u8) {
         self.memory[address as usize] = byte;
