@@ -1,6 +1,7 @@
 use bitflags::bitflags;
 
 const VIDEO_RAM_SIZE: usize = 0x2000;
+const OAM_SIZE: usize = 0x100;
 
 bitflags!(
     pub struct Control: u8 {
@@ -57,6 +58,7 @@ pub struct PPU {
     obj_palette_1: u8,
     window_y_position: u8,
     window_x_position: u8,
+    oam: [u8; OAM_SIZE],
 }
 
 impl PPU {
@@ -75,6 +77,7 @@ impl PPU {
             obj_palette_1: 0,
             window_y_position: 0,
             window_x_position: 0,
+            oam: [0; OAM_SIZE],
         }
     }
     pub fn read_byte(&self, address: u8) -> u8 {
@@ -98,9 +101,15 @@ impl PPU {
         todo!()
     }
     pub fn read_oam(&self, address: u16) -> u8 {
-        todo!()
+        match self.mode {
+            Mode::Drawing | Mode::OAMScan => 0xff,
+            _ => self.oam[address as usize]
+        }
     }
-    pub fn write_oam(&self, address: u16, value: u8) {
-        todo!()
+    pub fn write_oam(&mut self, address: u16, value: u8) {
+        match self.mode {
+            Mode::Drawing | Mode::OAMScan => (),
+            _ => self.oam[address as usize] = value,
+        }
     }
 }
