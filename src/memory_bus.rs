@@ -90,7 +90,8 @@ impl MemoryBus {
             0x0f => self.interrupt_flag = byte,
             0x10 ..= 0x26 => panic!("Audio not implemented"),
             0x30 ..= 0x3f => panic!("Wave pattern not implemented"),
-            0x40 ..= 0x4b => self.ppu.write_byte(address, byte),
+            0x40 ..= 0x45 | 0x47 ..= 0x4b => self.ppu.write_byte(address, byte),
+            0x46 => self.oam_dma(byte),
             0x4f => panic!("VRAM Bank Select is CGB feature"),
             0x50 => self.bootrom.deactivate(),
             0x51 ..= 0x70 => panic!("Game Boy Color feature"),
@@ -103,5 +104,12 @@ impl MemoryBus {
     pub fn write_word(&mut self, address: u16, word: u16) {
         self.write_byte(address, (word & 0xff) as u8);
         self.write_byte(address + 1, (word >> 8) as u8);
+    }
+    pub fn oam_dma(&mut self, value: u8) {
+        let base = (value as u16) << 8;
+        for i in 0..0xa0 {
+            let sprite = self.read_byte(base + i);
+            self.ppu.dma_write_oam(i, sprite);
+        }
     }
 }

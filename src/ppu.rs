@@ -1,7 +1,7 @@
 use bitflags::bitflags;
 
 const VIDEO_RAM_SIZE: usize = 0x2000;
-const OAM_SIZE: usize = 0x100;
+const OAM_SIZE: usize = 160;
 
 bitflags!(
     pub struct Control: u8 {
@@ -98,18 +98,44 @@ impl PPU {
         }
     }
     pub fn write_byte(&mut self, address: u8, value: u8) {
-        todo!()
+        match address {
+            0x40 => self.control = Control::from_bits(value).unwrap(),
+            0x41 => self.set_status(value),
+            0x42 => self.vertical_scroll = value,
+            0x43 => self.horizontal_scroll = value,
+            0x44 => self.scanline = value,
+            0x45 => self.scanline_compare = value,
+            0x47 => self.bg_palette = value,
+            0x48 => self.obj_palette_0 = value,
+            0x49 => self.obj_palette_1 = value,
+            0x4a => self.window_y_position = value,
+            0x4b => self.window_x_position = value,
+            _ => unreachable!()
+        }
+    }
+    fn set_status(&mut self, value: u8) {
+        self.status = Status::from_bits(value).unwrap();
+        self.mode = match value & 0x3 {
+            0x0 => Mode::HorizontalBlank,
+            0x1 => Mode::VerticalBlank,
+            0x2 => Mode::Drawing,
+            0x3 => Mode::OAMScan,
+            _ => unreachable!()
+        }
     }
     pub fn read_oam(&self, address: u16) -> u8 {
         match self.mode {
             Mode::Drawing | Mode::OAMScan => 0xff,
-            _ => self.oam[address as usize]
+            _ => self.oam[address as usize - 0xfe00]
         }
     }
     pub fn write_oam(&mut self, address: u16, value: u8) {
         match self.mode {
             Mode::Drawing | Mode::OAMScan => (),
-            _ => self.oam[address as usize] = value,
+            _ => self.oam[address as usize - 0xfe00] = value,
         }
+    }
+    pub fn dma_write_oam(&mut self, address: u16, sprite: u8) {
+        self.oam[address as usize] = sprite;
     }
 }
