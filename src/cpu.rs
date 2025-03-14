@@ -1,10 +1,12 @@
 mod decode;
 mod execute;
 
+use std::{env, path};
+use crate::cartridge::Cartridge;
 use crate::memory_bus::MemoryBus;
 use crate::registers::Registers;
 
-struct CPU {
+pub struct CPU {
     registers: Registers,
     pc: u16,
     bus: MemoryBus,
@@ -12,6 +14,16 @@ struct CPU {
 }
 
 impl CPU {
+    pub fn new(cartridge_name: &str) -> Result<Self, &'static str> {
+        let cartridge = Cartridge::from_path(format!("roms/{}", cartridge_name).into())?;
+        
+        Ok(Self {
+            registers: Registers::new(),
+            pc: 0,
+            bus: MemoryBus::new(cartridge.mbc),
+            is_halted: false,
+        })
+    }
     fn cycle(&mut self) -> u32 {
         self.call()
     }

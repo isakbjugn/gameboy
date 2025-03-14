@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 bitflags = "2.9.0"
+clap = "4.5.32"
 pixels = "0.15.0"
 winit = "0.29"
 winit_input_helper = "0.16.0"

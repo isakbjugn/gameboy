@@ -34,6 +34,24 @@ pub enum Reg16 {
 }
 
 impl Registers {
+    pub fn new() -> Self {
+        Self {
+            a: 0,
+            b: 0,
+            c: 0,
+            d: 0,
+            e: 0,
+            f: FlagsRegister {
+                zero: false,
+                subtract: false,
+                half_carry: false,
+                carry: false,
+            },
+            h: 0,
+            l: 0,
+            sp: 0,
+        }
+    }
     pub fn read_8(&self, reg: Reg8) -> u8 {
         match reg {
             Reg8::A => self.a,

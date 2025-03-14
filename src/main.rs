@@ -5,6 +5,7 @@ use winit::event_loop::{ControlFlow, EventLoop};
 use winit::keyboard::KeyCode;
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
+use crate::game_boy::GameBoy;
 
 mod cpu;
 mod flags_register;
@@ -15,11 +16,28 @@ mod ppu;
 mod joypad;
 mod bootrom;
 mod timer;
+mod game_boy;
+mod cartridge;
 
 const SCREEN_WIDTH: u32 = 160;
 const SCREEN_HEIGHT: u32 = 144;
 
 fn main() -> Result<(), Error> {
+    let matches = clap::Command::new("gameboy")
+        .version("0.1")
+        .author("Isak Kyrre Lichtwarck Bjugn")
+        .about("A Gameboy emulator written in Rust")
+        .arg(clap::Arg::new("cartridge_name")
+            .help("Sets the ROM file to load")
+            .required(true))
+        .get_matches();
+    let cartridge_name = matches.get_one::<String>("cartridge_name").unwrap();
+
+    let game_boy = match GameBoy::new(cartridge_name) {
+        Ok(game_boy) => game_boy,
+        Err(error_str) => panic!("{}", error_str),
+    };
+
     let event_loop = EventLoop::new().unwrap();
     event_loop.set_control_flow(ControlFlow::Poll);
     let mut input = WinitInputHelper::new();

@@ -1,2 +1,6 @@
 /target
 .idea
+
+roms/*.gb
+roms/*.gbsave
+dmg_boot.bin
