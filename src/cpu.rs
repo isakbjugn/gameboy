@@ -1,7 +1,6 @@
 mod decode;
 mod execute;
 
-use std::{env, path};
 use crate::cartridge::Cartridge;
 use crate::memory_bus::MemoryBus;
 use crate::registers::Registers;
@@ -9,7 +8,7 @@ use crate::registers::Registers;
 pub struct CPU {
     registers: Registers,
     pc: u16,
-    bus: MemoryBus,
+    pub bus: MemoryBus,
     is_halted: bool,
 }
 
@@ -20,7 +19,7 @@ impl CPU {
         Ok(Self {
             registers: Registers::new(),
             pc: 0,
-            bus: MemoryBus::new(cartridge.mbc),
+            bus: MemoryBus::new(cartridge),
             is_halted: false,
         })
     }

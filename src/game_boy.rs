@@ -13,4 +13,7 @@ impl GameBoy {
     pub fn emulate(&mut self) {
         
     }
+    pub fn title(&self) -> String {
+        self.cpu.bus.cartridge.title()
+    }
 }
