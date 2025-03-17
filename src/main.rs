@@ -143,8 +143,13 @@ enum GameBoyEvent {
 
 fn run_game_boy(mut game_boy: Box<GameBoy>, sender: SyncSender<Vec<u8>>, receiver: Receiver<GameBoyEvent>) {
     use std::sync::mpsc::{TryRecvError, TrySendError};
+    use std::time::{Duration, Instant};
+    
+    let frame_duration = Duration::from_millis(16);
     
     loop {
+        let start = Instant::now();
+        
         let data = vec![0; SCREEN_WIDTH as usize * SCREEN_HEIGHT as usize * 3];
         if let Err(TrySendError::Disconnected(..)) = sender.try_send(data) {
             info!("Game Boy mistet forbindelse med skjermen!");
@@ -156,6 +161,8 @@ fn run_game_boy(mut game_boy: Box<GameBoy>, sender: SyncSender<Vec<u8>>, receive
             Err(TryRecvError::Empty) => (),
             Err(TryRecvError::Disconnected) => break,
         }
+        
+        thread::sleep(frame_duration - start.elapsed());
     }
 }
 
