@@ -5,10 +5,10 @@ pub struct GameBoy {
 }
 
 impl GameBoy {
-    pub fn new(cartridge_name: &str) -> Result<Self, &'static str> {
-        Ok(Self {
+    pub fn new(cartridge_name: &str) -> Result<Box<Self>, &'static str> {
+        Ok(Box::new(Self {
             cpu: CPU::new(cartridge_name)?,
-        })
+        }))
     }
     pub fn emulate(&mut self) {
         

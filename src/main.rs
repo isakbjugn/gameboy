@@ -1,3 +1,6 @@
+use std::sync::mpsc;
+use std::sync::mpsc::{Receiver, SyncSender};
+use std::thread;
 use pixels::{Error, Pixels, SurfaceTexture};
 use winit::dpi::LogicalSize;
 use winit::event::{Event, WindowEvent};
@@ -6,6 +9,7 @@ use winit::keyboard::KeyCode;
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
 use crate::game_boy::GameBoy;
+use crate::joypad::JoypadKey;
 
 mod cpu;
 mod flags_register;
@@ -37,6 +41,9 @@ fn main() -> Result<(), Error> {
         Ok(game_boy) => game_boy,
         Err(error_str) => panic!("{}", error_str),
     };
+    
+    let (key_sender, key_receiver) = mpsc::channel();
+    let (screen_sender, screen_receiver) = mpsc::sync_channel(1);
 
     let event_loop = EventLoop::new().unwrap();
     event_loop.set_control_flow(ControlFlow::Poll);
@@ -50,13 +57,15 @@ fn main() -> Result<(), Error> {
             .build(&event_loop)
             .unwrap()
     };
+    
+    let game_boy_thread = thread::spawn(move || run_game_boy(game_boy, screen_sender, key_receiver));
 
     let mut pixels = {
         let window_size = window.inner_size();
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
         Pixels::new(SCREEN_WIDTH, SCREEN_HEIGHT, surface_texture)?
     };
-
+    
     let res = event_loop.run(|event, elwt| {
         if let Event::WindowEvent {
             event: WindowEvent::RedrawRequested,
@@ -78,5 +87,17 @@ fn main() -> Result<(), Error> {
             window.request_redraw();
         }
     });
+    
+    drop(screen_receiver);
+    let _ = game_boy_thread.join();
     res.map_err(|e| Error::UserDefined(Box::new(e)))
+}
+
+enum GameBoyEvent {
+    KeyUp(JoypadKey),
+    KeyDown(JoypadKey),
+}
+
+fn run_game_boy(mut game_boy: Box<GameBoy>, sender: SyncSender<Vec<u8>>, receiver: Receiver<GameBoyEvent>) {
+    
 }

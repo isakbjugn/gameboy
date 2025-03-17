@@ -1,4 +1,15 @@
 
+pub enum JoypadKey {
+    Right,
+    Left,
+    Up,
+    Down,
+    A,
+    B,
+    Start,
+    Select,
+}
+
 pub struct Joypad {
     data: u8,
 }
