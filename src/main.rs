@@ -3,9 +3,7 @@ use std::sync::mpsc::{Receiver, SyncSender};
 use std::thread;
 use pixels::{Error, Pixels, SurfaceTexture};
 use winit::dpi::LogicalSize;
-use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
-use winit::keyboard::KeyCode;
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
 use crate::game_boy::GameBoy;
@@ -41,7 +39,7 @@ fn main() -> Result<(), Error> {
         Ok(game_boy) => game_boy,
         Err(error_str) => panic!("{}", error_str),
     };
-    
+
     let (key_sender, key_receiver) = mpsc::channel();
     let (screen_sender, screen_receiver) = mpsc::sync_channel(1);
 
@@ -57,7 +55,7 @@ fn main() -> Result<(), Error> {
             .build(&event_loop)
             .unwrap()
     };
-    
+
     let game_boy_thread = thread::spawn(move || run_game_boy(game_boy, screen_sender, key_receiver));
 
     let mut pixels = {
@@ -65,16 +63,24 @@ fn main() -> Result<(), Error> {
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
         Pixels::new(SCREEN_WIDTH, SCREEN_HEIGHT, surface_texture)?
     };
-    
+
     let res = event_loop.run(|event, elwt| {
-        if let Event::WindowEvent {
-            event: WindowEvent::RedrawRequested,
-            ..
-        } = event
-        {
-            if let Err(err) = pixels.render() {
-                elwt.exit();
-                return;
+        use winit::event::{Event, WindowEvent};
+        use winit::event::ElementState::{Pressed, Released};
+        use winit::keyboard::{Key, KeyCode, NamedKey};
+        
+        if let Event::WindowEvent { event: WindowEvent::KeyboardInput { event: key_event, .. }, .. } = &event {
+            match (key_event.state, key_event.logical_key.as_ref()) {
+                (Pressed, winit_key) => {
+                    if let Some(key) = winit_to_joypad(winit_key) {
+                        let _ = key_sender.send(GameBoyEvent::KeyDown(key));
+                    }
+                }
+                (Released, winit_key) => {
+                    if let Some(key) = winit_to_joypad(winit_key) {
+                        let _ = key_sender.send(GameBoyEvent::KeyUp(key));
+                    }
+                }
             }
         }
 
@@ -87,7 +93,7 @@ fn main() -> Result<(), Error> {
             window.request_redraw();
         }
     });
-    
+
     drop(screen_receiver);
     let _ = game_boy_thread.join();
     res.map_err(|e| Error::UserDefined(Box::new(e)))
@@ -99,5 +105,20 @@ enum GameBoyEvent {
 }
 
 fn run_game_boy(mut game_boy: Box<GameBoy>, sender: SyncSender<Vec<u8>>, receiver: Receiver<GameBoyEvent>) {
-    
+
+}
+
+fn winit_to_joypad(key: winit::keyboard::Key<&str>) -> Option<JoypadKey> {
+    use winit::keyboard::{Key, NamedKey};
+    match key {
+        Key::Character("Z" | "z") => Some(JoypadKey::A),
+        Key::Character("X" | "x") => Some(JoypadKey::B),
+        Key::Named(NamedKey::ArrowUp) => Some(JoypadKey::Up),
+        Key::Named(NamedKey::ArrowDown) => Some(JoypadKey::Down),
+        Key::Named(NamedKey::ArrowLeft) => Some(JoypadKey::Left),
+        Key::Named(NamedKey::ArrowRight) => Some(JoypadKey::Right),
+        Key::Named(NamedKey::Space) => Some(JoypadKey::Select),
+        Key::Named(NamedKey::Enter) => Some(JoypadKey::Start),
+        _ => None,
+    }
 }
