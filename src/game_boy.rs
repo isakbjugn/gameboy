@@ -14,6 +14,12 @@ impl GameBoy {
     pub fn emulate(&mut self) {
         
     }
+    pub fn updated_frame_buffer(&mut self) -> Option<Vec<u8>> {
+        match self.cpu.bus.ppu.check_and_reset_updated() {
+            true => Some(self.cpu.bus.ppu.read_frame_buffer().to_vec()),
+            false => None
+        }
+    }
     pub fn title(&self) -> String {
         self.cpu.bus.cartridge.title()
     }

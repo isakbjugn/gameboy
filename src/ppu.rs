@@ -1,5 +1,7 @@
 use bitflags::bitflags;
 
+const SCREEN_WIDTH: usize = 160;
+const SCREEN_HEIGHT: usize = 144;
 const VIDEO_RAM_SIZE: usize = 0x2000;
 const OAM_SIZE: usize = 160;
 
@@ -46,6 +48,7 @@ impl Mode {
 
 pub struct PPU {
     pub video_ram: [u8; VIDEO_RAM_SIZE],
+    frame_buffer: Vec<u8>,
     control: Control,
     status: Status,
     mode: Mode,
@@ -59,12 +62,14 @@ pub struct PPU {
     window_y_position: u8,
     window_x_position: u8,
     oam: [u8; OAM_SIZE],
+    updated: bool,
 }
 
 impl PPU {
     pub fn new() -> Self {
         Self {
             video_ram: [0; VIDEO_RAM_SIZE],
+            frame_buffer: vec![0; SCREEN_WIDTH * SCREEN_HEIGHT * 3],
             control: Control::from_bits(0).unwrap(),
             status: Status::from_bits(0).unwrap(),
             mode: Mode::OAMScan,
@@ -78,6 +83,7 @@ impl PPU {
             window_y_position: 0,
             window_x_position: 0,
             oam: [0; OAM_SIZE],
+            updated: false,
         }
     }
     pub fn read_byte(&self, address: u8) -> u8 {
@@ -137,5 +143,13 @@ impl PPU {
     }
     pub fn dma_write_oam(&mut self, address: u16, sprite: u8) {
         self.oam[address as usize] = sprite;
+    }
+    pub fn check_and_reset_updated(&mut self) -> bool {
+        let result = self.updated;
+        self.updated = false;
+        result
+    }
+    pub fn read_frame_buffer(&mut self) -> &[u8] {
+        &self.frame_buffer
     }
 }

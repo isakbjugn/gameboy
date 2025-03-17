@@ -10,7 +10,7 @@ const HIGH_RAM_SIZE: usize = 0x7f;
 pub struct MemoryBus {
     memory: [u8; 65536], // fra 0x0000 til 0xFFFF
     pub cartridge: Cartridge,
-    ppu: PPU,
+    pub ppu: PPU,
     work_ram: [u8; WORK_RAM_SIZE],
     high_ram: [u8; HIGH_RAM_SIZE],
     interrupt_enable_register: u8,
