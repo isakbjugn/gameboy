@@ -1,7 +1,9 @@
 use std::sync::mpsc;
 use std::sync::mpsc::{Receiver, SyncSender};
 use std::thread;
+use log::{error, info, LevelFilter};
 use pixels::{Error, Pixels, SurfaceTexture};
+use simplelog::{TermLogger, TerminalMode};
 use winit::dpi::LogicalSize;
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
@@ -25,6 +27,14 @@ const SCREEN_WIDTH: u32 = 160;
 const SCREEN_HEIGHT: u32 = 144;
 
 fn main() -> Result<(), Error> {
+    TermLogger::init(
+        LevelFilter::Info,
+        simplelog::Config::default(),
+        TerminalMode::Mixed,
+        simplelog::ColorChoice::Auto,
+    )
+        .expect("Kunne ikke sette opp logger");
+
     let matches = clap::Command::new("gameboy")
         .version("0.1")
         .author("Isak Kyrre Lichtwarck Bjugn")
@@ -86,8 +96,8 @@ fn main() -> Result<(), Error> {
 
         if input.update(&event) {
             if input.key_pressed(KeyCode::Escape) || input.close_requested() {
+                info!("Skrur av Game Boy!");
                 elwt.exit();
-                return;
             }
 
             window.request_redraw();
@@ -95,8 +105,9 @@ fn main() -> Result<(), Error> {
         
         match screen_receiver.recv() {
             Ok(data) => {
-                pixels.frame_mut().copy_from_slice(&data);
+                pixels.frame_mut().copy_from_slice(&data.with_alpha());
                 if let Err(err) = pixels.render() {
+                    error!("Feil under tegning til skjerm!");
                     elwt.exit();
                 }
             }
@@ -109,19 +120,40 @@ fn main() -> Result<(), Error> {
     res.map_err(|e| Error::UserDefined(Box::new(e)))
 }
 
+trait FrameBuffer {
+    fn with_alpha(&self) -> Self;
+}
+
+impl FrameBuffer for Vec<u8> {
+    fn with_alpha(&self) -> Vec<u8> {
+        self.chunks_exact(3).flat_map(|chunk| {
+            let mut rgba = Vec::with_capacity(4);
+            rgba.extend_from_slice(chunk);
+            rgba.push(0xff);
+            rgba
+        })
+            .collect()
+    }
+}
+
 enum GameBoyEvent {
     KeyUp(JoypadKey),
     KeyDown(JoypadKey),
 }
 
 fn run_game_boy(mut game_boy: Box<GameBoy>, sender: SyncSender<Vec<u8>>, receiver: Receiver<GameBoyEvent>) {
-    use std::sync::mpsc::TryRecvError;
+    use std::sync::mpsc::{TryRecvError, TrySendError};
     
     loop {
+        let data = vec![0; SCREEN_WIDTH as usize * SCREEN_HEIGHT as usize * 3];
+        if let Err(TrySendError::Disconnected(..)) = sender.try_send(data) {
+            info!("Game Boy mistet forbindelse med skjermen!");
+            break
+        }
         match receiver.try_recv() {
             Ok(GameBoyEvent::KeyDown(key)) => game_boy.key_down(key),
             Ok(GameBoyEvent::KeyUp(key)) => game_boy.key_up(key),
-            Err(TryRecvError::Empty) => break,
+            Err(TryRecvError::Empty) => (),
             Err(TryRecvError::Disconnected) => break,
         }
     }
