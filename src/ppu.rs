@@ -11,7 +11,7 @@ bitflags!(
         const window_tile_map_area = 0x7;
         const window_enable = 0x8;
         const bg_window_tile_data_area = 0x5;
-        const bg_tile_map_area = 0x43;
+        const bg_tile_map_area = 0x4;
         const obj_size = 0x3;
         const obj_enable = 0x2;
         const bg_window_enable = 0x1;
