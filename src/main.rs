@@ -67,8 +67,8 @@ fn main() -> Result<(), Error> {
     let res = event_loop.run(|event, elwt| {
         use winit::event::{Event, WindowEvent};
         use winit::event::ElementState::{Pressed, Released};
-        use winit::keyboard::{Key, KeyCode, NamedKey};
-        
+        use winit::keyboard::KeyCode;
+
         if let Event::WindowEvent { event: WindowEvent::KeyboardInput { event: key_event, .. }, .. } = &event {
             match (key_event.state, key_event.logical_key.as_ref()) {
                 (Pressed, winit_key) => {
@@ -91,6 +91,13 @@ fn main() -> Result<(), Error> {
             }
 
             window.request_redraw();
+        }
+        
+        match screen_receiver.recv() {
+            Ok(data) => if let Err(err) = pixels.render() {
+                elwt.exit();
+            }
+            Err(..) => elwt.exit(),
         }
     });
 
