@@ -94,8 +94,11 @@ fn main() -> Result<(), Error> {
         }
         
         match screen_receiver.recv() {
-            Ok(data) => if let Err(err) = pixels.render() {
-                elwt.exit();
+            Ok(data) => {
+                pixels.frame_mut().copy_from_slice(&data);
+                if let Err(err) = pixels.render() {
+                    elwt.exit();
+                }
             }
             Err(..) => elwt.exit(),
         }
