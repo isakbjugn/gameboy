@@ -1,4 +1,5 @@
 use crate::cpu::CPU;
+use crate::joypad::JoypadKey;
 
 pub struct GameBoy {
     cpu: CPU,
@@ -15,5 +16,11 @@ impl GameBoy {
     }
     pub fn title(&self) -> String {
         self.cpu.bus.cartridge.title()
+    }
+    pub fn key_down(&mut self, key: JoypadKey) {
+        self.cpu.bus.joypad.key_down(key)
+    }
+    pub fn key_up(&mut self, key: JoypadKey) {
+        self.cpu.bus.joypad.key_up(key)
     }
 }

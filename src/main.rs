@@ -115,11 +115,21 @@ enum GameBoyEvent {
 }
 
 fn run_game_boy(mut game_boy: Box<GameBoy>, sender: SyncSender<Vec<u8>>, receiver: Receiver<GameBoyEvent>) {
-
+    use std::sync::mpsc::TryRecvError;
+    
+    loop {
+        match receiver.try_recv() {
+            Ok(GameBoyEvent::KeyDown(key)) => game_boy.key_down(key),
+            Ok(GameBoyEvent::KeyUp(key)) => game_boy.key_up(key),
+            Err(TryRecvError::Empty) => break,
+            Err(TryRecvError::Disconnected) => break,
+        }
+    }
 }
 
 fn winit_to_joypad(key: winit::keyboard::Key<&str>) -> Option<JoypadKey> {
     use winit::keyboard::{Key, NamedKey};
+    
     match key {
         Key::Character("Z" | "z") => Some(JoypadKey::A),
         Key::Character("X" | "x") => Some(JoypadKey::B),

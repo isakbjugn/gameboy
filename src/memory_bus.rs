@@ -15,7 +15,7 @@ pub struct MemoryBus {
     high_ram: [u8; HIGH_RAM_SIZE],
     interrupt_enable_register: u8,
     interrupt_flag: u8,
-    joypad: Joypad,
+    pub joypad: Joypad,
     bootrom: Bootrom,
     timer: Timer,
 }
