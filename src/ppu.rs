@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::collections::HashMap;
 use arrayvec::ArrayVec;
 use bitflags::bitflags;
 use itertools::Itertools;
@@ -67,6 +68,12 @@ pub struct Sprite {
     x: u8,
     tile_row: u8,
     sprite_number: u8,
+}
+
+pub struct Pixel {
+    color: u8,
+    palette: u8,
+    background_priority: u8,
 }
 
 pub struct PPU {
@@ -226,7 +233,7 @@ impl PPU {
             .sorted_by(Self::sprite_order())
             .map(|(_, sprite)| sprite)
             .collect();
-        
+
         self.t_cycles -= 80;
         self.mode = Mode::Drawing
     }
@@ -237,9 +244,32 @@ impl PPU {
         }
     }
     fn draw(&mut self) {
-        //todo!("Write resulting pixels to frame buffer")
+        let line_start = SCREEN_WIDTH * self.scanline as usize;
+        let line_end = line_start + SCREEN_WIDTH;
+        let pixels = &mut self.frame_buffer[line_start..line_end];
+        let mut bg_priority = [false; SCREEN_WIDTH];
+
+        if self.control.contains(Control::bg_window_enable) {
+            let background_pixels = self.fetch_background_pixels();
+        }
+        if self.control.contains(Control::sprite_enable) {
+            let sprite_pixels = self.fetch_sprites_pixels();
+        }
+        if self.control.contains(Control::window_enable) && self.window_y_position <= self.scanline {
+            let window_pixels = self.fetch_window_pixels();
+        }
+
         self.t_cycles -= 172;
         self.mode = Mode::HorizontalBlank;
+    }
+    fn fetch_background_pixels(&self) -> HashMap<usize, Pixel>  {
+        HashMap::new()
+    }
+    fn fetch_sprites_pixels(&self) -> HashMap<usize, Pixel> {
+        HashMap::new()
+    }
+    fn fetch_window_pixels(&self) -> HashMap<usize, Pixel>   {
+        HashMap::new()
     }
     fn horizontal_blank(&mut self) {
         self.t_cycles -= 204;
