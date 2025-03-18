@@ -4,6 +4,7 @@ const SCREEN_WIDTH: usize = 160;
 const SCREEN_HEIGHT: usize = 144;
 const VIDEO_RAM_SIZE: usize = 0x2000;
 const OAM_SIZE: usize = 160;
+const SCANLINES: u8 = 154;
 
 bitflags!(
     pub struct Control: u8 {
@@ -69,6 +70,7 @@ pub struct PPU {
     window_x_position: u8,
     oam: [u8; OAM_SIZE],
     updated: bool,
+    t_cycles: u32,
 }
 
 impl PPU {
@@ -90,6 +92,7 @@ impl PPU {
             window_x_position: 0,
             oam: [0; OAM_SIZE],
             updated: false,
+            t_cycles: 0,
         }
     }
     pub fn read_byte(&self, address: u8) -> u8 {
@@ -130,7 +133,7 @@ impl PPU {
         self.control = Control::from_bits(value).unwrap();
         if !self.control.lcd_on() && lcd_enable_initial_state {
             // reset PPU
-            self.mode = Mode::OAMScan;
+            self.mode = Mode::OAMScan; // todo!("Dette er vel ikke riktig tilstand etter nullstilling?")
             self.scanline = 0;
             self.clear_display()
         }
@@ -165,5 +168,47 @@ impl PPU {
     }
     pub fn read_frame_buffer(&mut self) -> &[u8] {
         &self.frame_buffer
+    }
+    pub fn cycle(&mut self, m_cycles: u32) {
+        if !self.control.lcd_on() { return }
+
+        self.t_cycles += m_cycles * 4;
+
+        loop {
+            match self.mode {
+                Mode::OAMScan if self.t_cycles >= 80 => self.oam_scan(),
+                Mode::Drawing if self.t_cycles >= 172 => self.draw(),
+                Mode::HorizontalBlank if self.t_cycles >= 204 => self.horizontal_blank(),
+                Mode::VerticalBlank if self.t_cycles >= 456 => self.vertical_blank(),
+                _ => break,
+            }
+        }
+    }
+    fn oam_scan(&mut self) {
+        //todo!("Read sprites from OAM to sprite buffer")
+        self.t_cycles -= 80;
+        self.mode = Mode::Drawing
+    }
+    fn draw(&mut self) {
+        //todo!("Write resulting pixels to frame buffer")
+        self.t_cycles -= 172;
+        self.mode = Mode::HorizontalBlank;
+        
+    }
+    fn horizontal_blank(&mut self) {
+        self.t_cycles -= 204;
+        self.scanline += 1;
+        self.mode = match self.scanline >= 144 {
+            true => Mode::VerticalBlank,
+            false => Mode::OAMScan,
+        };
+    }
+    fn vertical_blank(&mut self) {
+        self.t_cycles -= 456;
+        self.scanline += 1;
+        self.scanline %= SCANLINES;
+        if self.scanline == 0 {
+            self.mode = Mode::OAMScan;
+        }
     }
 }
