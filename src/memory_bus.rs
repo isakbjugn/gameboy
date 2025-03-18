@@ -8,7 +8,6 @@ const WORK_RAM_SIZE: usize = 0x8000;
 const HIGH_RAM_SIZE: usize = 0x7f;
 
 pub struct MemoryBus {
-    memory: [u8; 65536], // fra 0x0000 til 0xFFFF
     pub cartridge: Cartridge,
     pub ppu: PPU,
     work_ram: [u8; WORK_RAM_SIZE],
@@ -23,7 +22,6 @@ pub struct MemoryBus {
 impl MemoryBus {
     pub fn new(cart: Cartridge) -> Self {
         Self {
-            memory: [0; 65536],
             cartridge: cart,
             ppu: PPU::new(),
             work_ram: [0; WORK_RAM_SIZE],
