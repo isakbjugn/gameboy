@@ -73,7 +73,7 @@ impl CPU {
     }
     pub fn jr(&mut self) {
         let offset = self.fetch_byte() as i8;
-        self.pc = self.pc.wrapping_add(offset as u16)
+        self.registers.pc = self.registers.pc.wrapping_add(offset as u16)
     }
     pub fn daa(&mut self) {
         let mut adjustment = 0;

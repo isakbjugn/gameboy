@@ -9,6 +9,7 @@ pub struct Registers {
     pub f: FlagsRegister,
     pub h: u8,
     pub l: u8,
+    pub pc: u16,
     pub sp: u16,
 }
 
@@ -49,6 +50,7 @@ impl Registers {
             },
             h: 0,
             l: 0,
+            pc: 0,
             sp: 0,
         }
     }
