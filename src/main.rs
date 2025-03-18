@@ -13,7 +13,7 @@ use crate::joypad::JoypadKey;
 
 mod cpu;
 mod flags_register;
-mod memory_bus;
+mod address_bus;
 mod registers;
 mod mbc;
 mod ppu;

@@ -7,7 +7,7 @@ use crate::timer::Timer;
 const WORK_RAM_SIZE: usize = 0x8000;
 const HIGH_RAM_SIZE: usize = 0x7f;
 
-pub struct MemoryBus {
+pub struct AddressBus {
     pub cartridge: Cartridge,
     pub ppu: PPU,
     work_ram: [u8; WORK_RAM_SIZE],
@@ -19,7 +19,7 @@ pub struct MemoryBus {
     timer: Timer,
 }
 
-impl MemoryBus {
+impl AddressBus {
     pub fn new(cart: Cartridge) -> Self {
         Self {
             cartridge: cart,

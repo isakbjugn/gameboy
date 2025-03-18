@@ -2,13 +2,13 @@ mod decode;
 mod execute;
 
 use crate::cartridge::Cartridge;
-use crate::memory_bus::MemoryBus;
+use crate::address_bus::AddressBus;
 use crate::registers::Registers;
 
 pub struct CPU {
     registers: Registers,
     pc: u16,
-    pub bus: MemoryBus,
+    pub bus: AddressBus,
     is_halted: bool,
 }
 
@@ -19,7 +19,7 @@ impl CPU {
         Ok(Self {
             registers: Registers::new(),
             pc: 0,
-            bus: MemoryBus::new(cartridge),
+            bus: AddressBus::new(cartridge),
             is_halted: false,
         })
     }
