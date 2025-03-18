@@ -137,6 +137,7 @@ impl PPU {
     }
     fn clear_display(&mut self) {
         self.frame_buffer.iter_mut().for_each(|value| *value = 0xff);
+        self.updated = true;
     }
     fn set_status(&mut self, value: u8) {
         self.status = Status::from_bits(value).unwrap();
