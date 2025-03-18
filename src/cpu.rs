@@ -1,9 +1,11 @@
 mod decode;
 mod execute;
+mod flags_register;
+mod registers;
 
 use crate::cartridge::Cartridge;
 use crate::address_bus::AddressBus;
-use crate::registers::Registers;
+use registers::Registers;
 
 pub struct CPU {
     registers: Registers,

@@ -1,4 +1,4 @@
-use crate::flags_register::FlagsRegister;
+use crate::cpu::flags_register::FlagsRegister;
 
 pub struct Registers {
     pub a: u8,

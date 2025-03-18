@@ -1,7 +1,7 @@
 use crate::cpu::CPU;
 use crate::cpu::execute::Address;
-use crate::registers::Reg8::{A, B, C, D, E, H, L};
-use crate::registers::Reg16::{BC, DE, HL, SP};
+use crate::cpu::registers::Reg8::{A, B, C, D, E, H, L};
+use crate::cpu::registers::Reg16::{BC, DE, HL, SP};
 
 impl CPU {
     pub fn call(&mut self) -> u32 {

@@ -12,9 +12,7 @@ use crate::game_boy::GameBoy;
 use crate::joypad::JoypadKey;
 
 mod cpu;
-mod flags_register;
 mod address_bus;
-mod registers;
 mod mbc;
 mod ppu;
 mod joypad;

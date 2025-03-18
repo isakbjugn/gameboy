@@ -1,6 +1,6 @@
 use crate::cpu::CPU;
-use crate::registers::{Reg16, Reg8};
-use crate::registers::Reg16::HL;
+use crate::cpu::registers::{Reg16, Reg8};
+use crate::cpu::registers::Reg16::HL;
 
 pub enum Address {
     HL,
