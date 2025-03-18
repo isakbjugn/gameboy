@@ -4,8 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+arrayvec = "0.7.6"
 bitflags = "2.9.0"
 clap = "4.5.32"
+itertools = "0.14.0"
 log = "0.4.26"
 pixels = "0.15.0"
 simplelog = "0.12.2"

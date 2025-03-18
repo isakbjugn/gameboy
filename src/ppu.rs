@@ -1,4 +1,7 @@
+use std::cmp::Ordering;
+use arrayvec::ArrayVec;
 use bitflags::bitflags;
+use itertools::Itertools;
 
 const SCREEN_WIDTH: usize = 160;
 const SCREEN_HEIGHT: usize = 144;
@@ -22,6 +25,12 @@ bitflags!(
 impl Control {
     fn lcd_on(&self) -> bool {
         self.bits() & 0x8 != 0
+    }
+    fn tall_sprite_mode(&self) -> bool {
+        self.bits() & 0x4 != 0
+    }
+    fn sprite_height(&self) -> u8 {
+        if self.tall_sprite_mode() { 16 } else { 8 }
     }
 }
 
@@ -53,6 +62,13 @@ impl Mode {
     }
 }
 
+#[derive(Clone)]
+pub struct Sprite {
+    x: u8,
+    tile_row: u8,
+    sprite_number: u8,
+}
+
 pub struct PPU {
     pub video_ram: [u8; VIDEO_RAM_SIZE],
     frame_buffer: Vec<u8>,
@@ -71,6 +87,7 @@ pub struct PPU {
     oam: [u8; OAM_SIZE],
     updated: bool,
     t_cycles: u32,
+    sprite_buffer: ArrayVec<Sprite, 10>
 }
 
 impl PPU {
@@ -93,6 +110,7 @@ impl PPU {
             oam: [0; OAM_SIZE],
             updated: false,
             t_cycles: 0,
+            sprite_buffer: ArrayVec::new(),
         }
     }
     pub fn read_byte(&self, address: u8) -> u8 {
@@ -185,15 +203,43 @@ impl PPU {
         }
     }
     fn oam_scan(&mut self) {
-        //todo!("Read sprites from OAM to sprite buffer")
+        self.sprite_buffer.clear();
+        self.sprite_buffer = self.oam.chunks_exact(4)
+            .filter_map(|sprite| match sprite {
+                &[y, x, tile_index, flags] => {
+                    let y = y.wrapping_sub(16);
+                    let x = x.wrapping_sub(8);
+                    if self.scanline.wrapping_sub(y) < self.control.sprite_height() {
+                        Some(Sprite {
+                            x: x,
+                            tile_row: todo!(),
+                            sprite_number: tile_index,
+                        })
+                    } else {
+                        None
+                    }
+                }
+                _ => None
+            })
+            .take(10)
+            .enumerate()
+            .sorted_by(Self::sprite_order())
+            .map(|(_, sprite)| sprite)
+            .collect();
+        
         self.t_cycles -= 80;
         self.mode = Mode::Drawing
+    }
+    fn sprite_order() -> fn(&(usize, Sprite), &(usize, Sprite)) -> Ordering {
+        |&(a_index, ref a), &(b_index, ref b)| match a.x.cmp(&b.x) {
+            Ordering::Equal => b_index.cmp(&a_index),
+            order => order.reverse()
+        }
     }
     fn draw(&mut self) {
         //todo!("Write resulting pixels to frame buffer")
         self.t_cycles -= 172;
         self.mode = Mode::HorizontalBlank;
-        
     }
     fn horizontal_blank(&mut self) {
         self.t_cycles -= 204;
