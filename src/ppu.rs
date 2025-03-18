@@ -7,16 +7,22 @@ const OAM_SIZE: usize = 160;
 
 bitflags!(
     pub struct Control: u8 {
-        const lcd_ppu_enable = 0x8;
-        const window_tile_map_area = 0x7;
+        const lcd_enable = 0x8;
+        const window_tile_map_select = 0x7;
         const window_enable = 0x8;
-        const bg_window_tile_data_area = 0x5;
-        const bg_tile_map_area = 0x4;
-        const obj_size = 0x3;
-        const obj_enable = 0x2;
+        const tile_data_select = 0x5;
+        const bg_tile_map_select = 0x4;
+        const sprite_size = 0x3;
+        const sprite_enable = 0x2;
         const bg_window_enable = 0x1;
     }
 );
+
+impl Control {
+    fn lcd_on(&self) -> bool {
+        self.bits() & 0x8 != 0
+    }
+}
 
 bitflags!(
     struct Status: u8 {
@@ -105,11 +111,11 @@ impl PPU {
     }
     pub fn write_byte(&mut self, address: u8, value: u8) {
         match address {
-            0x40 => self.control = Control::from_bits(value).unwrap(),
+            0x40 => self.set_control(value),
             0x41 => self.set_status(value),
             0x42 => self.vertical_scroll = value,
             0x43 => self.horizontal_scroll = value,
-            0x44 => self.scanline = value,
+            0x44 => panic!("scanline is read-only"),
             0x45 => self.scanline_compare = value,
             0x47 => self.bg_palette = value,
             0x48 => self.obj_palette_0 = value,
@@ -119,15 +125,22 @@ impl PPU {
             _ => unreachable!()
         }
     }
+    fn set_control(&mut self, value: u8) {
+        let lcd_enable_initial_state = self.control.lcd_on();
+        self.control = Control::from_bits(value).unwrap();
+        if !self.control.lcd_on() && lcd_enable_initial_state {
+            // reset PPU
+            self.mode = Mode::OAMScan;
+            self.scanline = 0;
+            self.clear_display()
+        }
+    }
+    fn clear_display(&mut self) {
+        self.frame_buffer.iter_mut().for_each(|value| *value = 0xff);
+    }
     fn set_status(&mut self, value: u8) {
         self.status = Status::from_bits(value).unwrap();
-        self.mode = match value & 0x3 {
-            0x0 => Mode::HorizontalBlank,
-            0x1 => Mode::VerticalBlank,
-            0x2 => Mode::Drawing,
-            0x3 => Mode::OAMScan,
-            _ => unreachable!()
-        }
+        // self.mode is read-only
     }
     pub fn read_oam(&self, address: u16) -> u8 {
         match self.mode {
