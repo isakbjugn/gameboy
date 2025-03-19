@@ -73,7 +73,7 @@ pub struct Sprite {
 pub struct Pixel {
     color: u8,
     palette: u8,
-    background_priority: u8,
+    background_priority: bool,
 }
 
 pub struct PPU {
@@ -263,7 +263,33 @@ impl PPU {
         self.mode = Mode::HorizontalBlank;
     }
     fn fetch_background_pixels(&self) -> HashMap<usize, Pixel>  {
-        HashMap::new()
+        let mut pixels = HashMap::new();
+        let y = self.scanline.wrapping_add(self.vertical_scroll);
+        let row = (y / 8) as usize;
+        for i in 0..SCREEN_WIDTH {
+            let x = (i as u8).wrapping_add(self.horizontal_scroll);
+            let col = (x / 8) as usize;
+
+            let tile_number = match self.control.contains(Control::bg_tile_map_select) {
+                true => self.video_ram[(0x1c00 | (row * 32 + col)) & 0x1f],
+                false => self.video_ram[(0x1800 | (row * 32 + col)) & 0x1f],
+            };
+            let line = ((y % 8) * 2) as usize;
+            let tile_data_low = match self.control.contains(Control::tile_data_select) {
+                true => self.video_ram[(tile_number as usize * 16 + line) & 0x1fff],
+                false => self.video_ram[(0x1000 + (tile_number as i8 as i16) as usize + line) & 0x1fff],
+            };
+            let tile_data_high = match self.control.contains(Control::tile_data_select) {
+                true => self.video_ram[(tile_number as usize * 16 + line + 1) & 0x1fff],
+                false => self.video_ram[(0x1000 + (tile_number as i8 as i16) as usize + line + 1) & 0x1fff],
+            };
+            // mest signifikante bit i en u8 er pikselen lengst til venstre. Må derfor snu x
+            let x_bit = 7 - (x % 8);
+            let color = (((tile_data_high >> x_bit) & 1) << 1) | ((tile_data_low >> x_bit) & 1);
+            let palette = self.bg_palette;
+            pixels.insert(i, Pixel { color, palette, background_priority: color != 0x00  });
+        }
+        pixels
     }
     fn fetch_sprites_pixels(&self) -> HashMap<usize, Pixel> {
         HashMap::new()
