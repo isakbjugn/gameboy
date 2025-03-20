@@ -256,11 +256,11 @@ impl PPU {
                 bg_priority[key] = background_priority;
             })
         }
-        if self.control.contains(Control::sprite_enable) {
-            let sprite_pixels = self.fetch_sprites_pixels();
-        }
         if self.control.contains(Control::window_enable) && self.window_y_position <= self.scanline {
             let window_pixels = self.fetch_window_pixels();
+        }
+        if self.control.contains(Control::sprite_enable) {
+            let sprite_pixels = self.fetch_sprites_pixels();
         }
 
         self.frame_buffer[line_start..line_end].copy_from_slice(&pixels);
@@ -301,10 +301,10 @@ impl PPU {
         let shift_amount = pixel_value * 2;
         (palette >> shift_amount) & 0b11
     }
-    fn fetch_sprites_pixels(&self) -> HashMap<usize, Pixel> {
+    fn fetch_window_pixels(&self) -> HashMap<usize, Pixel>   {
         HashMap::new()
     }
-    fn fetch_window_pixels(&self) -> HashMap<usize, Pixel>   {
+    fn fetch_sprites_pixels(&self) -> HashMap<usize, Pixel> {
         HashMap::new()
     }
     fn horizontal_blank(&mut self) {
