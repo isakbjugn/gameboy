@@ -83,9 +83,11 @@ impl Mode {
 
 #[derive(Clone)]
 pub struct Sprite {
+    y: u8,
     x: u8,
-    tile_row: u8,
-    sprite_number: u8,
+    tile_index: u8,
+    flags: u8,
+
 }
 
 pub struct Pixel {
@@ -235,10 +237,12 @@ impl PPU {
                     let y = y.wrapping_sub(16);
                     let x = x.wrapping_sub(8);
                     if self.scanline.wrapping_sub(y) < self.control.sprite_height() {
+                        // todo!("Tror egentlig ikke vi skal lagre Sprite slik de lagres i OAM, men heller x, tile_row og sprite_number")
                         Some(Sprite {
-                            x: x,
-                            tile_row: todo!(),
-                            sprite_number: tile_index,
+                            y,
+                            x,
+                            tile_index,
+                            flags,
                         })
                     } else {
                         None
@@ -282,7 +286,11 @@ impl PPU {
                 })
         }
         if self.control.contains(Control::sprite_enable) {
-            let sprite_pixels = self.fetch_sprites_pixels();
+            self.fetch_sprites_pixels().into_iter().for_each(|(key, Pixel { color, palette, background_priority })| {
+                if !(background_priority && bg_priority[key]) {
+                    pixels[key] = self.color_from_palette(color, palette);
+                }
+            })
         }
 
         self.frame_buffer[line_start..line_end].copy_from_slice(&pixels);
@@ -294,7 +302,7 @@ impl PPU {
         let mut pixels = HashMap::new();
         let y = self.scanline.wrapping_add(self.vertical_scroll);
         let row = (y / 8) as usize;
-        
+
         for i in 0..SCREEN_WIDTH {
             let x = (i as u8).wrapping_add(self.horizontal_scroll);
             let col = (x / 8) as usize;
@@ -305,11 +313,11 @@ impl PPU {
             let tile_data_low = self.video_ram[(tile_data_base + line) & 0x1fff];
             let tile_data_high = self.video_ram[(tile_data_base + line + 1) & 0x1fff];
             let color = self.pixel_color_from_bits(tile_data_low, tile_data_high, x);
-            
+
             pixels.insert(i, Pixel {
                 color,
                 palette: self.bg_palette,
-                background_priority: color != 0x00 
+                background_priority: color != 0x00
             });
         }
         pixels
@@ -337,7 +345,7 @@ impl PPU {
             let line = ((y % 8) * 2) as usize;
             let tile_data_low = self.video_ram[(tile_data_base + line) & 0x1fff];
             let tile_data_high = self.video_ram[(tile_data_base + line + 1) & 0x1fff];
-            let color = self.pixel_color_from_bits(tile_data_low, tile_data_high, x);
+            let color = self.pixel_color_from_bits(tile_data_low, tile_data_high, x as u8);
 
             pixels.insert(x, Pixel {
                 color,
@@ -349,7 +357,26 @@ impl PPU {
         pixels
     }
     fn fetch_sprites_pixels(&self) -> HashMap<usize, Pixel> {
-        HashMap::new()
+        let mut pixels = HashMap::new();
+        for sprite in self.sprite_buffer.iter() {
+            let tile_data_low = self.video_ram[sprite.tile_index as usize];
+            let tile_data_high = self.video_ram[sprite.tile_index as usize + 1];
+
+            for x in 0..8 {
+                if sprite.x + x < 8 { continue }
+                let color = self.pixel_color_from_bits(tile_data_low, tile_data_high, x);
+                let palette=  if sprite.flags >> 4 == 1 { self.obj_palette_1 } else { self.obj_palette_0 };
+
+                // todo!("Må ta hensyn til x-flip og y-flip i sprite.flags")
+
+                pixels.entry((sprite.x + x) as usize).or_insert(Pixel {
+                    color,
+                    palette,
+                    background_priority: sprite.flags >> 7 == 1,
+                });
+            }
+        }
+        pixels
     }
     fn horizontal_blank(&mut self) {
         self.t_cycles -= 204;
