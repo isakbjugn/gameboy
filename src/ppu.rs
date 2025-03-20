@@ -33,6 +33,24 @@ impl Control {
     fn sprite_height(&self) -> u8 {
         if self.tall_sprite_mode() { 16 } else { 8 }
     }
+    fn bg_map_mask(&self) -> usize {
+        match self.contains(Control::bg_tile_map_select) {
+            true => 0x1c00,
+            false => 0x1800,
+        }
+    }
+    fn window_map_mask(&self) -> usize {
+        match self.contains(Control::window_tile_map_select) {
+            true => 0x1c00,
+            false => 0x1800,
+        }
+    }
+    fn tile_data_base_from_tile_number(&self, tile_number: u8) -> usize {
+        match self.contains(Control::tile_data_select) {
+            true => tile_number as usize * 16,
+            false => 0x1000 + (tile_number as i8 as i16) as usize,
+        }
+    }
 }
 
 bitflags!(
@@ -250,14 +268,18 @@ impl PPU {
         let mut bg_priority = [false; SCREEN_WIDTH];
 
         if self.control.contains(Control::bg_window_enable) {
-            let background_pixels = self.fetch_background_pixels();
-            background_pixels.into_iter().for_each(|(key, Pixel { color, palette, background_priority })| {
-                pixels[key] = self.color_from_palette(color, palette);
-                bg_priority[key] = background_priority;
-            })
+            self.fetch_background_pixels().into_iter()
+                .for_each(|(key, Pixel { color, palette, background_priority })| {
+                    pixels[key] = self.color_from_palette(color, palette);
+                    bg_priority[key] = background_priority;
+                })
         }
         if self.control.contains(Control::window_enable) && self.window_y_position <= self.scanline {
-            let window_pixels = self.fetch_window_pixels();
+            self.fetch_window_pixels().into_iter()
+                .for_each(|(key, Pixel { color, palette, background_priority })| {
+                    pixels[key] = self.color_from_palette(color, palette);
+                    bg_priority[key] = background_priority;
+                })
         }
         if self.control.contains(Control::sprite_enable) {
             let sprite_pixels = self.fetch_sprites_pixels();
@@ -272,27 +294,23 @@ impl PPU {
         let mut pixels = HashMap::new();
         let y = self.scanline.wrapping_add(self.vertical_scroll);
         let row = (y / 8) as usize;
+        
         for i in 0..SCREEN_WIDTH {
             let x = (i as u8).wrapping_add(self.horizontal_scroll);
             let col = (x / 8) as usize;
 
-            let tile_number = match self.control.contains(Control::bg_tile_map_select) {
-                true => self.video_ram[(0x1c00 | (row * 32 + col)) & 0x1fff],
-                false => self.video_ram[(0x1800 | (row * 32 + col)) & 0x1fff],
-            };
+            let tile_number = self.video_ram[(self.control.bg_map_mask() | (row * 32 + col)) & 0x1fff];
+            let tile_data_base = self.control.tile_data_base_from_tile_number(tile_number);
             let line = ((y % 8) * 2) as usize;
-            let tile_data_low = match self.control.contains(Control::tile_data_select) {
-                true => self.video_ram[(tile_number as usize * 16 + line) & 0x1fff],
-                false => self.video_ram[(0x1000 + (tile_number as i8 as i16) as usize + line) & 0x1fff],
-            };
-            let tile_data_high = match self.control.contains(Control::tile_data_select) {
-                true => self.video_ram[(tile_number as usize * 16 + line + 1) & 0x1fff],
-                false => self.video_ram[(0x1000 + (tile_number as i8 as i16) as usize + line + 1) & 0x1fff],
-            };
-            // mest signifikante bit i en u8 er pikselen lengst til venstre. Må derfor snu x
-            let x_bit = 7 - (x % 8);
-            let color = (((tile_data_high >> x_bit) & 1) << 1) | ((tile_data_low >> x_bit) & 1);
-            pixels.insert(i, Pixel { color, palette: self.bg_palette, background_priority: color != 0x00  });
+            let tile_data_low = self.video_ram[(tile_data_base + line) & 0x1fff];
+            let tile_data_high = self.video_ram[(tile_data_base + line + 1) & 0x1fff];
+            let color = self.pixel_color_from_bits(tile_data_low, tile_data_high, x);
+            
+            pixels.insert(i, Pixel {
+                color,
+                palette: self.bg_palette,
+                background_priority: color != 0x00 
+            });
         }
         pixels
     }
@@ -301,8 +319,34 @@ impl PPU {
         let shift_amount = pixel_value * 2;
         (palette >> shift_amount) & 0b11
     }
+    fn pixel_color_from_bits(&self, tile_data_low: u8, tile_data_high: u8, x: u8) -> u8 {
+        // mest signifikante bit i en u8 er pikselen lengst til venstre. Må derfor snu x
+        let x_bit = 7 - (x % 8);
+        (((tile_data_high >> x_bit) & 1) << 1) | ((tile_data_low >> x_bit) & 1)
+    }
     fn fetch_window_pixels(&self) -> HashMap<usize, Pixel>   {
-        HashMap::new()
+        let mut pixels = HashMap::new();
+        let y = self.scanline - self.window_y_position;
+        let row = (y / 8) as usize;
+        let start_x = self.window_x_position.wrapping_sub(7) as usize;
+
+        for x in start_x..SCREEN_WIDTH {
+            let col = x / 8;
+            let tile_number = self.video_ram[(self.control.window_map_mask() | (row * 32 + col)) & 0x1fff];
+            let tile_data_base = self.control.tile_data_base_from_tile_number(tile_number);
+            let line = ((y % 8) * 2) as usize;
+            let tile_data_low = self.video_ram[(tile_data_base + line) & 0x1fff];
+            let tile_data_high = self.video_ram[(tile_data_base + line + 1) & 0x1fff];
+            let color = self.pixel_color_from_bits(tile_data_low, tile_data_high, x);
+
+            pixels.insert(x, Pixel {
+                color,
+                palette: self.bg_palette,
+                background_priority: color != 0x00,
+            });
+        }
+
+        pixels
     }
     fn fetch_sprites_pixels(&self) -> HashMap<usize, Pixel> {
         HashMap::new()
