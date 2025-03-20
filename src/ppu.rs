@@ -262,7 +262,7 @@ impl PPU {
         if self.control.contains(Control::window_enable) && self.window_y_position <= self.scanline {
             let window_pixels = self.fetch_window_pixels();
         }
-        
+
         self.frame_buffer[line_start..line_end].copy_from_slice(&pixels);
 
         self.t_cycles -= 172;
@@ -277,8 +277,8 @@ impl PPU {
             let col = (x / 8) as usize;
 
             let tile_number = match self.control.contains(Control::bg_tile_map_select) {
-                true => self.video_ram[(0x1c00 | (row * 32 + col)) & 0x1f],
-                false => self.video_ram[(0x1800 | (row * 32 + col)) & 0x1f],
+                true => self.video_ram[(0x1c00 | (row * 32 + col)) & 0x1fff],
+                false => self.video_ram[(0x1800 | (row * 32 + col)) & 0x1fff],
             };
             let line = ((y % 8) * 2) as usize;
             let tile_data_low = match self.control.contains(Control::tile_data_select) {
