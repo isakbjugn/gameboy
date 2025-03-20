@@ -246,11 +246,15 @@ impl PPU {
     fn draw(&mut self) {
         let line_start = SCREEN_WIDTH * self.scanline as usize;
         let line_end = line_start + SCREEN_WIDTH;
-        let pixels = &mut self.frame_buffer[line_start..line_end];
+        let mut pixels = [0; SCREEN_WIDTH];
         let mut bg_priority = [false; SCREEN_WIDTH];
 
         if self.control.contains(Control::bg_window_enable) {
             let background_pixels = self.fetch_background_pixels();
+            background_pixels.into_iter().for_each(|(key, Pixel { color, palette, background_priority })| {
+                pixels[key] = self.color_from_palette(color, palette);
+                bg_priority[key] = background_priority;
+            })
         }
         if self.control.contains(Control::sprite_enable) {
             let sprite_pixels = self.fetch_sprites_pixels();
@@ -258,6 +262,8 @@ impl PPU {
         if self.control.contains(Control::window_enable) && self.window_y_position <= self.scanline {
             let window_pixels = self.fetch_window_pixels();
         }
+        
+        self.frame_buffer[line_start..line_end].copy_from_slice(&pixels);
 
         self.t_cycles -= 172;
         self.mode = Mode::HorizontalBlank;
@@ -286,10 +292,14 @@ impl PPU {
             // mest signifikante bit i en u8 er pikselen lengst til venstre. Må derfor snu x
             let x_bit = 7 - (x % 8);
             let color = (((tile_data_high >> x_bit) & 1) << 1) | ((tile_data_low >> x_bit) & 1);
-            let palette = self.bg_palette;
-            pixels.insert(i, Pixel { color, palette, background_priority: color != 0x00  });
+            pixels.insert(i, Pixel { color, palette: self.bg_palette, background_priority: color != 0x00  });
         }
         pixels
+    }
+    fn color_from_palette(&self, pixel: u8, palette: u8) -> u8 {
+        let pixel_value = pixel & 0b11;
+        let shift_amount = pixel_value * 2;
+        (palette >> shift_amount) & 0b11
     }
     fn fetch_sprites_pixels(&self) -> HashMap<usize, Pixel> {
         HashMap::new()
