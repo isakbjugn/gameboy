@@ -119,7 +119,7 @@ impl CPU {
             0x6d => { 1 }
             0x6e => { self.registers.l = self.bus.read_byte(self.registers.read_16(HL)); 2 }
             0x6f => { self.registers.l = self.registers.a; 1 }
-            _ => todo!("Instruksjonen er ikke støttet!")
+            _ => panic!("Instruksjon ikke støttet: 0x{:2x}", opcode)
         }
     }
 }

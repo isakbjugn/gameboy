@@ -214,10 +214,10 @@ impl PPU {
     pub fn read_frame_buffer(&mut self) -> &[u8] {
         &self.frame_buffer
     }
-    pub fn cycle(&mut self, m_cycles: u32) {
+    pub fn cycle(&mut self, t_cycles: u32) {
         if !self.control.lcd_on() { return }
-
-        self.t_cycles += m_cycles * 4;
+        
+        self.t_cycles += t_cycles;
 
         loop {
             match self.mode {

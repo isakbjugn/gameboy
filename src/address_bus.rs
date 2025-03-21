@@ -33,6 +33,10 @@ impl AddressBus {
             timer: Timer::new(),
         }
     }
+    pub fn cycle(&mut self, t_cycles: u32) {
+        self.timer.cycle(t_cycles);
+        self.ppu.cycle(t_cycles);
+    }
     pub fn read_byte(&self, address: u16) -> u8 {
         match address {
             0x0000 ..= 0x00ff if self.bootrom.is_active() => self.bootrom[address],

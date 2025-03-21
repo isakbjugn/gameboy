@@ -144,9 +144,23 @@ fn run_game_boy(mut game_boy: Box<GameBoy>, sender: SyncSender<Vec<u8>>, receive
     use std::time::{Duration, Instant};
 
     let frame_duration = Duration::from_millis(16);
+    let cpu_cycles_per_frame = (4194204f64 / 1000.0 * 16.0).round() as u32;
+    let mut cpu_cycles = 0;
     
-    loop {
+    'emulate: loop {
         let start = Instant::now();
+        
+        while cpu_cycles < cpu_cycles_per_frame {
+            cpu_cycles += game_boy.emulate();
+            let data = game_boy.updated_frame_buffer()
+                .unwrap_or_else(|| vec![0; SCREEN_WIDTH as usize * SCREEN_HEIGHT as usize * 3]);
+            if let Err(TrySendError::Disconnected(..)) = sender.try_send(data) {
+                info!("Game Boy mistet forbindelse med skjermen!");
+                break 'emulate;
+            }
+        }
+        
+        cpu_cycles -= cpu_cycles_per_frame;
         
         let data = game_boy.updated_frame_buffer()
             .unwrap_or_else(|| vec![0; SCREEN_WIDTH as usize * SCREEN_HEIGHT as usize * 3]);
@@ -154,14 +168,16 @@ fn run_game_boy(mut game_boy: Box<GameBoy>, sender: SyncSender<Vec<u8>>, receive
             info!("Game Boy mistet forbindelse med skjermen!");
             break
         }
-
-        match receiver.try_recv() {
-            Ok(GameBoyEvent::KeyDown(key)) => game_boy.key_down(key),
-            Ok(GameBoyEvent::KeyUp(key)) => game_boy.key_up(key),
-            Err(TryRecvError::Empty) => (),
-            Err(TryRecvError::Disconnected) => break,
+        
+        'joypad_input: loop {
+            match receiver.try_recv() {
+                Ok(GameBoyEvent::KeyDown(key)) => game_boy.key_down(key),
+                Ok(GameBoyEvent::KeyUp(key)) => game_boy.key_up(key),
+                Err(TryRecvError::Empty) => break 'joypad_input,
+                Err(TryRecvError::Disconnected) => break 'emulate,
+            }
         }
-
+        
         thread::sleep(frame_duration - start.elapsed());
     }
 }

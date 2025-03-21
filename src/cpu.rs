@@ -23,8 +23,10 @@ impl CPU {
             is_halted: false,
         })
     }
-    fn cycle(&mut self) -> u32 {
-        self.call()
+    pub fn cycle(&mut self) -> u32 {
+        let m_cycles = self.call();
+        self.bus.cycle(m_cycles * 4);
+        m_cycles
     }
     fn fetch_byte(&mut self) -> u8 {
         let byte = self.bus.read_byte(self.registers.pc);
