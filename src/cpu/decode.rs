@@ -122,6 +122,7 @@ impl CPU {
             
             0xaf => { self.alu_xor(self.registers.a); 1 }
             0xcb => { self.call_cb() }
+            0xfb => { self.interrupt_master_enable.ei(); 1 }
             _ => panic!("Instruksjon ikke støttet: 0x{:2x}", opcode)
         }
     }

@@ -2,15 +2,18 @@ mod decode;
 mod execute;
 mod flags_register;
 mod registers;
+mod interrupt_master_enable;
 
 use crate::cartridge::Cartridge;
 use crate::address_bus::AddressBus;
 use registers::Registers;
+use crate::cpu::interrupt_master_enable::InterruptMasterEnable;
 
 pub struct CPU {
     registers: Registers,
     pub bus: AddressBus,
     is_halted: bool,
+    interrupt_master_enable: InterruptMasterEnable,
 }
 
 impl CPU {
@@ -21,9 +24,11 @@ impl CPU {
             registers: Registers::new(),
             bus: AddressBus::new(cartridge),
             is_halted: false,
+            interrupt_master_enable: InterruptMasterEnable::new(),
         })
     }
     pub fn cycle(&mut self) -> u32 {
+        
         let m_cycles = self.call();
         self.bus.cycle(m_cycles * 4);
         m_cycles
