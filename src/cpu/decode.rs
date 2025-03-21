@@ -121,7 +121,14 @@ impl CPU {
             0x6f => { self.registers.l = self.registers.a; 1 }
             
             0xaf => { self.alu_xor(self.registers.a); 1 }
+            0xcb => { self.call_cb() }
             _ => panic!("Instruksjon ikke støttet: 0x{:2x}", opcode)
+        }
+    }
+    fn call_cb(&mut self) -> u32 {
+        let opcode = self.fetch_byte();
+        match opcode {
+            _ => panic!("CB-instruksjon ikke støttet: 0x{:2x}", opcode)
         }
     }
 }
