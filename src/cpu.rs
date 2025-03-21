@@ -28,7 +28,6 @@ impl CPU {
         })
     }
     pub fn cycle(&mut self) -> u32 {
-        
         let m_cycles = self.call();
         self.bus.cycle(m_cycles * 4);
         m_cycles
@@ -42,5 +41,12 @@ impl CPU {
         let word = self.bus.read_word(self.registers.pc);
         self.registers.pc = self.registers.pc.wrapping_add(2);
         word
+    }
+    fn pop_sp(&mut self) -> u16 {
+        let lower_byte = self.bus.read_byte(self.registers.sp);
+        self.registers.sp = self.registers.sp.wrapping_add(1);
+        let upper_byte = self.bus.read_byte(self.registers.sp);
+        self.registers.sp = self.registers.sp.wrapping_add(1);
+        u16::from_le_bytes([lower_byte, upper_byte])
     }
 }

@@ -90,7 +90,7 @@ impl AddressBus {
             0x01 ..= 0x02 => panic!("Serial transfer not implemented"),
             0x04 ..= 0x07 => self.timer.write_byte(address, byte),
             0x0f => self.interrupt_flag = byte,
-            0x10 ..= 0x26 => panic!("Audio not implemented"),
+            0x10 ..= 0x26 => (), // Audio not implemented
             0x30 ..= 0x3f => panic!("Wave pattern not implemented"),
             0x40 ..= 0x45 | 0x47 ..= 0x4b => self.ppu.write_byte(address, byte),
             0x46 => self.oam_dma(byte),
