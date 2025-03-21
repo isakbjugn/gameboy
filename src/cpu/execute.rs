@@ -144,4 +144,9 @@ impl CPU {
         self.registers.f.half_carry = false;
         self.registers.f.carry = false;
     }
+    pub fn alu_bit(&mut self, value: u8, bit: u8) {
+        self.registers.f.zero = value & (1 << bit) != 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = true;
+    }
 }

@@ -128,6 +128,7 @@ impl CPU {
     fn call_cb(&mut self) -> u32 {
         let opcode = self.fetch_byte();
         match opcode {
+            0x7c => { self.alu_bit(self.registers.h, 7); 2 }
             _ => panic!("CB-instruksjon ikke støttet: 0x{:2x}", opcode)
         }
     }
