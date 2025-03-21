@@ -137,4 +137,11 @@ impl CPU {
         let decremented_value = self.alu_dec(self.bus.read_byte(address));
         self.bus.write_byte(address, decremented_value);
     }
+    pub fn alu_xor(&mut self, value: u8) {
+        self.registers.a ^= value;
+        self.registers.f.zero = self.registers.a == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = false;
+        self.registers.f.carry = false;
+    }
 }
