@@ -122,6 +122,7 @@ impl CPU {
             0x6e => { self.registers.l = self.bus.read_byte(self.registers.read_16(HL)); 2 }
             0x6f => { self.registers.l = self.registers.a; 1 }
             
+            0x76 => { self.is_halted = true; 1 }
             0xaf => { self.alu_xor(self.registers.a); 1 }
             0xcb => { self.call_cb() }
             0xe1 => { let value = self.pop_sp(); self.registers.write_16(HL, value); 3 }
