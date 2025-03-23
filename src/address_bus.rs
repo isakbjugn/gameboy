@@ -1,3 +1,4 @@
+use log::info;
 use crate::bootrom::Bootrom;
 use crate::cartridge::Cartridge;
 use crate::joypad::Joypad;
@@ -47,6 +48,7 @@ impl AddressBus {
     }
     pub fn read_byte(&self, address: u16) -> u8 {
         match address {
+            //0x00ff => panic!("Siste instruksjon i bootrom"),
             0x0000 ..= 0x00ff if self.bootrom.is_active() => self.bootrom[address],
             0x0000 ..= 0x7fff => self.cartridge.mbc.read_rom(address),
             0x8000 ..= 0x9fff => self.ppu.video_ram[address as usize & 0x1FFF],
@@ -79,7 +81,7 @@ impl AddressBus {
     pub fn write_byte(&mut self, address: u16, byte: u8) {
         match address {
             0x0000 ..= 0x00ff if self.bootrom.is_active() => (),
-            0x0000 ..= 0x7fff => panic!("MBC0 is read-only"),
+            0x0000 ..= 0x7fff => { info!("MBC0 is read-only. Tried writing at {:#06x}", address); },
             0x8000 ..= 0x9fff => self.ppu.video_ram[address as usize  & 0x1FFF] = byte,
             0xa000 ..= 0xbfff => panic!("MBC0 is read-only"),
             0xc000 ..= 0xcfff | 0xe000 ..= 0xefff => self.work_ram[address as usize & 0x1fff] = byte,
@@ -95,7 +97,7 @@ impl AddressBus {
     pub fn io_write_byte(&mut self, address: u8, byte: u8) {
         match address {
             0x00 => self.joypad.write_byte(byte),
-            0x01 ..= 0x02 => panic!("Serial transfer not implemented"),
+            0x01 ..= 0x02 => self.write_serial(byte),
             0x04 ..= 0x07 => self.timer.write_byte(address, byte),
             0x0f => self.interrupt_flag = byte,
             0x10 ..= 0x26 => (), // Audio not implemented
@@ -114,6 +116,13 @@ impl AddressBus {
     pub fn write_word(&mut self, address: u16, word: u16) {
         self.write_byte(address, (word & 0xff) as u8);
         self.write_byte(address + 1, (word >> 8) as u8);
+    }
+    fn write_serial(&self, byte: u8) {
+        if cfg!(feature = "test") {
+            if let Ok(s) = String::from_utf8(vec![byte]) { print!("{}", s); }
+        } else {
+            panic!("Serial transfer not implemented");
+        }
     }
     pub fn oam_dma(&mut self, value: u8) {
         let base = (value as u16) << 8;

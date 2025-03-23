@@ -11,7 +11,7 @@ impl Bootrom {
     pub fn new() -> Self {
         Self {
             data: *include_bytes!("../dmg_boot.bin"),
-            active: true
+            active: if cfg!(feature = "test") { false } else { true },
         }
     }
     pub fn is_active(&self) -> bool {

@@ -50,7 +50,7 @@ impl Registers {
             },
             h: 0,
             l: 0,
-            pc: 0,
+            pc: if cfg!(feature = "test") { 0x0100 } else { 0 },
             sp: 0,
         }
     }

@@ -25,6 +25,17 @@ impl CPU {
         let decremented_value = self.alu_dec(value);
         self.registers.write_8(reg, decremented_value);
     }
+    pub fn rl(&mut self, reg: Reg8) {
+        let previous_carry = self.registers.f.carry;
+        let (result, carry) = self.registers.read_8(reg).overflowing_shl(1);
+        let result = result | (if previous_carry { 1 } else { 0 });
+        self.registers.write_8(reg, result);
+
+        self.registers.f.zero = result == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = false;
+        self.registers.f.carry = carry;
+    }
     pub fn rlca(&mut self) {
         self.registers.f.carry = (self.registers.a & 0x80) != 0;
         self.registers.a = self.registers.a.rotate_left(1);
@@ -52,14 +63,8 @@ impl CPU {
         self.registers.f.carry = carry;
     }
     pub fn rla(&mut self) {
-        let previous_carry = self.registers.f.carry;
-        let (result, carry) = self.registers.a.overflowing_shl(1);
-        self.registers.a = result | (if previous_carry { 1 } else { 0 });
-        
+        self.rl(Reg8::A);
         self.registers.f.zero = false;
-        self.registers.f.subtract = false;
-        self.registers.f.half_carry = false;
-        self.registers.f.carry = carry;
     }
     pub fn rra(&mut self) {
         let previous_carry = self.registers.f.carry;

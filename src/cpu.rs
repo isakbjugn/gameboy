@@ -56,8 +56,8 @@ impl CPU {
             panic!("Ugyldig interrupt-verdi")
         }
         self.bus.interrupt_flag &= !(1 << highest_priority_bit);
-        self.push_sp(self.registers.pc);
-        
+        self.push_stack(self.registers.pc);
+
         self.registers.pc = match highest_priority_bit {
             0 => 0x0040, // VBLANK
             1 => 0x0048, // LCD STAT
@@ -66,7 +66,7 @@ impl CPU {
             4 => 0x0060, // Joypad
             _ => unreachable!()
         };
-        
+
         5
     }
     fn fetch_byte(&mut self) -> u8 {
@@ -79,13 +79,13 @@ impl CPU {
         self.registers.pc = self.registers.pc.wrapping_add(2);
         word
     }
-    fn pop_sp(&mut self) -> u16 {
+    fn pop_stack(&mut self) -> u16 {
         let value = self.bus.read_word(self.registers.sp);
         self.registers.sp = self.registers.sp.wrapping_add(2);
         value
     }
-    fn push_sp(&mut self, value: u16) {
+    fn push_stack(&mut self, value: u16) {
         self.registers.sp = self.registers.sp.wrapping_sub(2);
         self.bus.write_word(self.registers.sp, value);
-    } 
+    }
 }

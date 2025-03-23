@@ -57,7 +57,7 @@ fn main() -> Result<(), Error> {
     let window = {
         let size = LogicalSize::new(SCREEN_WIDTH as f64, SCREEN_HEIGHT as f64);
         WindowBuilder::new()
-            .with_title(game_boy.title())
+            .with_title(if cfg!(feature = "test") { "Test mode".to_string() } else { game_boy.title() })
             .with_inner_size(size)
             .with_min_inner_size(size)
             .build(&event_loop)

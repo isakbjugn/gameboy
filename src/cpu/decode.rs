@@ -2,7 +2,7 @@ use log::debug;
 use crate::cpu::CPU;
 use crate::cpu::execute::Address;
 use crate::cpu::registers::Reg8::{A, B, C, D, E, H, L};
-use crate::cpu::registers::Reg16::{BC, DE, HL, SP};
+use crate::cpu::registers::Reg16::{AF, BC, DE, HL, SP};
 
 impl CPU {
     pub fn call(&mut self) -> u32 {
@@ -123,10 +123,22 @@ impl CPU {
             0x6f => { self.registers.l = self.registers.a; 1 }
             
             0x76 => { self.is_halted = true; 1 }
+            0x77 => { self.bus.write_byte(self.registers.read_16(HL), self.registers.a); 2 }
             0xaf => { self.alu_xor(self.registers.a); 1 }
+            0xc0 => { if !self.registers.f.zero { self.registers.pc = self.pop_stack(); 5 } else { 2 } }
+            0xc1 => { let value = self.pop_stack(); self.registers.write_16(BC, value); 3 }
+            0xc5 => { self.push_stack(self.registers.read_16(BC)); 4}
+            0xc9 => { self.registers.pc = self.pop_stack(); 4 }
             0xcb => { self.call_cb() }
-            0xe1 => { let value = self.pop_sp(); self.registers.write_16(HL, value); 3 }
+            0xcc => { if self.registers.f.zero { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 } else { 3 } }
+            0xcd => { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 }
+            0xdc => { if self.registers.f.carry { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 } else { 3 } }
+            0xe0 => { let address = 0xff00 | self.fetch_byte() as u16; self.bus.write_byte(address, self.registers.a); 3 }
+            0xe1 => { let value = self.pop_stack(); self.registers.write_16(HL, value); 3 }
+            0xe2 => { self.bus.write_byte(0xff00 | self.registers.c as u16, self.registers.a); 2 }
+            0xf5 => { self.push_stack(self.registers.read_16(AF)); 4 }
             0xfb => { self.interrupt_master_enable.ei(); 1 }
+            0xff => { self.push_stack(self.registers.pc); self.registers.pc = 0x38; 4 }
             _ => panic!("Instruksjon ikke støttet: 0x{:2x}", opcode)
         }
     }
@@ -134,6 +146,7 @@ impl CPU {
         let opcode = self.fetch_byte();
         debug!("Dekoder nå opkode {:#04x} (etter CB-prefiks)", opcode);
         match opcode {
+            0x11 => { self.rl(C); 2 }
             0x7c => { self.alu_bit(self.registers.h, 7); 2 }
             _ => panic!("CB-instruksjon ikke støttet: 0x{:2x}", opcode)
         }

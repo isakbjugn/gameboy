@@ -13,3 +13,6 @@ pixels = "0.15.0"
 simplelog = "0.12.2"
 winit = "0.29"
 winit_input_helper = "0.16.0"
+
+[features]
+test = []
