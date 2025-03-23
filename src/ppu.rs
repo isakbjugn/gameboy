@@ -12,14 +12,14 @@ const SCANLINES: u8 = 154;
 
 bitflags!(
     pub struct Control: u8 {
-        const lcd_enable = 0x8;
-        const window_tile_map_select = 0x7;
-        const window_enable = 0x8;
-        const tile_data_select = 0x5;
-        const bg_tile_map_select = 0x4;
-        const sprite_size = 0x3;
-        const sprite_enable = 0x2;
-        const bg_window_enable = 0x1;
+        const lcd_enable = 1 << 7;
+        const window_tile_map_select = 1 << 6;
+        const window_enable = 1 << 5;
+        const tile_data_select = 1 << 4;
+        const bg_tile_map_select = 1 << 3;
+        const sprite_size = 1 << 2;
+        const sprite_enable = 1 << 1;
+        const bg_window_enable = 1;
     }
 );
 
@@ -55,11 +55,11 @@ impl Control {
 
 bitflags!(
     struct Status: u8 {
-        const lyc_select = 0x7;
-        const mode_2_int_select = 0x6;
-        const mode_1_int_select = 0x5;
-        const mode_0_int_select = 0x4;
-        const lyc_equals_ly = 0x3;
+        const lyc_select = 1 << 6;
+        const mode_2_int_select = 1 << 5;
+        const mode_1_int_select = 1 << 4;
+        const mode_0_int_select = 1 << 3;
+        const lyc_equals_ly = 1 << 2;
     }
 );
 
