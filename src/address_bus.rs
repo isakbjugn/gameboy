@@ -12,8 +12,8 @@ pub struct AddressBus {
     pub ppu: PPU,
     work_ram: [u8; WORK_RAM_SIZE],
     high_ram: [u8; HIGH_RAM_SIZE],
-    interrupt_enable_register: u8,
-    interrupt_flag: u8,
+    pub interrupt_enable_register: u8,
+    pub interrupt_flag: u8,
     pub joypad: Joypad,
     bootrom: Bootrom,
     timer: Timer,
@@ -35,7 +35,15 @@ impl AddressBus {
     }
     pub fn cycle(&mut self, t_cycles: u32) {
         self.timer.cycle(t_cycles);
+        self.interrupt_flag |= self.timer.interrupt;
+        self.timer.interrupt = 0;
+        
+        self.interrupt_flag |= self.joypad.interrupt;
+        self.joypad.interrupt = 0;
+        
         self.ppu.cycle(t_cycles);
+        self.interrupt_flag |= self.ppu.interrupt;
+        self.ppu.interrupt = 0;
     }
     pub fn read_byte(&self, address: u16) -> u8 {
         match address {

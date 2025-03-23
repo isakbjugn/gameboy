@@ -7,7 +7,7 @@ pub struct Timer {
     timer_modulo: u8,
     enable: bool,
     step: u32,
-    interrupt: u8,
+    pub interrupt: u8,
 }
 
 impl Timer {
@@ -36,7 +36,7 @@ impl Timer {
                 self.timer = self.divider.wrapping_add(1);
                 if self.timer == 0 {
                     self.timer = self.timer_modulo;
-                    self.interrupt |= 0x4;
+                    self.interrupt |= 1 << 2;
                 }
                 self.internal_counter -= self.step;
             }

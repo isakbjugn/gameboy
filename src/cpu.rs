@@ -28,9 +28,46 @@ impl CPU {
         })
     }
     pub fn cycle(&mut self) -> u32 {
-        let m_cycles = self.call();
-        self.bus.cycle(m_cycles * 4);
-        m_cycles
+        let interrupts_handle_time = self.handle_interrupts();
+        if interrupts_handle_time > 0 {
+            return interrupts_handle_time
+        }
+        if self.is_halted {
+            return 1
+        }
+
+        self.call()
+    }
+    fn handle_interrupts(&mut self) -> u32 {
+        let interrupt_master_enable = self.interrupt_master_enable.read();
+        if !interrupt_master_enable && !self.is_halted {
+            return 0
+        }
+        let interrupts = self.bus.interrupt_enable_register & self.bus.interrupt_flag;
+        if interrupts == 0 {
+            return 0
+        }
+
+        self.is_halted = false;
+        if !interrupt_master_enable { return 0 }
+
+        let highest_priority_bit = interrupts.trailing_zeros();
+        if highest_priority_bit > 4 {
+            panic!("Ugyldig interrupt-verdi")
+        }
+        self.bus.interrupt_flag &= !(1 << highest_priority_bit);
+        self.push_sp(self.registers.pc);
+        
+        self.registers.pc = match highest_priority_bit {
+            0 => 0x0040, // VBLANK
+            1 => 0x0048, // LCD STAT
+            2 => 0x0050, // Timer
+            3 => 0x0058, // Serial
+            4 => 0x0060, // Joypad
+            _ => unreachable!()
+        };
+        
+        5
     }
     fn fetch_byte(&mut self) -> u8 {
         let byte = self.bus.read_byte(self.registers.pc);
@@ -43,10 +80,12 @@ impl CPU {
         word
     }
     fn pop_sp(&mut self) -> u16 {
-        let lower_byte = self.bus.read_byte(self.registers.sp);
-        self.registers.sp = self.registers.sp.wrapping_add(1);
-        let upper_byte = self.bus.read_byte(self.registers.sp);
-        self.registers.sp = self.registers.sp.wrapping_add(1);
-        u16::from_le_bytes([lower_byte, upper_byte])
+        let value = self.bus.read_word(self.registers.sp);
+        self.registers.sp = self.registers.sp.wrapping_add(2);
+        value
     }
+    fn push_sp(&mut self, value: u16) {
+        self.registers.sp = self.registers.sp.wrapping_sub(2);
+        self.bus.write_word(self.registers.sp, value);
+    } 
 }

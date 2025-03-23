@@ -114,7 +114,8 @@ pub struct PPU {
     oam: [u8; OAM_SIZE],
     updated: bool,
     t_cycles: u32,
-    sprite_buffer: ArrayVec<Sprite, 10>
+    sprite_buffer: ArrayVec<Sprite, 10>,
+    pub interrupt: u8,
 }
 
 impl PPU {
@@ -138,6 +139,7 @@ impl PPU {
             updated: false,
             t_cycles: 0,
             sprite_buffer: ArrayVec::new(),
+            interrupt: 0,
         }
     }
     pub fn read_byte(&self, address: u8) -> u8 {
@@ -382,7 +384,10 @@ impl PPU {
         self.t_cycles -= 204;
         self.scanline += 1;
         self.mode = match self.scanline >= 144 {
-            true => Mode::VerticalBlank,
+            true => {
+                self.interrupt |= 1;
+                Mode::VerticalBlank
+            },
             false => Mode::OAMScan,
         };
     }

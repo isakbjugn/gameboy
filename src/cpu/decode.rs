@@ -1,3 +1,4 @@
+use log::debug;
 use crate::cpu::CPU;
 use crate::cpu::execute::Address;
 use crate::cpu::registers::Reg8::{A, B, C, D, E, H, L};
@@ -6,6 +7,7 @@ use crate::cpu::registers::Reg16::{BC, DE, HL, SP};
 impl CPU {
     pub fn call(&mut self) -> u32 {
         let opcode = self.fetch_byte();
+        debug!("Dekoder nå opkode {:#04x}", opcode);
         match opcode {
             0x00 => { 1 }
             0x01 => { let word = self.fetch_word(); self.registers.write_16(BC, word); 3 }
@@ -122,13 +124,14 @@ impl CPU {
             
             0xaf => { self.alu_xor(self.registers.a); 1 }
             0xcb => { self.call_cb() }
-            0xe2 => { let value = self.pop_sp(); self.registers.write_16(HL, value); 3 }
+            0xe1 => { let value = self.pop_sp(); self.registers.write_16(HL, value); 3 }
             0xfb => { self.interrupt_master_enable.ei(); 1 }
             _ => panic!("Instruksjon ikke støttet: 0x{:2x}", opcode)
         }
     }
     fn call_cb(&mut self) -> u32 {
         let opcode = self.fetch_byte();
+        debug!("Dekoder nå opkode {:#04x} (etter CB-prefiks)", opcode);
         match opcode {
             0x7c => { self.alu_bit(self.registers.h, 7); 2 }
             _ => panic!("CB-instruksjon ikke støttet: 0x{:2x}", opcode)
