@@ -59,7 +59,6 @@ bitflags!(
         const mode_2_int_select = 1 << 5;
         const mode_1_int_select = 1 << 4;
         const mode_0_int_select = 1 << 3;
-        const lyc_equals_ly = 1 << 2;
     }
 );
 
@@ -145,7 +144,7 @@ impl PPU {
     pub fn read_byte(&self, address: u8) -> u8 {
         match address {
             0x40 => self.control.bits(),
-            0x41 => self.status.bits() | self.mode.bits(),
+            0x41 => self.read_status(),
             0x42 => self.vertical_scroll,
             0x43 => self.horizontal_scroll,
             0x44 => self.scanline,
@@ -166,7 +165,7 @@ impl PPU {
             0x42 => self.vertical_scroll = value,
             0x43 => self.horizontal_scroll = value,
             0x44 => panic!("scanline is read-only"),
-            0x45 => self.scanline_compare = value,
+            0x45 => { self.scanline_compare = value; self.check_scanline_interrupt() },
             0x47 => self.bg_palette = value,
             0x48 => self.obj_palette_0 = value,
             0x49 => self.obj_palette_1 = value,
@@ -189,8 +188,14 @@ impl PPU {
         self.frame_buffer.iter_mut().for_each(|value| *value = 0xff);
         self.updated = true;
     }
+    fn read_status(&self) -> u8 {
+        self.status.bits()
+            | if self.scanline == self.scanline_compare { 0x4 } else { 0 }
+            | self.mode.bits()
+    }
     fn set_status(&mut self, value: u8) {
-        self.status = Status::from_bits(value).unwrap();
+        self.status = Status::from_bits(value & 0b01111000).unwrap();
+        // self.lyc_equals_ly is read-only
         // self.mode is read-only
     }
     pub fn read_oam(&self, address: u16) -> u8 {
@@ -386,6 +391,7 @@ impl PPU {
     fn horizontal_blank(&mut self) {
         self.t_cycles -= 204;
         self.scanline += 1;
+        self.check_scanline_interrupt();
         self.mode = match self.scanline >= 144 {
             true => {
                 self.interrupt |= 1;
@@ -396,6 +402,11 @@ impl PPU {
             },
             false => Mode::OAMScan,
         };
+    }
+    fn check_scanline_interrupt(&mut self) {
+        if self.status.contains(Status::lyc_select) && self.scanline == self.scanline_compare {
+            self.interrupt |= 1 << 1;
+        }
     }
     fn vertical_blank(&mut self) {
         self.t_cycles -= 456;
