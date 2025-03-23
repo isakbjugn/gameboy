@@ -66,8 +66,8 @@ bitflags!(
 pub enum Mode {
     HorizontalBlank,
     VerticalBlank,
-    Drawing,
     OAMScan,
+    Drawing,
 }
 
 impl Mode {
@@ -75,8 +75,8 @@ impl Mode {
         match self {
             Mode::HorizontalBlank => 0,
             Mode::VerticalBlank => 1,
-            Mode::Drawing => 2,
-            Mode::OAMScan => 3,
+            Mode::OAMScan => 2,
+            Mode::Drawing => 3,
         }
     }
 }
@@ -299,6 +299,9 @@ impl PPU {
 
         self.t_cycles -= 172;
         self.mode = Mode::HorizontalBlank;
+        if self.status.contains(Status::mode_0_int_select) {
+            self.interrupt |= 1 << 1;
+        }
     }
     fn fetch_background_pixels(&self) -> HashMap<usize, Pixel>  {
         let mut pixels = HashMap::new();
@@ -386,6 +389,9 @@ impl PPU {
         self.mode = match self.scanline >= 144 {
             true => {
                 self.interrupt |= 1;
+                if self.status.contains(Status::mode_1_int_select) {
+                    self.interrupt |= 1 << 1;
+                }
                 Mode::VerticalBlank
             },
             false => Mode::OAMScan,
@@ -397,6 +403,9 @@ impl PPU {
         self.scanline %= SCANLINES;
         if self.scanline == 0 {
             self.mode = Mode::OAMScan;
+            if self.status.contains(Status::mode_2_int_select) {
+                self.interrupt |= 1 << 1;
+            }
         }
     }
 }
