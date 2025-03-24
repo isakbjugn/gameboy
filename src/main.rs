@@ -178,7 +178,10 @@ fn run_game_boy(mut game_boy: Box<GameBoy>, sender: SyncSender<Vec<u8>>, receive
             }
         }
         
-        thread::sleep(frame_duration - start.elapsed());
+        let time_elapsed = start.elapsed();
+        if frame_duration > time_elapsed {
+            thread::sleep(frame_duration - time_elapsed);
+        }
     }
 }
 
