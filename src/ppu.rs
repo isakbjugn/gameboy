@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use arrayvec::ArrayVec;
 use bitflags::bitflags;
 use itertools::Itertools;
+use log::{debug, info};
 
 const SCREEN_WIDTH: usize = 160;
 const SCREEN_HEIGHT: usize = 144;
@@ -164,7 +165,7 @@ impl PPU {
             0x41 => self.set_status(value),
             0x42 => self.vertical_scroll = value,
             0x43 => self.horizontal_scroll = value,
-            0x44 => panic!("scanline is read-only"),
+            0x44 => debug!("scanline is read-only"),
             0x45 => { self.scanline_compare = value; self.check_scanline_interrupt() },
             0x47 => self.bg_palette = value,
             0x48 => self.obj_palette_0 = value,
@@ -373,7 +374,9 @@ impl PPU {
             let tile_data_high = self.video_ram[sprite.tile_index as usize + 1];
 
             for x in 0..8 {
-                if sprite.x + x < 8 { continue }
+                let (sprite_x, overflow) = sprite.x.overflowing_add(x);
+                if sprite_x < 8 || sprite_x > SCREEN_WIDTH as u8 || overflow { continue }
+                
                 let color = self.pixel_color_from_bits(tile_data_low, tile_data_high, x);
                 let palette=  if sprite.flags >> 4 == 1 { self.obj_palette_1 } else { self.obj_palette_0 };
 
