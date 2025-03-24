@@ -41,7 +41,7 @@ impl CPU {
             0x1d => { self.dec(E); 1 }
             0x1e => { self.registers.e = self.fetch_byte(); 2 }
             0x1f => { self.rra(); 1 }
-            0x20 => { if !self.registers.f.zero { self.jr(); 3 } else { 2 } }
+            0x20 => { if !self.registers.f.zero { self.jr(); 3 } else { self.registers.pc += 1; 2 } }
             0x21 => { let word = self.fetch_word(); self.registers.write_16(HL, word); 3 }
             0x22 => { self.bus.write_byte(self.registers.hli(), self.registers.a); 2 }
             0x23 => { self.inc_16(HL); 2 }
@@ -49,7 +49,7 @@ impl CPU {
             0x25 => { self.dec(H); 1 }
             0x26 => { self.registers.h = self.fetch_byte(); 2 }
             0x27 => { self.daa(); 1 }
-            0x28 => { if self.registers.f.zero { self.jr(); 3 } else { 2 } }
+            0x28 => { if self.registers.f.zero { self.jr(); 3 } else { self.registers.pc += 1; 2 } }
             0x29 => { self.add_16(HL); 2 }
             0x2a => { self.registers.a = self.bus.read_byte(self.registers.hli()); 2 }
             0x2b => { self.dec_16(HL); 2 }
@@ -57,7 +57,7 @@ impl CPU {
             0x2d => { self.dec(L); 1 }
             0x2e => { self.registers.l = self.fetch_byte(); 2 }
             0x2f => { self.cpl(); 1 }
-            0x30 => { if !self.registers.f.carry { self.jr(); 3 } else { 2 } }
+            0x30 => { if !self.registers.f.carry { self.jr(); 3 } else { self.registers.pc += 1; 2 } }
             0x31 => { self.registers.sp = self.fetch_word(); 3 }
             0x32 => { self.bus.write_byte(self.registers.hld(), self.registers.a); 2 }
             0x33 => { self.inc_16(SP); 2 }
@@ -65,7 +65,7 @@ impl CPU {
             0x35 => { self.dec_addr(Address::HL); 3 }
             0x36 => { let d8 = self.fetch_byte(); self.bus.write_byte(self.registers.read_16(HL), d8); 3 }
             0x37 => { self.registers.f.scf(); 1 }
-            0x38 => { if self.registers.f.carry { self.jr(); 3 } else { 2 } }
+            0x38 => { if self.registers.f.carry { self.jr(); 3 } else { self.registers.pc += 1; 2 } }
             0x39 => { self.add_16(SP); 2 }
             0x3a => { self.registers.a = self.bus.read_byte(self.registers.hld()); 2 }
             0x3b => { self.dec_16(SP); 2 }
@@ -121,23 +121,129 @@ impl CPU {
             0x6d => { 1 }
             0x6e => { self.registers.l = self.bus.read_byte(self.registers.read_16(HL)); 2 }
             0x6f => { self.registers.l = self.registers.a; 1 }
-            
+            0x70 => { self.bus.write_byte(self.registers.read_16(HL), self.registers.b); 2 }
+            0x71 => { self.bus.write_byte(self.registers.read_16(HL), self.registers.c); 2 }
+            0x72 => { self.bus.write_byte(self.registers.read_16(HL), self.registers.d); 2 }
+            0x73 => { self.bus.write_byte(self.registers.read_16(HL), self.registers.e); 2 }
+            0x74 => { self.bus.write_byte(self.registers.read_16(HL), self.registers.h); 2 }
+            0x75 => { self.bus.write_byte(self.registers.read_16(HL), self.registers.l); 2 }
             0x76 => { self.is_halted = true; 1 }
             0x77 => { self.bus.write_byte(self.registers.read_16(HL), self.registers.a); 2 }
+            0x78 => { self.registers.a = self.registers.b; 1 }
+            0x79 => { self.registers.a = self.registers.c; 1 }
+            0x7a => { self.registers.a = self.registers.d; 1 }
+            0x7b => { self.registers.a = self.registers.e; 1 }
+            0x7c => { self.registers.a = self.registers.h; 1 }
+            0x7d => { self.registers.a = self.registers.l; 1 }
+            0x7e => { self.registers.a = self.bus.read_byte(self.registers.read_16(HL)); 2 }
+            0x7f => { 1 }
+            0x80 => { self.alu_add(self.registers.b); 1 }
+            0x81 => { self.alu_add(self.registers.c); 1 }
+            0x82 => { self.alu_add(self.registers.d); 1 }
+            0x83 => { self.alu_add(self.registers.e); 1 }
+            0x84 => { self.alu_add(self.registers.h); 1 }
+            0x85 => { self.alu_add(self.registers.l); 1 }
+            0x86 => { let byte = self.bus.read_byte(self.registers.read_16(HL)); self.alu_add(byte); 2 }
+            0x87 => { self.alu_add(self.registers.a); 1 }
+            0x88 => { self.alu_adc(self.registers.b); 1 }
+            0x89 => { self.alu_adc(self.registers.c); 1 }
+            0x8a => { self.alu_adc(self.registers.d); 1 }
+            0x8b => { self.alu_adc(self.registers.e); 1 }
+            0x8c => { self.alu_adc(self.registers.h); 1 }
+            0x8d => { self.alu_adc(self.registers.l); 1 }
+            0x8e => { let byte = self.bus.read_byte(self.registers.read_16(HL)); self.alu_adc(byte); 2 }
+            0x8f => { self.alu_adc(self.registers.a); 1 }
+            0x90 => { self.alu_sub(self.registers.b); 1 }
+            0x91 => { self.alu_sub(self.registers.c); 1 }
+            0x92 => { self.alu_sub(self.registers.d); 1 }
+            0x93 => { self.alu_sub(self.registers.e); 1 }
+            0x94 => { self.alu_sub(self.registers.h); 1 }
+            0x95 => { self.alu_sub(self.registers.l); 1 }
+            0x96 => { let byte = self.bus.read_byte(self.registers.read_16(HL)); self.alu_sub(byte); 2 }
+            0x97 => { self.alu_sub(self.registers.a); 1 }
+            0x98 => { self.alu_sbc(self.registers.b); 1 }
+            0x99 => { self.alu_sbc(self.registers.c); 1 }
+            0x9a => { self.alu_sbc(self.registers.d); 1 }
+            0x9b => { self.alu_sbc(self.registers.e); 1 }
+            0x9c => { self.alu_sbc(self.registers.h); 1 }
+            0x9d => { self.alu_sbc(self.registers.l); 1 }
+            0x9e => { let byte = self.bus.read_byte(self.registers.read_16(HL)); self.alu_sbc(byte); 2 }
+            0x9f => { self.alu_sbc(self.registers.a); 1 }
+            0xa0 => { self.alu_and(self.registers.b); 1 }
+            0xa1 => { self.alu_and(self.registers.c); 1 }
+            0xa2 => { self.alu_and(self.registers.d); 1 }
+            0xa3 => { self.alu_and(self.registers.e); 1 }
+            0xa4 => { self.alu_and(self.registers.h); 1 }
+            0xa5 => { self.alu_and(self.registers.l); 1 }
+            0xa6 => { let byte = self.bus.read_byte(self.registers.read_16(HL)); self.alu_and(byte); 2 }
+            0xa7 => { self.alu_and(self.registers.a); 1 }
+            0xa8 => { self.alu_and(self.registers.b); 1 }
+            0xa9 => { self.alu_xor(self.registers.c); 1 }
+            0xaa => { self.alu_xor(self.registers.d); 1 }
+            0xab => { self.alu_xor(self.registers.e); 1 }
+            0xac => { self.alu_xor(self.registers.h); 1 }
+            0xad => { self.alu_xor(self.registers.l); 1 }
+            0xae => { let byte = self.bus.read_byte(self.registers.read_16(HL)); self.alu_xor(byte); 2 }
             0xaf => { self.alu_xor(self.registers.a); 1 }
+            0xb0 => { self.alu_or(B); 1 }
+            0xb1 => { self.alu_or(C); 1 }
+            0xb2 => { self.alu_or(D); 1 }
+            0xb3 => { self.alu_or(E); 1 }
+            0xb4 => { self.alu_or(H); 1 }
+            0xb5 => { self.alu_or(L); 1 }
+            0xb6 => { let value = self.bus.read_byte(self.registers.read_16(HL)); self.alu_or_val(value); 2 }
+            0xb7 => { self.alu_or(A); 1 }
+            0xb8 => { self.alu_cp(self.registers.b); 1 }
+            0xb9 => { self.alu_cp(self.registers.c); 1 }
+            0xba => { self.alu_cp(self.registers.d); 1 }
+            0xbb => { self.alu_cp(self.registers.e); 1 }
+            0xbc => { self.alu_cp(self.registers.h); 1 }
+            0xbd => { self.alu_cp(self.registers.c); 1 }
+            0xbe => { let byte = self.bus.read_byte(self.registers.read_16(HL)); self.alu_cp(byte); 2 }
+            0xbf => { self.alu_cp(self.registers.a); 1 }
             0xc0 => { if !self.registers.f.zero { self.registers.pc = self.pop_stack(); 5 } else { 2 } }
             0xc1 => { let value = self.pop_stack(); self.registers.write_16(BC, value); 3 }
-            0xc5 => { self.push_stack(self.registers.read_16(BC)); 4}
+            0xc2 => { if !self.registers.f.zero { self.registers.pc = self.fetch_word(); 4 } else { self.registers.pc += 2; 3 } }
+            0xc3 => { self.registers.pc = self.fetch_word(); 4 }
+            0xc4 => { if !self.registers.f.zero { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 } else { 3 } }
+            0xc5 => { self.push_stack(self.registers.read_16(BC)); 4 }
+            0xc6 => { let value = self.fetch_byte(); self.alu_add(value); 2 }
+            
             0xc9 => { self.registers.pc = self.pop_stack(); 4 }
+            
             0xcb => { self.call_cb() }
             0xcc => { if self.registers.f.zero { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 } else { 3 } }
             0xcd => { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 }
+            0xce => { let byte = self.fetch_byte(); self.alu_adc(byte); 2 }
+            
+            0xd1 => { let value = self.pop_stack(); self.registers.write_16(DE, value); 3 }
+            
+            0xd5 => { self.push_stack(self.registers.read_16(DE)); 4 }
+            0xd6 => { let byte = self.fetch_byte(); self.alu_sub(byte); 2 }
+            
             0xdc => { if self.registers.f.carry { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 } else { 3 } }
+            
             0xe0 => { let address = 0xff00 | self.fetch_byte() as u16; self.bus.write_byte(address, self.registers.a); 3 }
             0xe1 => { let value = self.pop_stack(); self.registers.write_16(HL, value); 3 }
             0xe2 => { self.bus.write_byte(0xff00 | self.registers.c as u16, self.registers.a); 2 }
+            
+            0xe5 => { self.push_stack(self.registers.read_16(HL)); 4 }
+            0xe6 => { let byte = self.fetch_byte(); self.alu_and(byte); 2 }
+            
+            0xea => { let address = self.fetch_word(); self.bus.write_byte(address, self.registers.a); 4 }
+            0xf0 => { let address = 0xff00 | self.fetch_byte() as u16; self.registers.a = self.bus.read_byte(address); 3 }
+            0xf1 => { let value = self.pop_stack(); self.registers.write_16(AF, value); 4 }
+            
+            0xf3 => { self.interrupt_master_enable.di(); 1 }
+            
             0xf5 => { self.push_stack(self.registers.read_16(AF)); 4 }
+            
+            0xf7 => { self.push_stack(self.registers.pc); self.registers.pc = 0x30; 4 }
+            
+            0xfa => { let address = self.fetch_word(); self.registers.a = self.bus.read_byte(address); 4 }
             0xfb => { self.interrupt_master_enable.ei(); 1 }
+            
+            0xfe => { let value = self.fetch_byte(); self.alu_cp(value); 2 }
             0xff => { self.push_stack(self.registers.pc); self.registers.pc = 0x38; 4 }
             _ => panic!("Instruksjon ikke støttet: 0x{:2x}", opcode)
         }
@@ -146,8 +252,12 @@ impl CPU {
         let opcode = self.fetch_byte();
         debug!("Dekoder nå opkode {:#04x} (etter CB-prefiks)", opcode);
         match opcode {
+            0x1a => { self.rr(D); 2 }
             0x11 => { self.rl(C); 2 }
+            0x19 => { self.rr(C); 2 }
+            0x38 => { self.alu_srl(B); 2 }
             0x7c => { self.alu_bit(self.registers.h, 7); 2 }
+            0xd1 => { self.registers.c |= 0x2; 2 }
             _ => panic!("CB-instruksjon ikke støttet: 0x{:2x}", opcode)
         }
     }

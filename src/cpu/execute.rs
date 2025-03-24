@@ -37,7 +37,7 @@ impl CPU {
         self.registers.f.carry = carry;
     }
     pub fn rlca(&mut self) {
-        self.registers.f.carry = (self.registers.a & 0x80) != 0;
+        self.registers.f.carry = (self.registers.a >> 7) != 0;
         self.registers.a = self.registers.a.rotate_left(1);
         
         self.registers.f.zero = false;
@@ -67,11 +67,15 @@ impl CPU {
         self.registers.f.zero = false;
     }
     pub fn rra(&mut self) {
+        self.rr(Reg8::A);
+        self.registers.f.zero = false;
+    }
+    pub fn rr(&mut self, reg: Reg8) {
         let previous_carry = self.registers.f.carry;
         let (result, carry) = self.registers.a.overflowing_shr(1);
-        self.registers.a = result | (if previous_carry { 0x80 } else { 0 });
+        self.registers.a = result | (if previous_carry { 1 << 7 } else { 0 });
 
-        self.registers.f.zero = false;
+        self.registers.f.zero = result == 0;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = false;
         self.registers.f.carry = carry;
@@ -153,5 +157,79 @@ impl CPU {
         self.registers.f.zero = value & (1 << bit) != 0;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = true;
+    }
+    pub fn alu_or(&mut self, reg8: Reg8) {
+        self.alu_or_val(self.registers.read_8(reg8))
+    }
+    pub fn alu_or_val(&mut self, value: u8) {
+        self.registers.a |= value;
+
+        self.registers.f.zero = self.registers.a == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = false;
+        self.registers.f.carry = false;
+    }
+    pub fn alu_and(&mut self, value: u8) {
+        self.registers.a &= value;
+
+        self.registers.f.zero = self.registers.a == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = true;
+        self.registers.f.carry = false;
+    }
+    pub fn alu_cp(&mut self, value: u8) {
+        let (result, overflow) = self.registers.a.overflowing_sub(value);
+
+        self.registers.f.zero = result == 0;
+        self.registers.f.subtract = true;
+        self.registers.f.half_carry = (self.registers.a & 0x0f) < (value & 0x0f);
+        self.registers.f.carry = overflow;
+    }
+    pub fn alu_adc(&mut self, value: u8) {
+        let carry = if self.registers.f.carry { 1 } else { 0 };
+        let (sum, overflow_first) = self.registers.a.overflowing_add(value);
+        let (sum, overflow_second) = sum.overflowing_add(carry);
+
+        self.registers.f.zero = sum == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = (((self.registers.a & 0x0f) + (value & 0x0f) + carry) & 0x10) == 0x10;
+        self.registers.f.carry = overflow_first | overflow_second;
+    }
+    pub fn alu_add(&mut self, value: u8) {
+        let (sum, overflow) = self.registers.a.overflowing_add(value);
+        self.registers.a = sum;
+
+        self.registers.f.zero = sum == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = (((self.registers.a & 0x0f) + (value & 0x0f) ) & 0x10) == 0x10;
+        self.registers.f.carry = overflow;
+    }
+    pub fn alu_sub(&mut self, value: u8) {
+        let (difference, overflow) = self.registers.a.overflowing_sub(value);
+
+        self.registers.f.zero = difference == 0;
+        self.registers.f.subtract = true;
+        self.registers.f.half_carry = (self.registers.a & 0x0f) < (value & 0x0f);
+        self.registers.f.carry = overflow;
+    }
+    pub fn alu_sbc(&mut self, value: u8) {
+        let carry = if self.registers.f.carry { 1 } else { 0 };
+        let (difference, overflow_first) = self.registers.a.overflowing_sub(value);
+        let (difference, overflow_second) = difference.overflowing_sub(carry);
+
+        self.registers.f.zero = difference == 0;
+        self.registers.f.subtract = true;
+        self.registers.f.half_carry = (self.registers.a & 0x0f) < (value & 0x0f) + carry;
+        self.registers.f.carry = overflow_first | overflow_second;
+    }
+    pub fn alu_srl(&mut self, reg: Reg8) {
+        let value = self.registers.read_8(reg);
+        let (result, carry) = value.overflowing_shr(1);
+        self.registers.write_8(reg, result);
+
+        self.registers.f.zero = result == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = false;
+        self.registers.f.carry = carry;
     }
 }
