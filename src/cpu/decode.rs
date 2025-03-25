@@ -205,44 +205,52 @@ impl CPU {
             0xc1 => { let value = self.pop_stack(); self.registers.write_16(BC, value); 3 }
             0xc2 => { if !self.registers.f.zero { self.registers.pc = self.fetch_word(); 4 } else { self.registers.pc += 2; 3 } }
             0xc3 => { self.registers.pc = self.fetch_word(); 4 }
-            0xc4 => { if !self.registers.f.zero { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 } else { 3 } }
+            0xc4 => { if !self.registers.f.zero { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 } else { self.registers.pc += 2; 3 } }
             0xc5 => { self.push_stack(self.registers.read_16(BC)); 4 }
             0xc6 => { let value = self.fetch_byte(); self.alu_add(value); 2 }
-            
+
+            0xc8 => { if self.registers.f.zero { self.registers.pc = self.pop_stack(); 5 } else { 2 } }
             0xc9 => { self.registers.pc = self.pop_stack(); 4 }
-            
+
             0xcb => { self.call_cb() }
             0xcc => { if self.registers.f.zero { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 } else { 3 } }
             0xcd => { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 }
             0xce => { let byte = self.fetch_byte(); self.alu_adc(byte); 2 }
-            
+
+            0xd0 => { if !self.registers.f.carry { self.registers.pc = self.pop_stack(); 5 } else { 2 } }
             0xd1 => { let value = self.pop_stack(); self.registers.write_16(DE, value); 3 }
-            
+
             0xd5 => { self.push_stack(self.registers.read_16(DE)); 4 }
             0xd6 => { let byte = self.fetch_byte(); self.alu_sub(byte); 2 }
-            
+
+            0xd8 => { if self.registers.f.carry { self.registers.pc = self.pop_stack(); 5 } else { 2 } }
+
             0xdc => { if self.registers.f.carry { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 } else { 3 } }
-            
+
             0xe0 => { let address = 0xff00 | self.fetch_byte() as u16; self.bus.write_byte(address, self.registers.a); 3 }
             0xe1 => { let value = self.pop_stack(); self.registers.write_16(HL, value); 3 }
             0xe2 => { self.bus.write_byte(0xff00 | self.registers.c as u16, self.registers.a); 2 }
-            
+
             0xe5 => { self.push_stack(self.registers.read_16(HL)); 4 }
             0xe6 => { let byte = self.fetch_byte(); self.alu_and(byte); 2 }
-            
+
+            0xe9 => { self.registers.pc = self.registers.read_16(HL); 1 }
             0xea => { let address = self.fetch_word(); self.bus.write_byte(address, self.registers.a); 4 }
+
+            0xee => { let byte = self.fetch_byte(); self.alu_xor(byte); 2 }
+
             0xf0 => { let address = 0xff00 | self.fetch_byte() as u16; self.registers.a = self.bus.read_byte(address); 3 }
             0xf1 => { let value = self.pop_stack(); self.registers.write_16(AF, value); 4 }
-            
+
             0xf3 => { self.interrupt_master_enable.di(); 1 }
-            
+
             0xf5 => { self.push_stack(self.registers.read_16(AF)); 4 }
-            
+
             0xf7 => { self.push_stack(self.registers.pc); self.registers.pc = 0x30; 4 }
-            
+
             0xfa => { let address = self.fetch_word(); self.registers.a = self.bus.read_byte(address); 4 }
             0xfb => { self.interrupt_master_enable.ei(); 1 }
-            
+
             0xfe => { let value = self.fetch_byte(); self.alu_cp(value); 2 }
             0xff => { self.push_stack(self.registers.pc); self.registers.pc = 0x38; 4 }
             _ => panic!("Instruksjon ikke støttet: 0x{:2x}", opcode)
@@ -255,6 +263,7 @@ impl CPU {
             0x1a => { self.rr(D); 2 }
             0x11 => { self.rl(C); 2 }
             0x19 => { self.rr(C); 2 }
+            0x37 => { self.registers.a = self.alu_swap(self.registers.a); 2 }
             0x38 => { self.alu_srl(B); 2 }
             0x7c => { self.alu_bit(self.registers.h, 7); 2 }
             0xd1 => { self.registers.c |= 0x2; 2 }

@@ -72,8 +72,10 @@ impl CPU {
     }
     pub fn rr(&mut self, reg: Reg8) {
         let previous_carry = self.registers.f.carry;
-        let (result, carry) = self.registers.a.overflowing_shr(1);
-        self.registers.a = result | (if previous_carry { 1 << 7 } else { 0 });
+        let value = self.registers.read_8(reg);
+        let carry = value & 0x01 == 0x01;
+        let result = (value >> 1) | if previous_carry { 1 << 7 } else { 0 };
+        self.registers.write_8(reg, result);
 
         self.registers.f.zero = result == 0;
         self.registers.f.subtract = false;
@@ -82,7 +84,7 @@ impl CPU {
     }
     pub fn jr(&mut self) {
         let offset = self.fetch_byte() as i8;
-        self.registers.pc = self.registers.pc.wrapping_add(offset as u16)
+        self.registers.pc = (self.registers.pc as u32 as i32).wrapping_add(offset as i32) as u16;
     }
     pub fn daa(&mut self) {
         let mut adjustment = 0;
@@ -195,22 +197,27 @@ impl CPU {
         self.registers.f.half_carry = (((self.registers.a & 0x0f) + (value & 0x0f) + carry) & 0x10) == 0x10;
         self.registers.f.carry = overflow_first | overflow_second;
     }
-    pub fn alu_add(&mut self, value: u8) {
-        let (sum, overflow) = self.registers.a.overflowing_add(value);
-        self.registers.a = sum;
+    pub fn alu_add(&mut self, b: u8) {
+        let a = self.registers.a;
+        let (sum, carry) = a.overflowing_add(b);
 
         self.registers.f.zero = sum == 0;
+        self.registers.f.half_carry = (a & 0xF) + (b & 0xF) > 0xF;
         self.registers.f.subtract = false;
-        self.registers.f.half_carry = (((self.registers.a & 0x0f) + (value & 0x0f) ) & 0x10) == 0x10;
-        self.registers.f.carry = overflow;
-    }
-    pub fn alu_sub(&mut self, value: u8) {
-        let (difference, overflow) = self.registers.a.overflowing_sub(value);
+        self.registers.f.carry = carry;
 
-        self.registers.f.zero = difference == 0;
+        self.registers.a = sum;
+    }
+    pub fn alu_sub(&mut self, b: u8) {
+        let a = self.registers.a;
+        let r = a.wrapping_sub(b);
+
+        self.registers.f.zero = r == 0;
         self.registers.f.subtract = true;
-        self.registers.f.half_carry = (self.registers.a & 0x0f) < (value & 0x0f);
-        self.registers.f.carry = overflow;
+        self.registers.f.half_carry = (a & 0x0F) < (b & 0x0F);
+        self.registers.f.carry = (a as u16) < (b as u16);
+
+        self.registers.a = r;
     }
     pub fn alu_sbc(&mut self, value: u8) {
         let carry = if self.registers.f.carry { 1 } else { 0 };
@@ -224,12 +231,24 @@ impl CPU {
     }
     pub fn alu_srl(&mut self, reg: Reg8) {
         let value = self.registers.read_8(reg);
-        let (result, carry) = value.overflowing_shr(1);
+        let carry = value & 0x01 == 0x01;
+        let result = value >> 1;
         self.registers.write_8(reg, result);
 
         self.registers.f.zero = result == 0;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = false;
         self.registers.f.carry = carry;
+    }
+    pub fn alu_swap(&mut self, value: u8) -> u8 {
+        let lower = value & 0x0f;
+        let swapped_value = (lower << 4) | (value >> 4);
+
+        self.registers.f.zero = swapped_value == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = false;
+        self.registers.f.carry = false;
+
+        swapped_value
     }
 }
