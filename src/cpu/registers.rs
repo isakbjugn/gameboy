@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use crate::cpu::flags_register::FlagsRegister;
 
 pub struct Registers {
@@ -36,23 +37,44 @@ pub enum Reg16 {
 
 impl Registers {
     pub fn new() -> Self {
-        Self {
-            a: 0,
-            b: 0,
-            c: 0,
-            d: 0,
-            e: 0,
+        let mut registers = Registers {
+            a: 0x01,
+            b: 0x00,
+            c: 0x13,
+            d: 0x00,
+            e: 0xd8,
             f: FlagsRegister {
-                zero: false,
+                zero: true,
                 subtract: false,
-                half_carry: false,
-                carry: false,
+                half_carry: true,
+                carry: true,
             },
-            h: 0,
-            l: 0,
-            pc: if cfg!(feature = "test") { 0x0100 } else { 0 },
-            sp: 0,
+            h: 0x01,
+            l: 0x4d,
+            pc: 0,
+            sp: 0xfffe,
+        };
+        if cfg!(feature = "test") {
+            registers.set_state_after_boot_rom();
         }
+        registers
+    }
+    pub fn set_state_after_boot_rom(&mut self) {
+        self.a = 0x01;
+        self.b = 0x00;
+        self.c = 0x13;
+        self.d = 0x00;
+        self.e = 0xd8;
+        self.f = FlagsRegister {
+                zero: true,
+                subtract: false,
+                half_carry: true,
+                carry: true,
+            };
+        self.h = 0x01;
+        self.l = 0x4d;
+        self.pc = 0x0100;
+        self.sp = 0xfffe;
     }
     pub fn read_8(&self, reg: Reg8) -> u8 {
         match reg {
@@ -117,5 +139,12 @@ impl Registers {
         let address = self.read_16(Reg16::HL);
         self.write_16(Reg16::HL, address.wrapping_sub(1));
         address
+    }
+}
+
+impl Debug for Registers {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "A:{:02x} F:{:02x} B:{:02x} C:{:02x} D:{:02x} E:{:02x} H:{:02x} L:{:02x} SP:{:04x} PC:{:04x}",
+               self.a, u8::from(self.f), self.b, self.c, self.d, self.e, self.h, self.l, self.sp, self.pc)
     }
 }

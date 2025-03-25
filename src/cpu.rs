@@ -4,6 +4,7 @@ mod flags_register;
 mod registers;
 mod interrupt_master_enable;
 
+use std::fmt::Debug;
 use crate::cartridge::Cartridge;
 use crate::address_bus::AddressBus;
 use registers::Registers;
@@ -87,5 +88,13 @@ impl CPU {
     fn push_stack(&mut self, value: u16) {
         self.registers.sp = self.registers.sp.wrapping_sub(2);
         self.bus.write_word(self.registers.sp, value);
+    }
+}
+
+impl Debug for CPU {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let pc_mem: Vec<u8> = Vec::from_iter((0..4).map(|pc_offset| self.bus.read_byte(self.registers.pc + pc_offset)));
+        write!(f, "{:?} PCMEM:{:02x},{:02x},{:02x},{:02x}",
+            self.registers, pc_mem[0], pc_mem[1], pc_mem[2], pc_mem[3])
     }
 }
