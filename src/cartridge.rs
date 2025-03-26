@@ -1,7 +1,8 @@
 use std::fs::File;
 use std::io::Read;
 use std::path;
-use crate::mbc::{MBC, MBC0};
+use crate::mbc::MBC;
+use crate::mbc::mbc_0::MBC0;
 
 pub struct Cartridge {
     header: Vec<u8>,
@@ -14,9 +15,13 @@ impl Cartridge {
         File::open(&cartridge_path).and_then(|mut f| f.read_to_end(&mut data)).map_err(|_| "Could not read ROM")?;
         let mut header = vec![0; 0x14f - 0x100 + 1];
         header.copy_from_slice(&data[0x0100..=0x014f]);
+        
         Ok(Self {
             header,
-            mbc: Box::new(MBC0::new(data)),
+            mbc: match data[0x147] {
+                0x00 => Box::new(MBC0::new(data)),
+                _ => panic!("Støtter ikke denne MBC-en.")
+            }
         })
     }
     pub fn title(&self) -> String {
