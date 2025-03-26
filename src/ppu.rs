@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use arrayvec::ArrayVec;
 use bitflags::bitflags;
 use itertools::Itertools;
-use log::{debug, info};
+use log::debug;
 
 const SCREEN_WIDTH: usize = 160;
 const SCREEN_HEIGHT: usize = 144;
@@ -26,10 +26,10 @@ bitflags!(
 
 impl Control {
     fn lcd_on(&self) -> bool {
-        self.bits() & 0x8 != 0
+        self.bits() >> 7 != 0
     }
     fn tall_sprite_mode(&self) -> bool {
-        self.bits() & 0x4 != 0
+        self.bits() >> 2 != 0
     }
     fn sprite_height(&self) -> u8 {
         if self.tall_sprite_mode() { 16 } else { 8 }
@@ -148,7 +148,7 @@ impl PPU {
             0x41 => self.read_status(),
             0x42 => self.vertical_scroll,
             0x43 => self.horizontal_scroll,
-            0x44 => self.scanline,
+            0x44 => self.scanline, // 0x90 for å kjøre Blargg-tester uten skjerm
             0x45 => self.scanline_compare,
             0x46 => 0, // write-only
             0x47 => self.bg_palette,
@@ -180,7 +180,7 @@ impl PPU {
         self.control = Control::from_bits(value).unwrap();
         if !self.control.lcd_on() && lcd_enable_initial_state {
             // reset PPU
-            self.mode = Mode::OAMScan; // todo!("Dette er vel ikke riktig tilstand etter nullstilling?")
+            self.mode = Mode::HorizontalBlank;
             self.scanline = 0;
             self.clear_display()
         }
@@ -191,7 +191,7 @@ impl PPU {
     }
     fn read_status(&self) -> u8 {
         self.status.bits()
-            | if self.scanline == self.scanline_compare { 0x4 } else { 0 }
+            | if self.scanline == self.scanline_compare { 1 << 2 } else { 0 }
             | self.mode.bits()
     }
     fn set_status(&mut self, value: u8) {
@@ -302,6 +302,7 @@ impl PPU {
         }
 
         self.frame_buffer[line_start..line_end].copy_from_slice(&pixels);
+        self.updated = true;
 
         self.t_cycles -= 172;
         self.mode = Mode::HorizontalBlank;
@@ -376,7 +377,7 @@ impl PPU {
             for x in 0..8 {
                 let (sprite_x, overflow) = sprite.x.overflowing_add(x);
                 if sprite_x < 8 || sprite_x > SCREEN_WIDTH as u8 || overflow { continue }
-                
+
                 let color = self.pixel_color_from_bits(tile_data_low, tile_data_high, x);
                 let palette=  if sprite.flags >> 4 == 1 { self.obj_palette_1 } else { self.obj_palette_0 };
 
