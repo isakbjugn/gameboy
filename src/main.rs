@@ -37,13 +37,13 @@ fn main() -> Result<(), Error> {
         .version("0.1")
         .author("Isak Kyrre Lichtwarck Bjugn")
         .about("A Gameboy emulator written in Rust")
-        .arg(clap::Arg::new("cartridge_name")
-            .help("Sets the ROM file to load")
+        .arg(clap::Arg::new("cartridge_path")
+            .help("Sets the path to the ROM file to load")
             .required(true))
         .get_matches();
-    let cartridge_name = matches.get_one::<String>("cartridge_name").unwrap();
+    let cartridge_path = matches.get_one::<String>("cartridge_path").unwrap();
 
-    let game_boy = match GameBoy::new(cartridge_name) {
+    let game_boy = match GameBoy::new(cartridge_path) {
         Ok(game_boy) => game_boy,
         Err(error_str) => panic!("{}", error_str),
     };
