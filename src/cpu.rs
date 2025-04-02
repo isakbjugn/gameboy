@@ -18,8 +18,8 @@ pub struct CPU {
 }
 
 impl CPU {
-    pub fn new(cartridge_name: &str) -> Result<Self, &'static str> {
-        let cartridge = Cartridge::from_path(format!("roms/{}", cartridge_name).into())?;
+    pub fn new(cartridge_path: &str) -> Result<Self, &'static str> {
+        let cartridge = Cartridge::from_path(cartridge_path.into())?;
         
         Ok(Self {
             registers: Registers::new(),
