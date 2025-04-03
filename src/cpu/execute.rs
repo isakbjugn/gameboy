@@ -86,6 +86,9 @@ impl CPU {
         let offset = self.fetch_byte() as i8;
         self.registers.pc = (self.registers.pc as u32 as i32).wrapping_add(offset as i32) as u16;
     }
+    pub fn jp(&mut self) {
+        self.registers.pc = self.fetch_word()
+    }
     pub fn daa(&mut self) {
         let mut adjustment = 0;
         match self.registers.f.subtract {

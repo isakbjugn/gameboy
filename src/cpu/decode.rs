@@ -211,7 +211,7 @@ impl CPU {
 
             0xc8 => { if self.registers.f.zero { self.registers.pc = self.pop_stack(); 5 } else { 2 } }
             0xc9 => { self.registers.pc = self.pop_stack(); 4 }
-
+            0xca => { if self.registers.f.zero { self.jp(); 4 } else { self.registers.pc = self.registers.pc.wrapping_add(2); 3 } }
             0xcb => { self.call_cb() }
             0xcc => { if self.registers.f.zero { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 } else { 3 } }
             0xcd => { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 }

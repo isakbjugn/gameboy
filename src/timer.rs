@@ -18,8 +18,8 @@ impl Timer {
             timer: 0,
             internal_counter: 0,
             timer_modulo: 0,
-            enable: true,
-            step: 256,
+            enable: false,
+            step: 4 * 256,
             interrupt: 0,
         }
     }
@@ -33,7 +33,7 @@ impl Timer {
         if self.enable {
             self.internal_counter += t_cycles;
             while self.internal_counter > self.step {
-                self.timer = self.divider.wrapping_add(1);
+                self.timer = self.timer.wrapping_add(1);
                 if self.timer == 0 {
                     self.timer = self.timer_modulo;
                     self.interrupt |= 1 << 2;
@@ -53,7 +53,7 @@ impl Timer {
     }
     fn read_tac(&self) -> u8 {
         (if self.enable { 0x4 } else { 0 })
-            | match self.step { 256 => 0x0, 4 => 0x1, 16 => 0x2, 64 => 0x3, _ => unreachable!() }
+            | (4 * match self.step { 256 => 0x0, 4 => 0x1, 16 => 0x2, 64 => 0x3, _ => unreachable!() })
     }
     pub fn write_byte(&mut self, address: u8, value: u8) {
         match address {
@@ -66,6 +66,6 @@ impl Timer {
     }
     fn write_tac(&mut self, value: u8) {
         self.enable = value & 0x4 != 0;
-        self.step = match value & 0x3 { 0x0 => 256, 0x1 => 4, 0x2 => 16, 0x3 => 64, _ => unreachable!() }
+        self.step = 4 * match value & 0x3 { 0x0 => 256, 0x1 => 4, 0x2 => 16, 0x3 => 64, _ => unreachable!() }
     }
 }
