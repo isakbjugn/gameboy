@@ -272,8 +272,8 @@ impl CPU {
         
         self.registers.f.zero = false;
         self.registers.f.subtract = false;
-        self.registers.f.half_carry = ((value_i32 & 0x0fff) + (byte & 0x0fff)) & 0x1000 == 0x1000;
-        self.registers.f.carry = carry;
+        self.registers.f.half_carry = ((value_i32 & 0x000f) + (byte & 0x000f)) & 0x0010 == 0x0010;
+        self.registers.f.carry = ((value_i32 & 0x00ff) + (byte & 0x00ff)) & 0x0100 == 0x0100;
         
         sum as u16
     }
