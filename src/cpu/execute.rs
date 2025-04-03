@@ -1,4 +1,6 @@
 use crate::cpu::CPU;
+use crate::cpu::read_write::Operand;
+use crate::cpu::read_write::Operand::RegA;
 use crate::cpu::registers::{Reg16, Reg8};
 use crate::cpu::registers::Reg16::HL;
 
@@ -38,12 +40,14 @@ impl CPU {
         value
     }
     pub fn rlca(&mut self) {
-        self.registers.a = self.rlc(self.registers.a);
+        self.rlc(RegA);
         self.registers.f.subtract = false;
     }
-    pub fn rlc(&mut self, value: u8) -> u8 {
+    pub fn rlc(&mut self, operand: Operand) -> u8 {
+        let value = self.read(operand);
         self.registers.f.carry = (value >> 7) != 0;
         let result = value.rotate_left(1);
+        self.write(operand, result);
 
         self.registers.f.zero = false;
         self.registers.f.subtract = false;

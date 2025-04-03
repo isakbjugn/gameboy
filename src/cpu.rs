@@ -3,6 +3,7 @@ mod execute;
 mod flags_register;
 mod registers;
 mod interrupt_master_enable;
+mod read_write;
 
 use std::fmt::Debug;
 use crate::cartridge::Cartridge;

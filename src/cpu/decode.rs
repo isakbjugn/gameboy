@@ -1,6 +1,7 @@
 use log::debug;
 use crate::cpu::CPU;
 use crate::cpu::execute::Address;
+use crate::cpu::read_write::Operand::{RegA, RegB, RegC, RegD, RegE, RegH, RegL, AddressHL, Immediate8};
 use crate::cpu::registers::Reg8::{A, B, C, D, E, H, L};
 use crate::cpu::registers::Reg16::{AF, BC, DE, HL, SP};
 
@@ -261,14 +262,14 @@ impl CPU {
         let opcode = self.fetch_byte();
         debug!("Dekoder nå opkode {:#04x} (etter CB-prefiks)", opcode);
         match opcode {
-            0x00 => { self.registers.b = self.rlc(self.registers.b); 2 }
-            0x01 => { self.registers.c = self.rlc(self.registers.c); 2 }
-            0x02 => { self.registers.d = self.rlc(self.registers.d); 2 }
-            0x03 => { self.registers.e = self.rlc(self.registers.e); 2 }
-            0x04 => { self.registers.h = self.rlc(self.registers.h); 2 }
-            0x05 => { self.registers.l = self.rlc(self.registers.l); 2 }
-            0x06 => { let rotated_byte = self.rlc(self.bus.read_byte(self.registers.read_16(HL))); self.bus.write_byte(self.registers.read_16(HL), rotated_byte); 4 }
-            0x07 => { self.registers.a = self.rlc(self.registers.a); 2 }
+            0x00 => { self.rlc(RegB); 2 }
+            0x01 => { self.rlc(RegC); 2 }
+            0x02 => { self.rlc(RegD); 2 }
+            0x03 => { self.rlc(RegE); 2 }
+            0x04 => { self.rlc(RegH); 2 }
+            0x05 => { self.rlc(RegL); 2 }
+            0x06 => { self.rlc(AddressHL); 4 }
+            0x07 => { self.rlc(RegA); 2 }
             0x1a => { self.registers.d = self.rr(self.registers.d); 2 }
             0x1b => { self.registers.b = self.rr(self.registers.b); 2 }
             0x11 => { self.registers.c = self.rl(self.registers.c); 2 }
