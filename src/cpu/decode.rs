@@ -263,6 +263,7 @@ impl CPU {
         debug!("Dekoder nå opkode {:#04x} (etter CB-prefiks)", opcode);
         match opcode {
             0x1a => { self.rr(D); 2 }
+            0x1b => { self.rr(B); 2 }
             0x11 => { self.rl(C); 2 }
             0x19 => { self.rr(C); 2 }
             0x37 => { self.registers.a = self.alu_swap(self.registers.a); 2 }
