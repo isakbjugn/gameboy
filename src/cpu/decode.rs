@@ -235,6 +235,7 @@ impl CPU {
             0xe6 => { let byte = self.fetch_byte(); self.alu_and(byte); 2 }
 
             0xe9 => { self.registers.pc = self.registers.read_16(HL); 1 }
+            0xe8 => { self.registers.sp = self.alu_add_s8(self.registers.sp); 4 }
             0xea => { let address = self.fetch_word(); self.bus.write_byte(address, self.registers.a); 4 }
 
             0xee => { let byte = self.fetch_byte(); self.alu_xor(byte); 2 }
@@ -247,6 +248,7 @@ impl CPU {
             0xf5 => { self.push_stack(self.registers.read_16(AF)); 4 }
 
             0xf7 => { self.push_stack(self.registers.pc); self.registers.pc = 0x30; 4 }
+            0xf8 => { let sum = self.alu_add_s8(self.registers.sp); self.registers.write_16(HL, sum); 3 }
 
             0xfa => { let address = self.fetch_word(); self.registers.a = self.bus.read_byte(address); 4 }
             0xfb => { self.interrupt_master_enable.ei(); 1 }
