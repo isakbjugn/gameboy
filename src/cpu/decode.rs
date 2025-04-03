@@ -270,6 +270,14 @@ impl CPU {
             0x05 => { self.rlc(RegL); 2 }
             0x06 => { self.rlc(AddressHL); 4 }
             0x07 => { self.rlc(RegA); 2 }
+            0x08 => { self.rrc(RegB); 2 }
+            0x09 => { self.rrc(RegC); 2 }
+            0x0a => { self.rrc(RegD); 2 }
+            0x0b => { self.rrc(RegE); 2 }
+            0x0c => { self.rrc(RegH); 2 }
+            0x0d => { self.rrc(RegL); 2 }
+            0x0e => { self.rrc(AddressHL); 4 }
+            0x0f => { self.rrc(RegA); 2 }
             0x11 => { self.rl(RegC); 2 }
             0x18 => { self.rr(RegB); 2 }
             0x19 => { self.rr(RegC); 2 }

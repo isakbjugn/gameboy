@@ -56,10 +56,16 @@ impl CPU {
         result
     }
     pub fn rrca(&mut self) {
-        self.registers.f.carry = (self.registers.a & 0x01) != 0;
-        self.registers.a = self.registers.a.rotate_right(1);
-        
+        self.rrc(RegA);
         self.registers.f.zero = false;
+    }
+    pub fn rrc(&mut self, operand: Operand) {
+        let value = self.read(operand);
+        self.registers.f.carry = (value & 0x01) != 0;
+        let result = value.rotate_right(1);
+        self.write(operand, result);
+        
+        self.registers.f.zero = result == 0;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = false;
     }
