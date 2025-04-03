@@ -270,10 +270,11 @@ impl CPU {
             0x05 => { self.rlc(RegL); 2 }
             0x06 => { self.rlc(AddressHL); 4 }
             0x07 => { self.rlc(RegA); 2 }
-            0x1a => { self.registers.d = self.rr(self.registers.d); 2 }
-            0x1b => { self.registers.b = self.rr(self.registers.b); 2 }
             0x11 => { self.registers.c = self.rl(self.registers.c); 2 }
-            0x19 => { self.registers.c = self.rr(self.registers.c); 2 }
+            0x18 => { self.rr(RegB); 2 }
+            0x19 => { self.rr(RegC); 2 }
+            0x1a => { self.rr(RegD); 2 }
+            0x1b => { self.rr(RegE); 2 }
             0x37 => { self.registers.a = self.alu_swap(self.registers.a); 2 }
             0x38 => { self.alu_srl(B); 2 }
             0x7c => { self.alu_bit(self.registers.h, 7); 2 }

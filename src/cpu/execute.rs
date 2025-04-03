@@ -78,20 +78,20 @@ impl CPU {
         self.registers.f.zero = false;
     }
     pub fn rra(&mut self) {
-        self.registers.a = self.rr(self.registers.a);
+        self.rr(RegA);
         self.registers.f.zero = false;
     }
-    pub fn rr(&mut self, value: u8) -> u8 {
+    pub fn rr(&mut self, operand: Operand) {
+        let value = self.read(operand);
         let previous_carry = self.registers.f.carry;
         let carry = value & 0x01 == 0x01;
         let result = (value >> 1) | if previous_carry { 1 << 7 } else { 0 };
+        self.write(operand, result);
 
         self.registers.f.zero = result == 0;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = false;
         self.registers.f.carry = carry;
-        
-        result
     }
     pub fn jr(&mut self) {
         let offset = self.fetch_byte() as i8;
