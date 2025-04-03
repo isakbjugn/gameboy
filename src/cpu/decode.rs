@@ -261,10 +261,10 @@ impl CPU {
         let opcode = self.fetch_byte();
         debug!("Dekoder nå opkode {:#04x} (etter CB-prefiks)", opcode);
         match opcode {
-            0x1a => { self.rr(D); 2 }
-            0x1b => { self.rr(B); 2 }
-            0x11 => { self.rl(C); 2 }
-            0x19 => { self.rr(C); 2 }
+            0x1a => { self.registers.d = self.rr(self.registers.d); 2 }
+            0x1b => { self.registers.b = self.rr(self.registers.b); 2 }
+            0x11 => { self.registers.c = self.rl(self.registers.c); 2 }
+            0x19 => { self.registers.c = self.rr(self.registers.c); 2 }
             0x37 => { self.registers.a = self.alu_swap(self.registers.a); 2 }
             0x38 => { self.alu_srl(B); 2 }
             0x7c => { self.alu_bit(self.registers.h, 7); 2 }

@@ -25,16 +25,17 @@ impl CPU {
         let decremented_value = self.alu_dec(value);
         self.registers.write_8(reg, decremented_value);
     }
-    pub fn rl(&mut self, reg: Reg8) {
+    pub fn rl(&mut self, value: u8) -> u8 {
         let previous_carry = self.registers.f.carry;
-        let (result, carry) = self.registers.read_8(reg).overflowing_shl(1);
+        let (result, carry) = value.overflowing_shl(1);
         let result = result | (if previous_carry { 1 } else { 0 });
-        self.registers.write_8(reg, result);
 
         self.registers.f.zero = result == 0;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = false;
         self.registers.f.carry = carry;
+        
+        value
     }
     pub fn rlca(&mut self) {
         self.registers.f.carry = (self.registers.a >> 7) != 0;
@@ -63,24 +64,24 @@ impl CPU {
         self.registers.f.carry = carry;
     }
     pub fn rla(&mut self) {
-        self.rl(Reg8::A);
+        self.registers.a = self.rl(self.registers.a);
         self.registers.f.zero = false;
     }
     pub fn rra(&mut self) {
-        self.rr(Reg8::A);
+        self.registers.a = self.rr(self.registers.a);
         self.registers.f.zero = false;
     }
-    pub fn rr(&mut self, reg: Reg8) {
+    pub fn rr(&mut self, value: u8) -> u8 {
         let previous_carry = self.registers.f.carry;
-        let value = self.registers.read_8(reg);
         let carry = value & 0x01 == 0x01;
         let result = (value >> 1) | if previous_carry { 1 << 7 } else { 0 };
-        self.registers.write_8(reg, result);
 
         self.registers.f.zero = result == 0;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = false;
         self.registers.f.carry = carry;
+        
+        result
     }
     pub fn jr(&mut self) {
         let offset = self.fetch_byte() as i8;
