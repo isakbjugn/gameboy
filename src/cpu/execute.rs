@@ -27,17 +27,17 @@ impl CPU {
         let decremented_value = self.alu_dec(value);
         self.registers.write_8(reg, decremented_value);
     }
-    pub fn rl(&mut self, value: u8) -> u8 {
+    pub fn rl(&mut self, operand: Operand) {
+        let value = self.read(operand);
         let previous_carry = self.registers.f.carry;
         let (result, carry) = value.overflowing_shl(1);
         let result = result | (if previous_carry { 1 } else { 0 });
+        self.write(operand, result);
 
         self.registers.f.zero = result == 0;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = false;
         self.registers.f.carry = carry;
-        
-        value
     }
     pub fn rlca(&mut self) {
         self.rlc(RegA);
@@ -74,7 +74,7 @@ impl CPU {
         self.registers.f.carry = carry;
     }
     pub fn rla(&mut self) {
-        self.registers.a = self.rl(self.registers.a);
+        self.rl(RegA);
         self.registers.f.zero = false;
     }
     pub fn rra(&mut self) {

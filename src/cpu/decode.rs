@@ -270,7 +270,7 @@ impl CPU {
             0x05 => { self.rlc(RegL); 2 }
             0x06 => { self.rlc(AddressHL); 4 }
             0x07 => { self.rlc(RegA); 2 }
-            0x11 => { self.registers.c = self.rl(self.registers.c); 2 }
+            0x11 => { self.rl(RegC); 2 }
             0x18 => { self.rr(RegB); 2 }
             0x19 => { self.rr(RegC); 2 }
             0x1a => { self.rr(RegD); 2 }
