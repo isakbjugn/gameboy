@@ -38,12 +38,18 @@ impl CPU {
         value
     }
     pub fn rlca(&mut self) {
-        self.registers.f.carry = (self.registers.a >> 7) != 0;
-        self.registers.a = self.registers.a.rotate_left(1);
-        
+        self.registers.a = self.rlc(self.registers.a);
+        self.registers.f.subtract = false;
+    }
+    pub fn rlc(&mut self, value: u8) -> u8 {
+        self.registers.f.carry = (value >> 7) != 0;
+        let result = value.rotate_left(1);
+
         self.registers.f.zero = false;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = false;
+
+        result
     }
     pub fn rrca(&mut self) {
         self.registers.f.carry = (self.registers.a & 0x01) != 0;

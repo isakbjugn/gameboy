@@ -261,6 +261,14 @@ impl CPU {
         let opcode = self.fetch_byte();
         debug!("Dekoder nå opkode {:#04x} (etter CB-prefiks)", opcode);
         match opcode {
+            0x00 => { self.registers.b = self.rlc(self.registers.b); 2 }
+            0x01 => { self.registers.c = self.rlc(self.registers.c); 2 }
+            0x02 => { self.registers.d = self.rlc(self.registers.d); 2 }
+            0x03 => { self.registers.e = self.rlc(self.registers.e); 2 }
+            0x04 => { self.registers.h = self.rlc(self.registers.h); 2 }
+            0x05 => { self.registers.l = self.rlc(self.registers.l); 2 }
+            0x06 => { let rotated_byte = self.rlc(self.bus.read_byte(self.registers.read_16(HL))); self.bus.write_byte(self.registers.read_16(HL), rotated_byte); 4 }
+            0x07 => { self.registers.a = self.rlc(self.registers.a); 2 }
             0x1a => { self.registers.d = self.rr(self.registers.d); 2 }
             0x1b => { self.registers.b = self.rr(self.registers.b); 2 }
             0x11 => { self.registers.c = self.rl(self.registers.c); 2 }
