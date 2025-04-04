@@ -260,16 +260,16 @@ impl CPU {
         self.registers.f.half_carry = false;
         self.registers.f.carry = carry;
     }
-    pub fn alu_swap(&mut self, value: u8) -> u8 {
+    pub fn swap(&mut self, operand: Operand) {
+        let value = self.read(operand);
         let lower = value & 0x0f;
         let swapped_value = (lower << 4) | (value >> 4);
+        self.write(operand, swapped_value);
 
         self.registers.f.zero = swapped_value == 0;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = false;
         self.registers.f.carry = false;
-
-        swapped_value
     }
     pub fn alu_add_s8(&mut self, value: u16) -> u16 {
         let byte = self.fetch_byte() as i8 as i32;

@@ -310,12 +310,18 @@ impl CPU {
             0x2d => { self.sra(RegL); 2 }
             0x2e => { self.sra(AddressHL); 4 }
             0x2f => { self.sra(RegA); 2 }
-            
-            0x37 => { self.registers.a = self.alu_swap(self.registers.a); 2 }
+            0x30 => { self.swap(RegB); 2 }
+            0x31 => { self.swap(RegC); 2 }
+            0x32 => { self.swap(RegD); 2 }
+            0x33 => { self.swap(RegE); 2 }
+            0x34 => { self.swap(RegH); 2 }
+            0x35 => { self.swap(RegL); 2 }
+            0x36 => { self.swap(AddressHL); 4 }
+            0x37 => { self.swap(RegA); 2 }
             0x38 => { self.alu_srl(B); 2 }
-            
+
             0x7c => { self.alu_bit(self.registers.h, 7); 2 }
-            
+
             0xd1 => { self.registers.c |= 0x2; 2 }
             _ => panic!("CB-instruksjon ikke støttet: 0x{:2x}", opcode)
         }
