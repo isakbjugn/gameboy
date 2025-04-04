@@ -249,16 +249,10 @@ impl CPU {
         self.registers.f.half_carry = (self.registers.a & 0x0f) < (value & 0x0f) + carry;
         self.registers.f.carry = overflow_first | overflow_second;
     }
-    pub fn alu_srl(&mut self, reg: Reg8) {
-        let value = self.registers.read_8(reg);
-        let carry = value & 0x01 == 0x01;
-        let result = value >> 1;
-        self.registers.write_8(reg, result);
-
-        self.registers.f.zero = result == 0;
-        self.registers.f.subtract = false;
-        self.registers.f.half_carry = false;
-        self.registers.f.carry = carry;
+    pub fn srl(&mut self, operand: Operand) {
+        self.sra(operand);
+        let value = self.read(operand);
+        self.write(operand, value & 0x7f);
     }
     pub fn swap(&mut self, operand: Operand) {
         let value = self.read(operand);
