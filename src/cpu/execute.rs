@@ -181,7 +181,7 @@ impl CPU {
     }
     pub fn bit(&mut self, operand: Operand, bit: u8) {
         let value = self.read(operand);
-        self.registers.f.zero = value & (1 << bit) != 0;
+        self.registers.f.zero = value & (1 << bit) == 0;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = true;
     }
