@@ -278,11 +278,22 @@ impl CPU {
             0x0d => { self.rrc(RegL); 2 }
             0x0e => { self.rrc(AddressHL); 4 }
             0x0f => { self.rrc(RegA); 2 }
+            0x10 => { self.rl(RegB); 2 }
             0x11 => { self.rl(RegC); 2 }
+            0x12 => { self.rl(RegD); 2 }
+            0x13 => { self.rl(RegE); 2 }
+            0x14 => { self.rl(RegH); 2 }
+            0x15 => { self.rl(RegL); 2 }
+            0x16 => { self.rl(AddressHL); 4 }
+            0x17 => { self.rl(RegA); 2 }
             0x18 => { self.rr(RegB); 2 }
             0x19 => { self.rr(RegC); 2 }
             0x1a => { self.rr(RegD); 2 }
             0x1b => { self.rr(RegE); 2 }
+            0x1c => { self.rr(RegH); 2 }
+            0x1d => { self.rr(RegL); 2 }
+            0x1e => { self.rr(AddressHL); 4 }
+            0x1f => { self.rr(RegA); 2 }
             0x37 => { self.registers.a = self.alu_swap(self.registers.a); 2 }
             0x38 => { self.alu_srl(B); 2 }
             0x7c => { self.alu_bit(self.registers.h, 7); 2 }
