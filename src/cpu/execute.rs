@@ -305,4 +305,9 @@ impl CPU {
         let result = value & !(1 << bit);
         self.write(operand, result);
     }
+    pub fn set(&mut self, operand: Operand, bit: u8) {
+        let value = self.read(operand);
+        let result = value | (1 << bit);
+        self.write(operand, result);
+    }
 }
