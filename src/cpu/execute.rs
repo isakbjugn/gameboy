@@ -135,6 +135,10 @@ impl CPU {
         self.registers.f.half_carry = false;
         self.registers.f.carry = !self.registers.f.carry;
     }
+    pub fn load(&mut self, destination: Operand, source: Operand) {
+        let value = self.read(source);
+        self.write(destination, value);
+    }
     pub fn alu_inc(&mut self, value: u8) -> u8 {
         let incremented_value = value.wrapping_add(1);
 

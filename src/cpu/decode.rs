@@ -74,70 +74,70 @@ impl CPU {
             0x3d => { self.dec(A); 1 }
             0x3e => { self.registers.a = self.fetch_byte(); 2 }
             0x3f => { self.ccf(); 1 }
-            0x40 => { 1 }
-            0x41 => { self.registers.b = self.registers.c; 1 }
-            0x42 => { self.registers.b = self.registers.d; 1 }
-            0x43 => { self.registers.b = self.registers.e; 1 }
-            0x44 => { self.registers.b = self.registers.h; 1 }
-            0x45 => { self.registers.b = self.registers.l; 1 }
-            0x46 => { self.registers.b = self.bus.read_byte(self.registers.read_16(HL)); 2 }
-            0x47 => { self.registers.b = self.registers.a; 1 }
-            0x48 => { self.registers.c = self.registers.b; 1 }
-            0x49 => { 1 }
-            0x4a => { self.registers.c = self.registers.d; 1 }
-            0x4b => { self.registers.c = self.registers.e; 1 }
-            0x4c => { self.registers.c = self.registers.h; 1 }
-            0x4d => { self.registers.c = self.registers.l; 1 }
-            0x4e => { self.registers.c = self.bus.read_byte(self.registers.read_16(HL)); 2 }
-            0x4f => { self.registers.c = self.registers.a; 1 }
-            0x50 => { self.registers.d = self.registers.b; 1 }
-            0x51 => { self.registers.d = self.registers.c; 1 }
-            0x52 => { 1 }
-            0x53 => { self.registers.d = self.registers.e; 1 }
-            0x54 => { self.registers.d = self.registers.h; 1 }
-            0x55 => { self.registers.d = self.registers.l; 1 }
-            0x56 => { self.registers.d = self.bus.read_byte(self.registers.read_16(HL)); 2 }
-            0x57 => { self.registers.d = self.registers.a; 1 }
-            0x58 => { self.registers.e = self.registers.b; 1 }
-            0x59 => { self.registers.e = self.registers.c; 1 }
-            0x5a => { self.registers.e = self.registers.d; 1 }
-            0x5b => { 1 }
-            0x5c => { self.registers.e = self.registers.h; 1 }
-            0x5d => { self.registers.e = self.registers.l; 1 }
-            0x5e => { self.registers.e = self.bus.read_byte(self.registers.read_16(HL)); 2 }
-            0x5f => { self.registers.e = self.registers.a; 1 }
-            0x60 => { self.registers.h = self.registers.b; 1 }
-            0x61 => { self.registers.h = self.registers.c; 1 }
-            0x62 => { self.registers.h = self.registers.d; 1 }
-            0x63 => { self.registers.h = self.registers.e; 1 }
-            0x64 => { 1 }
-            0x65 => { self.registers.h = self.registers.l; 1 }
-            0x66 => { self.registers.h = self.bus.read_byte(self.registers.read_16(HL)); 2 }
-            0x67 => { self.registers.h = self.registers.a; 1 }
-            0x68 => { self.registers.l = self.registers.b; 1 }
-            0x69 => { self.registers.l = self.registers.c; 1 }
-            0x6a => { self.registers.l = self.registers.d; 1 }
-            0x6b => { self.registers.l = self.registers.e; 1 }
-            0x6c => { self.registers.l = self.registers.h; 1 }
-            0x6d => { 1 }
-            0x6e => { self.registers.l = self.bus.read_byte(self.registers.read_16(HL)); 2 }
-            0x6f => { self.registers.l = self.registers.a; 1 }
-            0x70 => { self.bus.write_byte(self.registers.read_16(HL), self.registers.b); 2 }
-            0x71 => { self.bus.write_byte(self.registers.read_16(HL), self.registers.c); 2 }
-            0x72 => { self.bus.write_byte(self.registers.read_16(HL), self.registers.d); 2 }
-            0x73 => { self.bus.write_byte(self.registers.read_16(HL), self.registers.e); 2 }
-            0x74 => { self.bus.write_byte(self.registers.read_16(HL), self.registers.h); 2 }
-            0x75 => { self.bus.write_byte(self.registers.read_16(HL), self.registers.l); 2 }
+            0x40 => { self.load(RegB, RegB); 1 }
+            0x41 => { self.load(RegB, RegC); 1 }
+            0x42 => { self.load(RegB, RegD); 1 }
+            0x43 => { self.load(RegB, RegE); 1 }
+            0x44 => { self.load(RegB, RegH); 1 }
+            0x45 => { self.load(RegB, RegL); 1 }
+            0x46 => { self.load(RegB, AddressHL); 2 }
+            0x47 => { self.load(RegB, RegA); 1 }
+            0x48 => { self.load(RegC, RegB); 1 }
+            0x49 => { self.load(RegC, RegC); 1 }
+            0x4a => { self.load(RegC, RegD); 1 }
+            0x4b => { self.load(RegC, RegE); 1 }
+            0x4c => { self.load(RegC, RegH); 1 }
+            0x4d => { self.load(RegC, RegL); 1 }
+            0x4e => { self.load(RegC, AddressHL); 2 }
+            0x4f => { self.load(RegC, RegA); 1 }
+            0x50 => { self.load(RegD, RegB); 1 }
+            0x51 => { self.load(RegD, RegC); 1 }
+            0x52 => { self.load(RegD, RegD); 1 }
+            0x53 => { self.load(RegD, RegE); 1 }
+            0x54 => { self.load(RegD, RegH); 1 }
+            0x55 => { self.load(RegD, RegL); 1 }
+            0x56 => { self.load(RegD, AddressHL); 2 }
+            0x57 => { self.load(RegD, RegA); 1 }
+            0x58 => { self.load(RegE, RegB); 1 }
+            0x59 => { self.load(RegE, RegC); 1 }
+            0x5a => { self.load(RegE, RegD); 1 }
+            0x5b => { self.load(RegE, RegE); 1 }
+            0x5c => { self.load(RegE, RegH); 1 }
+            0x5d => { self.load(RegE, RegL); 1 }
+            0x5e => { self.load(RegE, AddressHL); 2 }
+            0x5f => { self.load(RegE, RegA); 1 }
+            0x60 => { self.load(RegH, RegB); 1 }
+            0x61 => { self.load(RegH, RegC); 1 }
+            0x62 => { self.load(RegH, RegD); 1 }
+            0x63 => { self.load(RegH, RegE); 1 }
+            0x64 => { self.load(RegH, RegH); 1 }
+            0x65 => { self.load(RegH, RegL); 1 }
+            0x66 => { self.load(RegH, AddressHL); 2 }
+            0x67 => { self.load(RegH, RegA); 1 }
+            0x68 => { self.load(RegL, RegB); 1 }
+            0x69 => { self.load(RegL, RegC); 1 }
+            0x6a => { self.load(RegL, RegD); 1 }
+            0x6b => { self.load(RegL, RegE); 1 }
+            0x6c => { self.load(RegL, RegH); 1 }
+            0x6d => { self.load(RegL, RegL); 1 }
+            0x6e => { self.load(RegL, AddressHL); 2 }
+            0x6f => { self.load(RegL, RegA); 1 }
+            0x70 => { self.load(AddressHL, RegB); 2 }
+            0x71 => { self.load(AddressHL, RegC); 2 }
+            0x72 => { self.load(AddressHL, RegD); 2 }
+            0x73 => { self.load(AddressHL, RegE); 2 }
+            0x74 => { self.load(AddressHL, RegH); 2 }
+            0x75 => { self.load(AddressHL, RegL); 2 }
             0x76 => { self.is_halted = true; 1 }
-            0x77 => { self.bus.write_byte(self.registers.read_16(HL), self.registers.a); 2 }
-            0x78 => { self.registers.a = self.registers.b; 1 }
-            0x79 => { self.registers.a = self.registers.c; 1 }
-            0x7a => { self.registers.a = self.registers.d; 1 }
-            0x7b => { self.registers.a = self.registers.e; 1 }
-            0x7c => { self.registers.a = self.registers.h; 1 }
-            0x7d => { self.registers.a = self.registers.l; 1 }
-            0x7e => { self.registers.a = self.bus.read_byte(self.registers.read_16(HL)); 2 }
-            0x7f => { 1 }
+            0x77 => { self.load(AddressHL, RegA); 2 }
+            0x78 => { self.load(RegA, RegB); 1 }
+            0x79 => { self.load(RegA, RegC); 1 }
+            0x7a => { self.load(RegA, RegD); 1 }
+            0x7b => { self.load(RegA, RegE); 1 }
+            0x7c => { self.load(RegA, RegH); 1 }
+            0x7d => { self.load(RegA, RegL); 1 }
+            0x7e => { self.load(RegA, AddressHL); 2 }
+            0x7f => { self.load(RegA, RegA); 1 }
             0x80 => { self.alu_add(self.registers.b); 1 }
             0x81 => { self.alu_add(self.registers.c); 1 }
             0x82 => { self.alu_add(self.registers.d); 1 }
