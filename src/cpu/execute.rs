@@ -247,7 +247,8 @@ impl CPU {
 
         self.registers.a = r;
     }
-    pub fn alu_sbc(&mut self, value: u8) {
+    pub fn alu_sbc(&mut self, operand: Operand) {
+        let value = self.read(operand);
         let carry = if self.registers.f.carry { 1 } else { 0 };
         let (difference, overflow_first) = self.registers.a.overflowing_sub(value);
         let (difference, overflow_second) = difference.overflowing_sub(carry);
@@ -256,6 +257,8 @@ impl CPU {
         self.registers.f.subtract = true;
         self.registers.f.half_carry = (self.registers.a & 0x0f) < (value & 0x0f) + carry;
         self.registers.f.carry = overflow_first | overflow_second;
+        
+        self.registers.a = difference;
     }
     pub fn srl(&mut self, operand: Operand) {
         self.sra(operand);

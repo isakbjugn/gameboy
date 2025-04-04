@@ -162,14 +162,14 @@ impl CPU {
             0x95 => { self.alu_sub(self.registers.l); 1 }
             0x96 => { let byte = self.bus.read_byte(self.registers.read_16(HL)); self.alu_sub(byte); 2 }
             0x97 => { self.alu_sub(self.registers.a); 1 }
-            0x98 => { self.alu_sbc(self.registers.b); 1 }
-            0x99 => { self.alu_sbc(self.registers.c); 1 }
-            0x9a => { self.alu_sbc(self.registers.d); 1 }
-            0x9b => { self.alu_sbc(self.registers.e); 1 }
-            0x9c => { self.alu_sbc(self.registers.h); 1 }
-            0x9d => { self.alu_sbc(self.registers.l); 1 }
-            0x9e => { let byte = self.bus.read_byte(self.registers.read_16(HL)); self.alu_sbc(byte); 2 }
-            0x9f => { self.alu_sbc(self.registers.a); 1 }
+            0x98 => { self.alu_sbc(RegB); 1 }
+            0x99 => { self.alu_sbc(RegC); 1 }
+            0x9a => { self.alu_sbc(RegD); 1 }
+            0x9b => { self.alu_sbc(RegE); 1 }
+            0x9c => { self.alu_sbc(RegH); 1 }
+            0x9d => { self.alu_sbc(RegL); 1 }
+            0x9e => { self.alu_sbc(AddressHL); 2 }
+            0x9f => { self.alu_sbc(RegA); 1 }
             0xa0 => { self.alu_and(self.registers.b); 1 }
             0xa1 => { self.alu_and(self.registers.c); 1 }
             0xa2 => { self.alu_and(self.registers.d); 1 }
@@ -229,7 +229,7 @@ impl CPU {
             0xd9 => { self.interrupt_master_enable.reti(); self.registers.pc = self.pop_stack(); 4 }
             0xda => { if self.registers.f.carry { self.registers.pc = self.fetch_word(); 4 } else { self.registers.pc += 2; 3 } }
             0xdc => { if self.registers.f.carry { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 } else { 3 } }
-            0xde => { let byte = self.fetch_byte(); self.alu_sbc(byte); 1 }
+            0xde => { self.alu_sbc(Immediate8); 2 }
             0xdf => { self.push_stack(self.registers.pc); self.registers.pc = 0x18; 4 }
             0xe0 => { let address = 0xff00 | self.fetch_byte() as u16; self.bus.write_byte(address, self.registers.a); 3 }
             0xe1 => { let value = self.pop_stack(); self.registers.write_16(HL, value); 3 }
