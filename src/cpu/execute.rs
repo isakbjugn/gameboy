@@ -300,4 +300,9 @@ impl CPU {
         self.registers.f.half_carry = false;
         self.registers.f.carry = carry;
     }
+    pub fn res(&mut self, operand: Operand, bit: u8) {
+        let value = self.read(operand);
+        let result = value & !(1 << bit);
+        self.write(operand, result);
+    }
 }
