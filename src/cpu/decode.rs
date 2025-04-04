@@ -178,7 +178,7 @@ impl CPU {
             0xa5 => { self.alu_and(self.registers.l); 1 }
             0xa6 => { let byte = self.bus.read_byte(self.registers.read_16(HL)); self.alu_and(byte); 2 }
             0xa7 => { self.alu_and(self.registers.a); 1 }
-            0xa8 => { self.alu_and(self.registers.b); 1 }
+            0xa8 => { self.alu_xor(self.registers.b); 1 }
             0xa9 => { self.alu_xor(self.registers.c); 1 }
             0xaa => { self.alu_xor(self.registers.d); 1 }
             0xab => { self.alu_xor(self.registers.e); 1 }
@@ -194,14 +194,14 @@ impl CPU {
             0xb5 => { self.alu_or(L); 1 }
             0xb6 => { let value = self.bus.read_byte(self.registers.read_16(HL)); self.alu_or_val(value); 2 }
             0xb7 => { self.alu_or(A); 1 }
-            0xb8 => { self.alu_cp(self.registers.b); 1 }
-            0xb9 => { self.alu_cp(self.registers.c); 1 }
-            0xba => { self.alu_cp(self.registers.d); 1 }
-            0xbb => { self.alu_cp(self.registers.e); 1 }
-            0xbc => { self.alu_cp(self.registers.h); 1 }
-            0xbd => { self.alu_cp(self.registers.c); 1 }
-            0xbe => { let byte = self.bus.read_byte(self.registers.read_16(HL)); self.alu_cp(byte); 2 }
-            0xbf => { self.alu_cp(self.registers.a); 1 }
+            0xb8 => { self.alu_cp(RegB); 1 }
+            0xb9 => { self.alu_cp(RegC); 1 }
+            0xba => { self.alu_cp(RegD); 1 }
+            0xbb => { self.alu_cp(RegE); 1 }
+            0xbc => { self.alu_cp(RegH); 1 }
+            0xbd => { self.alu_cp(RegL); 1 }
+            0xbe => { self.alu_cp(AddressHL); 2 }
+            0xbf => { self.alu_cp(RegA); 1 }
             0xc0 => { if !self.registers.f.zero { self.registers.pc = self.pop_stack(); 5 } else { 2 } }
             0xc1 => { let value = self.pop_stack(); self.registers.write_16(BC, value); 3 }
             0xc2 => { if !self.registers.f.zero { self.registers.pc = self.fetch_word(); 4 } else { self.registers.pc += 2; 3 } }
@@ -253,7 +253,7 @@ impl CPU {
             0xf9 => { self.registers.sp = self.registers.read_16(HL); 2 }
             0xfa => { let address = self.fetch_word(); self.registers.a = self.bus.read_byte(address); 4 }
             0xfb => { self.interrupt_master_enable.ei(); 1 }
-            0xfe => { let value = self.fetch_byte(); self.alu_cp(value); 2 }
+            0xfe => { self.alu_cp(Immediate8); 2 }
             0xff => { self.push_stack(self.registers.pc); self.registers.pc = 0x38; 4 }
             _ => panic!("Instruksjon ikke støttet: 0x{:2x}", opcode)
         }

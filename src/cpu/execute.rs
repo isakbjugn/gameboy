@@ -29,9 +29,9 @@ impl CPU {
     }
     pub fn rl(&mut self, operand: Operand) {
         let value = self.read(operand);
-        let previous_carry = self.registers.f.carry;
-        let (result, carry) = value.overflowing_shl(1);
-        let result = result | (if previous_carry { 1 } else { 0 });
+        let previous_carry = if self.registers.f.carry { 1 } else { 0 };
+        let carry = (value >> 7) == 1;
+        let result = (value << 1) | previous_carry;
         self.write(operand, result);
 
         self.registers.f.zero = result == 0;
@@ -41,7 +41,7 @@ impl CPU {
     }
     pub fn rlca(&mut self) {
         self.rlc(RegA);
-        self.registers.f.subtract = false;
+        self.registers.f.zero = false;
     }
     pub fn rlc(&mut self, operand: Operand) -> u8 {
         let value = self.read(operand);
@@ -49,7 +49,7 @@ impl CPU {
         let result = value.rotate_left(1);
         self.write(operand, result);
 
-        self.registers.f.zero = false;
+        self.registers.f.zero = result == 0;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = false;
 
@@ -64,7 +64,7 @@ impl CPU {
         self.registers.f.carry = (value & 0x01) != 0;
         let result = value.rotate_right(1);
         self.write(operand, result);
-        
+
         self.registers.f.zero = result == 0;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = false;
@@ -204,7 +204,8 @@ impl CPU {
         self.registers.f.half_carry = true;
         self.registers.f.carry = false;
     }
-    pub fn alu_cp(&mut self, value: u8) {
+    pub fn alu_cp(&mut self, operand: Operand) {
+        let value = self.read(operand);
         let (result, overflow) = self.registers.a.overflowing_sub(value);
 
         self.registers.f.zero = result == 0;
@@ -222,7 +223,7 @@ impl CPU {
         self.registers.f.subtract = false;
         self.registers.f.half_carry = (((self.registers.a & 0x0f) + (value & 0x0f) + carry) & 0x10) == 0x10;
         self.registers.f.carry = overflow_first | overflow_second;
-        
+
         self.registers.a = sum;
     }
     pub fn alu_add(&mut self, b: u8) {
@@ -257,7 +258,7 @@ impl CPU {
         self.registers.f.subtract = true;
         self.registers.f.half_carry = (self.registers.a & 0x0f) < (value & 0x0f) + carry;
         self.registers.f.carry = overflow_first | overflow_second;
-        
+
         self.registers.a = difference;
     }
     pub fn srl(&mut self, operand: Operand) {
@@ -293,8 +294,8 @@ impl CPU {
         let carry = value >> 7 == 1;
         let result = value << 1;
         self.write(operand, result);
-        
-        self.registers.f.carry = result == 0;
+
+        self.registers.f.zero = result == 0;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = false;
         self.registers.f.carry = carry;
@@ -304,8 +305,8 @@ impl CPU {
         let carry = value & 0x01 == 1;
         let result = (value & 0x80) | (value >> 1);
         self.write(operand, result);
-        
-        self.registers.f.carry = result == 0;
+
+        self.registers.f.zero = result == 0;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = false;
         self.registers.f.carry = carry;
