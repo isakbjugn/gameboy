@@ -212,7 +212,8 @@ impl CPU {
         self.registers.f.half_carry = (self.registers.a & 0x0f) < (value & 0x0f);
         self.registers.f.carry = overflow;
     }
-    pub fn alu_adc(&mut self, value: u8) {
+    pub fn alu_adc(&mut self, operand: Operand) {
+        let value = self.read(operand);
         let carry = if self.registers.f.carry { 1 } else { 0 };
         let (sum, overflow_first) = self.registers.a.overflowing_add(value);
         let (sum, overflow_second) = sum.overflowing_add(carry);
@@ -221,6 +222,8 @@ impl CPU {
         self.registers.f.subtract = false;
         self.registers.f.half_carry = (((self.registers.a & 0x0f) + (value & 0x0f) + carry) & 0x10) == 0x10;
         self.registers.f.carry = overflow_first | overflow_second;
+        
+        self.registers.a = sum;
     }
     pub fn alu_add(&mut self, b: u8) {
         let a = self.registers.a;

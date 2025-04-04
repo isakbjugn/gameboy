@@ -146,14 +146,14 @@ impl CPU {
             0x85 => { self.alu_add(self.registers.l); 1 }
             0x86 => { let byte = self.bus.read_byte(self.registers.read_16(HL)); self.alu_add(byte); 2 }
             0x87 => { self.alu_add(self.registers.a); 1 }
-            0x88 => { self.alu_adc(self.registers.b); 1 }
-            0x89 => { self.alu_adc(self.registers.c); 1 }
-            0x8a => { self.alu_adc(self.registers.d); 1 }
-            0x8b => { self.alu_adc(self.registers.e); 1 }
-            0x8c => { self.alu_adc(self.registers.h); 1 }
-            0x8d => { self.alu_adc(self.registers.l); 1 }
-            0x8e => { let byte = self.bus.read_byte(self.registers.read_16(HL)); self.alu_adc(byte); 2 }
-            0x8f => { self.alu_adc(self.registers.a); 1 }
+            0x88 => { self.alu_adc(RegB); 1 }
+            0x89 => { self.alu_adc(RegC); 1 }
+            0x8a => { self.alu_adc(RegD); 1 }
+            0x8b => { self.alu_adc(RegE); 1 }
+            0x8c => { self.alu_adc(RegH); 1 }
+            0x8d => { self.alu_adc(RegL); 1 }
+            0x8e => { self.alu_adc(AddressHL); 2 }
+            0x8f => { self.alu_adc(RegA); 1 }
             0x90 => { self.alu_sub(self.registers.b); 1 }
             0x91 => { self.alu_sub(self.registers.c); 1 }
             0x92 => { self.alu_sub(self.registers.d); 1 }
@@ -216,7 +216,7 @@ impl CPU {
             0xcb => { self.call_cb() }
             0xcc => { if self.registers.f.zero { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 } else { 3 } }
             0xcd => { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 }
-            0xce => { let byte = self.fetch_byte(); self.alu_adc(byte); 2 }
+            0xce => { self.alu_adc(Immediate8); 2 }
             0xcf => { self.push_stack(self.registers.pc); self.registers.pc = 0x08; 4 }
             0xd0 => { if !self.registers.f.carry { self.registers.pc = self.pop_stack(); 5 } else { 2 } }
             0xd1 => { let value = self.pop_stack(); self.registers.write_16(DE, value); 3 }
