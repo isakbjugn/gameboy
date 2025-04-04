@@ -283,4 +283,26 @@ impl CPU {
         
         sum as u16
     }
+    pub fn sla(&mut self, operand: Operand) {
+        let value = self.read(operand);
+        let carry = value >> 7 == 1;
+        let result = value << 1;
+        self.write(operand, result);
+        
+        self.registers.f.carry = result == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = false;
+        self.registers.f.carry = carry;
+    }
+    pub fn sra(&mut self, operand: Operand) {
+        let value = self.read(operand);
+        let carry = value & 0x01 == 1;
+        let result = (value & 0x80) | (value >> 1);
+        self.write(operand, result);
+        
+        self.registers.f.carry = result == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = false;
+        self.registers.f.carry = carry;
+    }
 }

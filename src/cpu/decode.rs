@@ -294,9 +294,28 @@ impl CPU {
             0x1d => { self.rr(RegL); 2 }
             0x1e => { self.rr(AddressHL); 4 }
             0x1f => { self.rr(RegA); 2 }
+            0x20 => { self.sla(RegB); 2 }
+            0x21 => { self.sla(RegC); 2 }
+            0x22 => { self.sla(RegD); 2 }
+            0x23 => { self.sla(RegE); 2 }
+            0x24 => { self.sla(RegH); 2 }
+            0x25 => { self.sla(RegL); 2 }
+            0x26 => { self.sla(AddressHL); 4 }
+            0x27 => { self.sla(RegA); 2 }
+            0x28 => { self.sra(RegB); 2 }
+            0x29 => { self.sra(RegC); 2 }
+            0x2a => { self.sra(RegD); 2 }
+            0x2b => { self.sra(RegE); 2 }
+            0x2c => { self.sra(RegH); 2 }
+            0x2d => { self.sra(RegL); 2 }
+            0x2e => { self.sra(AddressHL); 4 }
+            0x2f => { self.sra(RegA); 2 }
+            
             0x37 => { self.registers.a = self.alu_swap(self.registers.a); 2 }
             0x38 => { self.alu_srl(B); 2 }
+            
             0x7c => { self.alu_bit(self.registers.h, 7); 2 }
+            
             0xd1 => { self.registers.c |= 0x2; 2 }
             _ => panic!("CB-instruksjon ikke støttet: 0x{:2x}", opcode)
         }
