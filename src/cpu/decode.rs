@@ -154,14 +154,14 @@ impl CPU {
             0x8d => { self.alu_adc(RegL); 1 }
             0x8e => { self.alu_adc(AddressHL); 2 }
             0x8f => { self.alu_adc(RegA); 1 }
-            0x90 => { self.alu_sub(self.registers.b); 1 }
-            0x91 => { self.alu_sub(self.registers.c); 1 }
-            0x92 => { self.alu_sub(self.registers.d); 1 }
-            0x93 => { self.alu_sub(self.registers.e); 1 }
-            0x94 => { self.alu_sub(self.registers.h); 1 }
-            0x95 => { self.alu_sub(self.registers.l); 1 }
-            0x96 => { let byte = self.bus.read_byte(self.registers.read_16(HL)); self.alu_sub(byte); 2 }
-            0x97 => { self.alu_sub(self.registers.a); 1 }
+            0x90 => { self.alu_sub(RegB); 1 }
+            0x91 => { self.alu_sub(RegC); 1 }
+            0x92 => { self.alu_sub(RegD); 1 }
+            0x93 => { self.alu_sub(RegE); 1 }
+            0x94 => { self.alu_sub(RegH); 1 }
+            0x95 => { self.alu_sub(RegL); 1 }
+            0x96 => { self.alu_sub(AddressHL); 2 }
+            0x97 => { self.alu_sub(RegA); 1 }
             0x98 => { self.alu_sbc(RegB); 1 }
             0x99 => { self.alu_sbc(RegC); 1 }
             0x9a => { self.alu_sbc(RegD); 1 }
@@ -223,7 +223,7 @@ impl CPU {
             0xd2 => { if !self.registers.f.carry { self.registers.pc = self.fetch_word(); 4 } else { self.registers.pc += 2; 3 } }
             0xd4 => { if !self.registers.f.carry { self.push_stack(self.registers.pc); self.registers.pc = self.fetch_word(); 6 } else { self.registers.pc += 2; 3 } }
             0xd5 => { self.push_stack(self.registers.read_16(DE)); 4 }
-            0xd6 => { let byte = self.fetch_byte(); self.alu_sub(byte); 2 }
+            0xd6 => { self.alu_sub(Immediate8); 2 }
             0xd7 => { self.push_stack(self.registers.pc); self.registers.pc = 0x10; 4 }
             0xd8 => { if self.registers.f.carry { self.registers.pc = self.pop_stack(); 5 } else { 2 } }
             0xd9 => { self.interrupt_master_enable.reti(); self.registers.pc = self.pop_stack(); 4 }

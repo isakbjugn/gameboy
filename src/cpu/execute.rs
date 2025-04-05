@@ -238,16 +238,17 @@ impl CPU {
 
         self.registers.a = sum;
     }
-    pub fn alu_sub(&mut self, b: u8) {
+    pub fn alu_sub(&mut self, operand: Operand) {
         let a = self.registers.a;
-        let r = a.wrapping_sub(b);
+        let b = self.read(operand);
+        let result = a.wrapping_sub(b);
 
-        self.registers.f.zero = r == 0;
+        self.registers.f.zero = result == 0;
         self.registers.f.subtract = true;
         self.registers.f.half_carry = (a & 0x0F) < (b & 0x0F);
         self.registers.f.carry = (a as u16) < (b as u16);
 
-        self.registers.a = r;
+        self.registers.a = result;
     }
     pub fn alu_sbc(&mut self, operand: Operand) {
         let value = self.read(operand);
