@@ -1,12 +1,7 @@
 use crate::cpu::CPU;
 use crate::cpu::read_write::Operand;
 use crate::cpu::read_write::Operand::RegA;
-use crate::cpu::registers::{Reg16, Reg8};
-use crate::cpu::registers::Reg16::HL;
-
-pub enum Address {
-    HL,
-}
+use crate::cpu::registers::Reg16;
 
 impl CPU {
     pub fn inc_16(&mut self, reg: Reg16) {
@@ -16,11 +11,6 @@ impl CPU {
     pub fn dec_16(&mut self, reg: Reg16) {
         let value = self.registers.read_16(reg).wrapping_sub(1);
         self.registers.write_16(reg, value);
-    }
-    pub fn dec(&mut self, reg: Reg8) {
-        let value = self.registers.read_8(reg);
-        let decremented_value = self.alu_dec(value);
-        self.registers.write_8(reg, decremented_value);
     }
     pub fn rl(&mut self, operand: Operand) {
         let value = self.read(operand);
@@ -66,9 +56,9 @@ impl CPU {
     }
     pub fn add_16(&mut self, reg: Reg16) {
         let a = self.registers.read_16(reg);
-        let b = self.registers.read_16(HL);
+        let b = self.registers.read_16(Reg16::HL);
         let (sum, carry) = a.overflowing_add(b);
-        self.registers.write_16(HL, sum);
+        self.registers.write_16(Reg16::HL, sum);
         
         self.registers.f.subtract = false;
         self.registers.f.half_carry = (((a & 0xfff) + (b & 0xfff)) & 0x1000) == 0x1000;
@@ -143,22 +133,14 @@ impl CPU {
         self.registers.f.subtract = false;
         self.registers.f.half_carry = value & 0x0f == 0x0f;
     }
-    pub fn alu_dec(&mut self, value: u8) -> u8 {
+    pub fn alu_dec(&mut self, operand: Operand) {
+        let value = self.read(operand);
         let decremented_value = value.wrapping_sub(1);
+        self.write(operand, decremented_value);
 
         self.registers.f.zero = decremented_value == 0;
         self.registers.f.subtract = true;
         self.registers.f.half_carry = value & 0x0f == 0;
-        
-        decremented_value
-    }
-    pub fn dec_addr(&mut self, addr: Address) {
-        let address = match addr {
-            Address::HL => self.registers.read_16(HL),
-        };
-        
-        let decremented_value = self.alu_dec(self.bus.read_byte(address));
-        self.bus.write_byte(address, decremented_value);
     }
     pub fn alu_xor(&mut self, operand: Operand) {
         let value = self.read(operand);
