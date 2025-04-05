@@ -11,8 +11,24 @@ impl CPU {
             Operand::RegE => self.registers.read_8(Reg8::E),
             Operand::RegH => self.registers.read_8(Reg8::H),
             Operand::RegL => self.registers.read_8(Reg8::L),
+            Operand::AddressBC => {
+                let address = self.registers.read_16(Reg16::BC);
+                self.bus.read_byte(address)
+            }
+            Operand::AddressDE => {
+                let address = self.registers.read_16(Reg16::DE);
+                self.bus.read_byte(address)
+            }
             Operand::AddressHL => {
                 let address = self.registers.read_16(Reg16::HL);
+                self.bus.read_byte(address)
+            }
+            Operand::AddressHLI => {
+                let address = self.registers.hli();
+                self.bus.read_byte(address)
+            }
+            Operand::AddressHLD => {
+                let address = self.registers.hld();
                 self.bus.read_byte(address)
             }
             Operand::Immediate8 => { self.fetch_byte() }
@@ -27,8 +43,24 @@ impl CPU {
             Operand::RegE => self.registers.write_8(Reg8::E, value),
             Operand::RegH => self.registers.write_8(Reg8::H, value),
             Operand::RegL => self.registers.write_8(Reg8::L, value),
+            Operand::AddressBC => {
+                let address = self.registers.read_16(Reg16::BC);
+                self.bus.write_byte(address, value)
+            }
+            Operand::AddressDE => {
+                let address = self.registers.read_16(Reg16::DE);
+                self.bus.write_byte(address, value)
+            }
             Operand::AddressHL => {
                 let address = self.registers.read_16(Reg16::HL);
+                self.bus.write_byte(address, value)
+            }
+            Operand::AddressHLI => {
+                let address = self.registers.hli();
+                self.bus.write_byte(address, value)
+            }
+            Operand::AddressHLD => {
+                let address = self.registers.hld();
                 self.bus.write_byte(address, value)
             }
             Operand::Immediate8 => panic!("Kan ikke skrive til umiddelbar operand"),
@@ -45,6 +77,10 @@ pub enum Operand {
     RegE,
     RegH,
     RegL,
+    AddressBC,
+    AddressDE,
     AddressHL,
+    AddressHLI,
+    AddressHLD,
     Immediate8,
 }
