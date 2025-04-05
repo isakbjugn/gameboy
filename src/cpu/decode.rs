@@ -1,4 +1,5 @@
 use log::debug;
+use crate::cpu::condition::Condition::{Carry, NotCarry, NotZero, True, Zero};
 use crate::cpu::CPU;
 use crate::cpu::read_write::Operand::{RegA, RegB, RegC, RegD, RegE, RegH, RegL, AddressBC, AddressDE, AddressHL, AddressHLI, AddressHLD, Immediate8};
 use crate::cpu::registers::Reg8::{A, B, C, D, E, H, L};
@@ -33,7 +34,7 @@ impl CPU {
             0x15 => { self.alu_dec(RegD); 1 }
             0x16 => { self.load(RegD, Immediate8); 2 }
             0x17 => { self.rla(); 1 }
-            0x18 => { self.jr(); 3 }
+            0x18 => { self.jr(True); 3 }
             0x19 => { self.add_16(DE); 2 }
             0x1a => { self.load(RegA, AddressDE); 2 }
             0x1b => { self.dec_16(DE); 2 }
@@ -41,7 +42,7 @@ impl CPU {
             0x1d => { self.alu_dec(RegE); 1 }
             0x1e => { self.load(RegE, Immediate8); 2 }
             0x1f => { self.rra(); 1 }
-            0x20 => { if !self.registers.f.zero { self.jr(); 3 } else { self.registers.pc += 1; 2 } }
+            0x20 => { if self.jr(NotZero) { 3 } else { 2 } }
             0x21 => { let word = self.fetch_word(); self.registers.write_16(HL, word); 3 }
             0x22 => { self.load(AddressHLI, RegA); 2 }
             0x23 => { self.inc_16(HL); 2 }
@@ -49,7 +50,7 @@ impl CPU {
             0x25 => { self.alu_dec(RegH); 1 }
             0x26 => { self.load(RegH, Immediate8); 2 }
             0x27 => { self.daa(); 1 }
-            0x28 => { if self.registers.f.zero { self.jr(); 3 } else { self.registers.pc += 1; 2 } }
+            0x28 => { if self.jr(Zero) { 3 } else { 2 } }
             0x29 => { self.add_16(HL); 2 }
             0x2a => { self.load(RegA, AddressHLI); 2 }
             0x2b => { self.dec_16(HL); 2 }
@@ -57,7 +58,7 @@ impl CPU {
             0x2d => { self.alu_dec(RegL); 1 }
             0x2e => { self.load(RegL, Immediate8); 2 }
             0x2f => { self.cpl(); 1 }
-            0x30 => { if !self.registers.f.carry { self.jr(); 3 } else { self.registers.pc += 1; 2 } }
+            0x30 => { if self.jr(NotCarry) { 3 } else { 2 } }
             0x31 => { self.registers.sp = self.fetch_word(); 3 }
             0x32 => { self.load(AddressHLD, RegA); 2 }
             0x33 => { self.inc_16(SP); 2 }
@@ -65,7 +66,7 @@ impl CPU {
             0x35 => { self.alu_dec(AddressHL); 3 }
             0x36 => { self.load(AddressHL, Immediate8); 3 }
             0x37 => { self.registers.f.scf(); 1 }
-            0x38 => { if self.registers.f.carry { self.jr(); 3 } else { self.registers.pc += 1; 2 } }
+            0x38 => { if self.jr(Carry) { 3 } else { 2 } }
             0x39 => { self.add_16(SP); 2 }
             0x3a => { self.load(RegA, AddressHLD); 2 }
             0x3b => { self.dec_16(SP); 2 }
@@ -203,15 +204,15 @@ impl CPU {
             0xbf => { self.alu_cp(RegA); 1 }
             0xc0 => { if !self.registers.f.zero { self.registers.pc = self.pop_stack(); 5 } else { 2 } }
             0xc1 => { let value = self.pop_stack(); self.registers.write_16(BC, value); 3 }
-            0xc2 => { if !self.registers.f.zero { self.registers.pc = self.fetch_word(); 4 } else { self.registers.pc += 2; 3 } }
-            0xc3 => { self.registers.pc = self.fetch_word(); 4 }
+            0xc2 => { if self.jp(NotZero) { 4 } else { 3 } }
+            0xc3 => { self.jp(True); 4 }
             0xc4 => { if !self.registers.f.zero { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 } else { self.registers.pc += 2; 3 } }
             0xc5 => { self.push_stack(self.registers.read_16(BC)); 4 }
             0xc6 => { self.alu_add(Immediate8); 2 }
             0xc7 => { self.push_stack(self.registers.pc); self.registers.pc = 0x00; 4 }
             0xc8 => { if self.registers.f.zero { self.registers.pc = self.pop_stack(); 5 } else { 2 } }
             0xc9 => { self.registers.pc = self.pop_stack(); 4 }
-            0xca => { if self.registers.f.zero { self.jp(); 4 } else { self.registers.pc = self.registers.pc.wrapping_add(2); 3 } }
+            0xca => { if self.jp(Zero) { 4 } else { 3 } }
             0xcb => { self.call_cb() }
             0xcc => { if self.registers.f.zero { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 } else { 3 } }
             0xcd => { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 }
@@ -219,14 +220,14 @@ impl CPU {
             0xcf => { self.push_stack(self.registers.pc); self.registers.pc = 0x08; 4 }
             0xd0 => { if !self.registers.f.carry { self.registers.pc = self.pop_stack(); 5 } else { 2 } }
             0xd1 => { let value = self.pop_stack(); self.registers.write_16(DE, value); 3 }
-            0xd2 => { if !self.registers.f.carry { self.registers.pc = self.fetch_word(); 4 } else { self.registers.pc += 2; 3 } }
+            0xd2 => { if self.jp(NotCarry) { 4 } else { 3 } }
             0xd4 => { if !self.registers.f.carry { self.push_stack(self.registers.pc); self.registers.pc = self.fetch_word(); 6 } else { self.registers.pc += 2; 3 } }
             0xd5 => { self.push_stack(self.registers.read_16(DE)); 4 }
             0xd6 => { self.alu_sub(Immediate8); 2 }
             0xd7 => { self.push_stack(self.registers.pc); self.registers.pc = 0x10; 4 }
             0xd8 => { if self.registers.f.carry { self.registers.pc = self.pop_stack(); 5 } else { 2 } }
             0xd9 => { self.interrupt_master_enable.reti(); self.registers.pc = self.pop_stack(); 4 }
-            0xda => { if self.registers.f.carry { self.registers.pc = self.fetch_word(); 4 } else { self.registers.pc += 2; 3 } }
+            0xda => { if self.jp(Carry) { 4 } else { 3 } }
             0xdc => { if self.registers.f.carry { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 } else { 3 } }
             0xde => { self.alu_sbc(Immediate8); 2 }
             0xdf => { self.push_stack(self.registers.pc); self.registers.pc = 0x18; 4 }

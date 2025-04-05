@@ -1,3 +1,4 @@
+use crate::cpu::condition::Condition;
 use crate::cpu::CPU;
 use crate::cpu::read_write::Operand;
 use crate::cpu::read_write::Operand::RegA;
@@ -84,12 +85,21 @@ impl CPU {
         self.registers.f.half_carry = false;
         self.registers.f.carry = carry;
     }
-    pub fn jr(&mut self) {
+    pub fn jr(&mut self, condition: Condition) -> bool {
         let offset = self.fetch_byte() as i8;
-        self.registers.pc = (self.registers.pc as u32 as i32).wrapping_add(offset as i32) as u16;
+        let should_jump = self.check_condition(condition);
+        if should_jump {
+            self.registers.pc = (self.registers.pc as u32 as i32).wrapping_add(offset as i32) as u16;
+        }
+        should_jump
     }
-    pub fn jp(&mut self) {
-        self.registers.pc = self.fetch_word()
+    pub fn jp(&mut self, condition: Condition) -> bool {
+        let address = self.fetch_word();
+        let should_jump = self.check_condition(condition);
+        if should_jump{
+            self.registers.pc = address;
+        }
+        should_jump
     }
     pub fn daa(&mut self) {
         let mut adjustment = 0;
