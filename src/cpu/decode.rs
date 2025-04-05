@@ -138,14 +138,14 @@ impl CPU {
             0x7d => { self.load(RegA, RegL); 1 }
             0x7e => { self.load(RegA, AddressHL); 2 }
             0x7f => { self.load(RegA, RegA); 1 }
-            0x80 => { self.alu_add(self.registers.b); 1 }
-            0x81 => { self.alu_add(self.registers.c); 1 }
-            0x82 => { self.alu_add(self.registers.d); 1 }
-            0x83 => { self.alu_add(self.registers.e); 1 }
-            0x84 => { self.alu_add(self.registers.h); 1 }
-            0x85 => { self.alu_add(self.registers.l); 1 }
-            0x86 => { let byte = self.bus.read_byte(self.registers.read_16(HL)); self.alu_add(byte); 2 }
-            0x87 => { self.alu_add(self.registers.a); 1 }
+            0x80 => { self.alu_add(RegB); 1 }
+            0x81 => { self.alu_add(RegC); 1 }
+            0x82 => { self.alu_add(RegD); 1 }
+            0x83 => { self.alu_add(RegE); 1 }
+            0x84 => { self.alu_add(RegH); 1 }
+            0x85 => { self.alu_add(RegL); 1 }
+            0x86 => { self.alu_add(AddressHL); 2 }
+            0x87 => { self.alu_add(RegA); 1 }
             0x88 => { self.alu_adc(RegB); 1 }
             0x89 => { self.alu_adc(RegC); 1 }
             0x8a => { self.alu_adc(RegD); 1 }
@@ -208,7 +208,7 @@ impl CPU {
             0xc3 => { self.registers.pc = self.fetch_word(); 4 }
             0xc4 => { if !self.registers.f.zero { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 } else { self.registers.pc += 2; 3 } }
             0xc5 => { self.push_stack(self.registers.read_16(BC)); 4 }
-            0xc6 => { let value = self.fetch_byte(); self.alu_add(value); 2 }
+            0xc6 => { self.alu_add(Immediate8); 2 }
             0xc7 => { self.push_stack(self.registers.pc); self.registers.pc = 0x00; 4 }
             0xc8 => { if self.registers.f.zero { self.registers.pc = self.pop_stack(); 5 } else { 2 } }
             0xc9 => { self.registers.pc = self.pop_stack(); 4 }

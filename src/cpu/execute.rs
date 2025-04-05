@@ -227,8 +227,9 @@ impl CPU {
 
         self.registers.a = sum;
     }
-    pub fn alu_add(&mut self, b: u8) {
+    pub fn alu_add(&mut self, operand: Operand) {
         let a = self.registers.a;
+        let b = self.read(operand);
         let (sum, carry) = a.overflowing_add(b);
 
         self.registers.f.zero = sum == 0;
