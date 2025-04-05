@@ -185,10 +185,8 @@ impl CPU {
         self.registers.f.subtract = false;
         self.registers.f.half_carry = true;
     }
-    pub fn alu_or(&mut self, reg8: Reg8) {
-        self.alu_or_val(self.registers.read_8(reg8))
-    }
-    pub fn alu_or_val(&mut self, value: u8) {
+    pub fn alu_or(&mut self, operand: Operand) {
+        let value = self.read(operand);
         self.registers.a |= value;
 
         self.registers.f.zero = self.registers.a == 0;

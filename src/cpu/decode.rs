@@ -186,14 +186,14 @@ impl CPU {
             0xad => { self.alu_xor(self.registers.l); 1 }
             0xae => { let byte = self.bus.read_byte(self.registers.read_16(HL)); self.alu_xor(byte); 2 }
             0xaf => { self.alu_xor(self.registers.a); 1 }
-            0xb0 => { self.alu_or(B); 1 }
-            0xb1 => { self.alu_or(C); 1 }
-            0xb2 => { self.alu_or(D); 1 }
-            0xb3 => { self.alu_or(E); 1 }
-            0xb4 => { self.alu_or(H); 1 }
-            0xb5 => { self.alu_or(L); 1 }
-            0xb6 => { let value = self.bus.read_byte(self.registers.read_16(HL)); self.alu_or_val(value); 2 }
-            0xb7 => { self.alu_or(A); 1 }
+            0xb0 => { self.alu_or(RegB); 1 }
+            0xb1 => { self.alu_or(RegC); 1 }
+            0xb2 => { self.alu_or(RegD); 1 }
+            0xb3 => { self.alu_or(RegE); 1 }
+            0xb4 => { self.alu_or(RegH); 1 }
+            0xb5 => { self.alu_or(RegL); 1 }
+            0xb6 => { self.alu_or(AddressHL); 2 }
+            0xb7 => { self.alu_or(RegA); 1 }
             0xb8 => { self.alu_cp(RegB); 1 }
             0xb9 => { self.alu_cp(RegC); 1 }
             0xba => { self.alu_cp(RegD); 1 }
@@ -247,7 +247,7 @@ impl CPU {
             0xf2 => { let address = 0xff00 | self.registers.c as u16; self.registers.a = self.bus.read_byte(address); 2 }
             0xf3 => { self.interrupt_master_enable.di(); 1 }
             0xf5 => { self.push_stack(self.registers.read_16(AF)); 4 }
-            0xf6 => { let byte = self.fetch_byte(); self.alu_or_val(byte); 2 }
+            0xf6 => { self.alu_or(Immediate8); 2 }
             0xf7 => { self.push_stack(self.registers.pc); self.registers.pc = 0x30; 4 }
             0xf8 => { let sum = self.alu_add_s8(self.registers.sp); self.registers.write_16(HL, sum); 3 }
             0xf9 => { self.registers.sp = self.registers.read_16(HL); 2 }
