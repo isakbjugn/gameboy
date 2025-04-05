@@ -170,14 +170,14 @@ impl CPU {
             0x9d => { self.alu_sbc(RegL); 1 }
             0x9e => { self.alu_sbc(AddressHL); 2 }
             0x9f => { self.alu_sbc(RegA); 1 }
-            0xa0 => { self.alu_and(self.registers.b); 1 }
-            0xa1 => { self.alu_and(self.registers.c); 1 }
-            0xa2 => { self.alu_and(self.registers.d); 1 }
-            0xa3 => { self.alu_and(self.registers.e); 1 }
-            0xa4 => { self.alu_and(self.registers.h); 1 }
-            0xa5 => { self.alu_and(self.registers.l); 1 }
-            0xa6 => { let byte = self.bus.read_byte(self.registers.read_16(HL)); self.alu_and(byte); 2 }
-            0xa7 => { self.alu_and(self.registers.a); 1 }
+            0xa0 => { self.alu_and(RegB); 1 }
+            0xa1 => { self.alu_and(RegC); 1 }
+            0xa2 => { self.alu_and(RegD); 1 }
+            0xa3 => { self.alu_and(RegE); 1 }
+            0xa4 => { self.alu_and(RegH); 1 }
+            0xa5 => { self.alu_and(RegL); 1 }
+            0xa6 => { self.alu_and(AddressHL); 2 }
+            0xa7 => { self.alu_and(RegA); 1 }
             0xa8 => { self.alu_xor(self.registers.b); 1 }
             0xa9 => { self.alu_xor(self.registers.c); 1 }
             0xaa => { self.alu_xor(self.registers.d); 1 }
@@ -235,7 +235,7 @@ impl CPU {
             0xe1 => { let value = self.pop_stack(); self.registers.write_16(HL, value); 3 }
             0xe2 => { self.bus.write_byte(0xff00 | self.registers.c as u16, self.registers.a); 2 }
             0xe5 => { self.push_stack(self.registers.read_16(HL)); 4 }
-            0xe6 => { let byte = self.fetch_byte(); self.alu_and(byte); 2 }
+            0xe6 => { self.alu_and(Immediate8); 2 }
             0xe7 => { self.push_stack(self.registers.pc); self.registers.pc = 0x20; 4 }
             0xe8 => { self.registers.sp = self.alu_add_s8(self.registers.sp); 4 }
             0xe9 => { self.registers.pc = self.registers.read_16(HL); 1 }

@@ -194,7 +194,8 @@ impl CPU {
         self.registers.f.half_carry = false;
         self.registers.f.carry = false;
     }
-    pub fn alu_and(&mut self, value: u8) {
+    pub fn alu_and(&mut self, operand: Operand) {
+        let value = self.read(operand);
         self.registers.a &= value;
 
         self.registers.f.zero = self.registers.a == 0;
