@@ -39,7 +39,7 @@ impl CPU {
             return 1
         }
 
-        self.call()
+        self.decode()
     }
     fn handle_interrupts(&mut self) -> u32 {
         let interrupt_master_enable = self.interrupt_master_enable.read();

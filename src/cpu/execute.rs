@@ -134,6 +134,16 @@ impl CPU {
         let value = self.read(source);
         self.write(destination, value);
     }
+    pub fn call(&mut self, condition: Condition) -> bool {
+        let address = self.fetch_word();
+        if self.check_condition(condition) {
+            self.push_stack(self.registers.pc);
+            self.registers.pc = address;
+            true
+        } else {
+            false
+        }
+    }
     pub fn alu_inc(&mut self, operand: Operand) {
         let value = self.read(operand);
         let incremented_value = value.wrapping_add(1);
@@ -155,7 +165,7 @@ impl CPU {
     pub fn alu_xor(&mut self, operand: Operand) {
         let value = self.read(operand);
         self.registers.a ^= value;
-        
+
         self.registers.f.zero = self.registers.a == 0;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = false;

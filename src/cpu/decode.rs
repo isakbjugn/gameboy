@@ -6,7 +6,7 @@ use crate::cpu::registers::Reg8::{A, B, C, D, E, H, L};
 use crate::cpu::registers::Reg16::{AF, BC, DE, HL, SP};
 
 impl CPU {
-    pub fn call(&mut self) -> u32 {
+    pub fn decode(&mut self) -> u32 {
         let opcode = self.fetch_byte();
         debug!("Dekoder nå opkode {:#04x}", opcode);
         match opcode {
@@ -206,29 +206,29 @@ impl CPU {
             0xc1 => { let value = self.pop_stack(); self.registers.write_16(BC, value); 3 }
             0xc2 => { if self.jp(NotZero) { 4 } else { 3 } }
             0xc3 => { self.jp(True); 4 }
-            0xc4 => { if !self.registers.f.zero { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 } else { self.registers.pc += 2; 3 } }
+            0xc4 => { if self.call(NotZero) { 6 } else { 3 } }
             0xc5 => { self.push_stack(self.registers.read_16(BC)); 4 }
             0xc6 => { self.alu_add(Immediate8); 2 }
             0xc7 => { self.push_stack(self.registers.pc); self.registers.pc = 0x00; 4 }
             0xc8 => { if self.registers.f.zero { self.registers.pc = self.pop_stack(); 5 } else { 2 } }
             0xc9 => { self.registers.pc = self.pop_stack(); 4 }
             0xca => { if self.jp(Zero) { 4 } else { 3 } }
-            0xcb => { self.call_cb() }
-            0xcc => { if self.registers.f.zero { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 } else { 3 } }
-            0xcd => { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 }
+            0xcb => { self.decode_cb() }
+            0xcc => { if self.call(Zero) { 6 } else { 3 } }
+            0xcd => { self.call(True); 6 }
             0xce => { self.alu_adc(Immediate8); 2 }
             0xcf => { self.push_stack(self.registers.pc); self.registers.pc = 0x08; 4 }
             0xd0 => { if !self.registers.f.carry { self.registers.pc = self.pop_stack(); 5 } else { 2 } }
             0xd1 => { let value = self.pop_stack(); self.registers.write_16(DE, value); 3 }
             0xd2 => { if self.jp(NotCarry) { 4 } else { 3 } }
-            0xd4 => { if !self.registers.f.carry { self.push_stack(self.registers.pc); self.registers.pc = self.fetch_word(); 6 } else { self.registers.pc += 2; 3 } }
+            0xd4 => { if self.call(NotCarry) { 6 } else { 3 } }
             0xd5 => { self.push_stack(self.registers.read_16(DE)); 4 }
             0xd6 => { self.alu_sub(Immediate8); 2 }
             0xd7 => { self.push_stack(self.registers.pc); self.registers.pc = 0x10; 4 }
             0xd8 => { if self.registers.f.carry { self.registers.pc = self.pop_stack(); 5 } else { 2 } }
             0xd9 => { self.interrupt_master_enable.reti(); self.registers.pc = self.pop_stack(); 4 }
             0xda => { if self.jp(Carry) { 4 } else { 3 } }
-            0xdc => { if self.registers.f.carry { self.push_stack(self.registers.pc + 2); self.registers.pc = self.fetch_word(); 6 } else { 3 } }
+            0xdc => { if self.call(Carry) { 6 } else { 3 } }
             0xde => { self.alu_sbc(Immediate8); 2 }
             0xdf => { self.push_stack(self.registers.pc); self.registers.pc = 0x18; 4 }
             0xe0 => { let address = 0xff00 | self.fetch_byte() as u16; self.bus.write_byte(address, self.registers.a); 3 }
@@ -258,7 +258,7 @@ impl CPU {
             _ => panic!("Instruksjon ikke støttet: 0x{:2x}", opcode)
         }
     }
-    fn call_cb(&mut self) -> u32 {
+    fn decode_cb(&mut self) -> u32 {
         let opcode = self.fetch_byte();
         debug!("Dekoder nå opkode {:#04x} (etter CB-prefiks)", opcode);
         match opcode {
