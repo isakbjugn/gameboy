@@ -33,7 +33,7 @@ impl AddressBus {
             bootrom: Bootrom::new(),
             timer: Timer::new(),
         };
-        if cfg!(feature = "test") {
+        #[cfg(feature = "test")] {
             address_bus.set_initial();
         }
         address_bus
