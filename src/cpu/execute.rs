@@ -17,11 +17,6 @@ impl CPU {
         let value = self.registers.read_16(reg).wrapping_sub(1);
         self.registers.write_16(reg, value);
     }
-    pub fn inc(&mut self, reg: Reg8) {
-        let value = self.registers.read_8(reg);
-        let incremented_value = self.alu_inc(value);
-        self.registers.write_8(reg, incremented_value);
-    }
     pub fn dec(&mut self, reg: Reg8) {
         let value = self.registers.read_8(reg);
         let decremented_value = self.alu_dec(value);
@@ -139,21 +134,14 @@ impl CPU {
         let value = self.read(source);
         self.write(destination, value);
     }
-    pub fn alu_inc(&mut self, value: u8) -> u8 {
+    pub fn alu_inc(&mut self, operand: Operand) {
+        let value = self.read(operand);
         let incremented_value = value.wrapping_add(1);
+        self.write(operand, incremented_value);
 
         self.registers.f.zero = incremented_value == 0;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = value & 0x0f == 0x0f;
-        
-        incremented_value
-    }
-    pub fn inc_addr(&mut self, addr: Address) {
-        let address = match addr {
-            Address::HL => self.registers.read_16(HL),
-        };
-        let incremented_value = self.alu_inc(self.bus.read_byte(address));
-        self.bus.write_byte(address, incremented_value);
     }
     pub fn alu_dec(&mut self, value: u8) -> u8 {
         let decremented_value = value.wrapping_sub(1);
