@@ -178,14 +178,14 @@ impl CPU {
             0xa5 => { self.alu_and(RegL); 1 }
             0xa6 => { self.alu_and(AddressHL); 2 }
             0xa7 => { self.alu_and(RegA); 1 }
-            0xa8 => { self.alu_xor(self.registers.b); 1 }
-            0xa9 => { self.alu_xor(self.registers.c); 1 }
-            0xaa => { self.alu_xor(self.registers.d); 1 }
-            0xab => { self.alu_xor(self.registers.e); 1 }
-            0xac => { self.alu_xor(self.registers.h); 1 }
-            0xad => { self.alu_xor(self.registers.l); 1 }
-            0xae => { let byte = self.bus.read_byte(self.registers.read_16(HL)); self.alu_xor(byte); 2 }
-            0xaf => { self.alu_xor(self.registers.a); 1 }
+            0xa8 => { self.alu_xor(RegB); 1 }
+            0xa9 => { self.alu_xor(RegC); 1 }
+            0xaa => { self.alu_xor(RegD); 1 }
+            0xab => { self.alu_xor(RegE); 1 }
+            0xac => { self.alu_xor(RegH); 1 }
+            0xad => { self.alu_xor(RegL); 1 }
+            0xae => { self.alu_xor(AddressHL); 2 }
+            0xaf => { self.alu_xor(RegA); 1 }
             0xb0 => { self.alu_or(RegB); 1 }
             0xb1 => { self.alu_or(RegC); 1 }
             0xb2 => { self.alu_or(RegD); 1 }
@@ -240,7 +240,7 @@ impl CPU {
             0xe8 => { self.registers.sp = self.alu_add_s8(self.registers.sp); 4 }
             0xe9 => { self.registers.pc = self.registers.read_16(HL); 1 }
             0xea => { let address = self.fetch_word(); self.bus.write_byte(address, self.registers.a); 4 }
-            0xee => { let byte = self.fetch_byte(); self.alu_xor(byte); 2 }
+            0xee => { self.alu_xor(Immediate8); 2 }
             0xef => { self.push_stack(self.registers.pc); self.registers.pc = 0x28; 4 }
             0xf0 => { let address = 0xff00 | self.fetch_byte() as u16; self.registers.a = self.bus.read_byte(address); 3 }
             0xf1 => { let value = self.pop_stack(); self.registers.write_16(AF, value); 4 }
