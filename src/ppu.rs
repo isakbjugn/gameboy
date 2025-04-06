@@ -1,9 +1,15 @@
+mod control;
+mod status;
+mod mode;
+
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use arrayvec::ArrayVec;
-use bitflags::bitflags;
 use itertools::Itertools;
 use log::debug;
+use crate::ppu::control::Control;
+use crate::ppu::mode::Mode;
+use crate::ppu::status::Status;
 
 const SCREEN_WIDTH: usize = 160;
 const SCREEN_HEIGHT: usize = 144;
@@ -11,83 +17,12 @@ const VIDEO_RAM_SIZE: usize = 0x2000;
 const OAM_SIZE: usize = 160;
 const SCANLINES: u8 = 154;
 
-bitflags!(
-    pub struct Control: u8 {
-        const lcd_enable = 1 << 7;
-        const window_tile_map_select = 1 << 6;
-        const window_enable = 1 << 5;
-        const tile_data_select = 1 << 4;
-        const bg_tile_map_select = 1 << 3;
-        const sprite_size = 1 << 2;
-        const sprite_enable = 1 << 1;
-        const bg_window_enable = 1;
-    }
-);
-
-impl Control {
-    fn lcd_on(&self) -> bool {
-        self.bits() >> 7 != 0
-    }
-    fn tall_sprite_mode(&self) -> bool {
-        self.bits() >> 2 != 0
-    }
-    fn sprite_height(&self) -> u8 {
-        if self.tall_sprite_mode() { 16 } else { 8 }
-    }
-    fn bg_map_mask(&self) -> usize {
-        match self.contains(Control::bg_tile_map_select) {
-            true => 0x1c00,
-            false => 0x1800,
-        }
-    }
-    fn window_map_mask(&self) -> usize {
-        match self.contains(Control::window_tile_map_select) {
-            true => 0x1c00,
-            false => 0x1800,
-        }
-    }
-    fn tile_data_base_from_tile_number(&self, tile_number: u8) -> usize {
-        match self.contains(Control::tile_data_select) {
-            true => tile_number as usize * 16,
-            false => 0x1000 + (tile_number as i8 as i16) as usize,
-        }
-    }
-}
-
-bitflags!(
-    struct Status: u8 {
-        const lyc_select = 1 << 6;
-        const mode_2_int_select = 1 << 5;
-        const mode_1_int_select = 1 << 4;
-        const mode_0_int_select = 1 << 3;
-    }
-);
-
-pub enum Mode {
-    HorizontalBlank,
-    VerticalBlank,
-    OAMScan,
-    Drawing,
-}
-
-impl Mode {
-    pub fn bits(&self) -> u8 {
-        match self {
-            Mode::HorizontalBlank => 0,
-            Mode::VerticalBlank => 1,
-            Mode::OAMScan => 2,
-            Mode::Drawing => 3,
-        }
-    }
-}
-
 #[derive(Clone)]
 pub struct Sprite {
     y: u8,
     x: u8,
     tile_index: u8,
     flags: u8,
-
 }
 
 pub struct Pixel {
@@ -294,13 +229,14 @@ impl PPU {
                 })
         }
         if self.control.contains(Control::sprite_enable) {
-            self.fetch_sprites_pixels().into_iter().for_each(|(key, Pixel { color, palette, background_priority })| {
+            self.fetch_sprites_pixels().into_iter()
+                .for_each(|(key, Pixel { color, palette, background_priority })| {
                 if !(background_priority && bg_priority[key]) {
                     pixels[key] = self.color_from_palette(color, palette);
                 }
             })
         }
-
+        
         self.frame_buffer[line_start..line_end].copy_from_slice(&pixels);
         self.updated = true;
 
