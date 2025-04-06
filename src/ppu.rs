@@ -33,7 +33,7 @@ pub struct Pixel {
 
 pub struct PPU {
     pub video_ram: [u8; VIDEO_RAM_SIZE],
-    frame_buffer: Vec<u8>,
+    frame_buffer: [u8; SCREEN_WIDTH * SCREEN_HEIGHT],
     control: Control,
     status: Status,
     mode: Mode,
@@ -57,10 +57,10 @@ impl PPU {
     pub fn new() -> Self {
         Self {
             video_ram: [0; VIDEO_RAM_SIZE],
-            frame_buffer: vec![0; SCREEN_WIDTH * SCREEN_HEIGHT * 3],
+            frame_buffer: [0; SCREEN_WIDTH * SCREEN_HEIGHT],
             control: Control::from_bits(0).unwrap(),
             status: Status::from_bits(0).unwrap(),
-            mode: Mode::OAMScan,
+            mode: Mode::HorizontalBlank,
             vertical_scroll: 0,
             horizontal_scroll: 0,
             scanline: 0,

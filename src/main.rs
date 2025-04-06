@@ -103,7 +103,7 @@ fn main() -> Result<(), Error> {
         
         match screen_receiver.recv() {
             Ok(data) => {
-                pixels.frame_mut().copy_from_slice(&data.with_alpha());
+                data.write_to_rbga_buffer(pixels.frame_mut());
                 if let Err(err) = pixels.render() {
                     error!("Feil under tegning til skjerm!");
                     elwt.exit();
@@ -119,18 +119,21 @@ fn main() -> Result<(), Error> {
 }
 
 trait FrameBuffer {
-    fn with_alpha(&self) -> Self;
+    fn write_to_rbga_buffer(&self, rgba_buffer: &mut [u8]);
 }
 
 impl FrameBuffer for Vec<u8> {
-    fn with_alpha(&self) -> Vec<u8> {
-        self.chunks_exact(3).flat_map(|chunk| {
-            let mut rgba = Vec::with_capacity(4);
-            rgba.extend_from_slice(chunk);
-            rgba.push(0xff);
-            rgba
-        })
-            .collect()
+    fn write_to_rbga_buffer(&self, rgba_buffer: &mut [u8]) {
+        for (i, byte) in self.iter().enumerate() {
+            let pixel_index = i * 4;
+            let color = match *byte {
+                0 => [0xFF, 0xFF, 0xFF, 0xFF], // Hvit
+                1 => [0xAA, 0xAA, 0xAA, 0xFF], // Lys grå
+                2 => [0x55, 0x55, 0x55, 0xFF], // Mørk grå
+                _ => [0x00, 0x00, 0x00, 0xFF], // Svart
+            };
+            rgba_buffer[pixel_index..pixel_index + 4].copy_from_slice(&color);
+        }
     }
 }
 
@@ -152,21 +155,15 @@ fn run_game_boy(mut game_boy: Box<GameBoy>, sender: SyncSender<Vec<u8>>, receive
         
         while cpu_cycles < cpu_cycles_per_frame {
             cpu_cycles += game_boy.emulate();
-            let data = game_boy.updated_frame_buffer()
-                .unwrap_or_else(|| vec![0; SCREEN_WIDTH as usize * SCREEN_HEIGHT as usize * 3]);
-            if let Err(TrySendError::Disconnected(..)) = sender.try_send(data) {
-                info!("Game Boy mistet forbindelse med skjermen!");
-                break 'emulate;
-            }
         }
         
         cpu_cycles -= cpu_cycles_per_frame;
-        
-        let data = game_boy.updated_frame_buffer()
-            .unwrap_or_else(|| vec![0; SCREEN_WIDTH as usize * SCREEN_HEIGHT as usize * 3]);
-        if let Err(TrySendError::Disconnected(..)) = sender.try_send(data) {
-            info!("Game Boy mistet forbindelse med skjermen!");
-            break
+
+        if let Some(data) = game_boy.updated_frame_buffer() {
+            if let Err(TrySendError::Disconnected(..)) = sender.try_send(data) {
+                info!("Game Boy mistet forbindelse med skjermen!");
+                break
+            }
         }
         
         'joypad_input: loop {

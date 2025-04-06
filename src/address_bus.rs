@@ -38,15 +38,15 @@ impl AddressBus {
         }
         address_bus
     }
-    pub fn cycle(&mut self, t_cycles: u32) {
-        self.timer.cycle(t_cycles);
+    pub fn cycle(&mut self, m_cycles: u32) {
+        self.timer.cycle(m_cycles);
         self.interrupt_flag |= self.timer.interrupt;
         self.timer.interrupt = 0;
         
         self.interrupt_flag |= self.joypad.interrupt;
         self.joypad.interrupt = 0;
         
-        self.ppu.cycle(t_cycles);
+        self.ppu.cycle(4 * m_cycles);
         self.interrupt_flag |= self.ppu.interrupt;
         self.ppu.interrupt = 0;
     }
@@ -126,7 +126,7 @@ impl AddressBus {
         if cfg!(feature = "test") {
             if let Ok(s) = String::from_utf8(vec![byte]) { print!("{}", s); }
         } else {
-            panic!("Serial transfer not implemented");
+            debug!("Serial transfer not implemented");
         }
     }
     pub fn oam_dma(&mut self, value: u8) {
