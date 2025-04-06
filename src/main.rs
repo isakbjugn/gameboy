@@ -8,6 +8,7 @@ use winit::dpi::LogicalSize;
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
+use crate::frame_buffer::FrameBuffer;
 use crate::game_boy::GameBoy;
 use crate::joypad::JoypadKey;
 
@@ -20,6 +21,7 @@ mod bootrom;
 mod timer;
 mod game_boy;
 mod cartridge;
+mod frame_buffer;
 
 const SCREEN_WIDTH: u32 = 160;
 const SCREEN_HEIGHT: u32 = 144;
@@ -116,25 +118,6 @@ fn main() -> Result<(), Error> {
     drop(screen_receiver);
     let _ = game_boy_thread.join();
     res.map_err(|e| Error::UserDefined(Box::new(e)))
-}
-
-trait FrameBuffer {
-    fn write_to_rbga_buffer(&self, rgba_buffer: &mut [u8]);
-}
-
-impl FrameBuffer for Vec<u8> {
-    fn write_to_rbga_buffer(&self, rgba_buffer: &mut [u8]) {
-        for (i, byte) in self.iter().enumerate() {
-            let pixel_index = i * 4;
-            let color = match *byte {
-                0 => [0xFF, 0xFF, 0xFF, 0xFF], // Hvit
-                1 => [0xAA, 0xAA, 0xAA, 0xFF], // Lys grå
-                2 => [0x55, 0x55, 0x55, 0xFF], // Mørk grå
-                _ => [0x00, 0x00, 0x00, 0xFF], // Svart
-            };
-            rgba_buffer[pixel_index..pixel_index + 4].copy_from_slice(&color);
-        }
-    }
 }
 
 enum GameBoyEvent {

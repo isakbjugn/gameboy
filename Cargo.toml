@@ -16,3 +16,4 @@ winit_input_helper = "0.16.0"
 
 [features]
 test = []
+green = []
