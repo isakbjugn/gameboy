@@ -19,6 +19,7 @@ impl Cartridge {
         Ok(Self {
             header,
             mbc: match data[0x147] {
+                _ if cfg!(feature = "test") => Box::new(MBC0::new(data)),
                 0x00 => Box::new(MBC0::new(data)),
                 _ => panic!("Støtter ikke denne MBC-en.")
             }
