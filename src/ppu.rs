@@ -313,8 +313,12 @@ impl PPU {
     fn fetch_sprites_pixels(&self) -> HashMap<usize, Pixel> {
         let mut pixels = HashMap::new();
         for sprite in self.sprite_buffer.iter() {
-            let tile_data_low = self.video_ram[sprite.tile_index as usize];
-            let tile_data_high = self.video_ram[sprite.tile_index as usize + 1];
+            let tile_line = match sprite.flags.contains(SpriteFlags::y_flip) {
+                false => self.scanline.wrapping_sub(sprite.y),
+                true => self.control.sprite_height() - self.scanline.wrapping_sub(sprite.y),
+            };
+            let tile_data_low = self.video_ram[(((sprite.tile_index as u16) << 4) | (tile_line as u16)) as usize];
+            let tile_data_high = self.video_ram[(((sprite.tile_index as u16) << 4) | (tile_line as u16 + 1u16)) as usize];
 
             for x in 0..8 {
                 let (sprite_x, overflow) = sprite.x.overflowing_add(x);
