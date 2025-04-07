@@ -1,8 +1,8 @@
 pub enum Mode {
     HorizontalBlank,
     VerticalBlank,
-    OAMScan,
-    Drawing,
+    OAMScan, // OAM utilgjengelig
+    Drawing, // OAM og VRAM utilgjengelige
 }
 
 impl Mode {

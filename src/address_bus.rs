@@ -55,7 +55,7 @@ impl AddressBus {
             //0x00ff => panic!("Siste instruksjon i bootrom"),
             0x0000 ..= 0x00ff if self.bootrom.is_active() => self.bootrom[address],
             0x0000 ..= 0x7fff => self.cartridge.mbc.read_rom(address),
-            0x8000 ..= 0x9fff => self.ppu.video_ram[address as usize & 0x1FFF],
+            0x8000 ..= 0x9fff => self.ppu.read_video_ram(address),
             0xa000 ..= 0xbfff => self.cartridge.mbc.read_ram(address),
             0xc000 ..= 0xcfff | 0xe000 ..= 0xefff => self.work_ram[address as usize & 0x1fff],
             0xd000 ..= 0xdfff | 0xf000 ..= 0xfdff => self.work_ram[address as usize & 0x1fff],
@@ -87,7 +87,7 @@ impl AddressBus {
         match address {
             0x0000 ..= 0x00ff if self.bootrom.is_active() => (),
             0x0000 ..= 0x7fff => self.cartridge.mbc.write_rom(address, byte),
-            0x8000 ..= 0x9fff => self.ppu.video_ram[address as usize  & 0x1FFF] = byte,
+            0x8000 ..= 0x9fff => self.ppu.write_video_ram(address, byte),
             0xa000 ..= 0xbfff => self.cartridge.mbc.write_ram(address, byte),
             0xc000 ..= 0xcfff | 0xe000 ..= 0xefff => self.work_ram[address as usize & 0x1fff] = byte,
             0xd000 ..= 0xdfff | 0xf000 ..= 0xfdff => self.work_ram[address as usize & 0x1fff] = byte,

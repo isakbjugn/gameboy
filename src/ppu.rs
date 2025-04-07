@@ -26,7 +26,7 @@ pub struct Pixel {
 }
 
 pub struct PPU {
-    pub video_ram: [u8; VIDEO_RAM_SIZE],
+    video_ram: [u8; VIDEO_RAM_SIZE],
     frame_buffer: [u8; SCREEN_WIDTH * SCREEN_HEIGHT],
     control: Control,
     status: Status,
@@ -52,8 +52,8 @@ impl PPU {
         Self {
             video_ram: [0; VIDEO_RAM_SIZE],
             frame_buffer: [0; SCREEN_WIDTH * SCREEN_HEIGHT],
-            control: Control::from_bits(0).unwrap(),
-            status: Status::from_bits(0).unwrap(),
+            control: Control::from_bits_truncate(0),
+            status: Status::from_bits_truncate(0),
             mode: Mode::HorizontalBlank,
             vertical_scroll: 0,
             horizontal_scroll: 0,
@@ -124,9 +124,21 @@ impl PPU {
             | self.mode.bits()
     }
     fn set_status(&mut self, value: u8) {
-        self.status = Status::from_bits(value & 0b01111000).unwrap();
+        self.status = Status::from_bits_truncate(value & 0b01111000);
         // self.lyc_equals_ly is read-only
         // self.mode is read-only
+    }
+    pub fn read_video_ram(&self, address: u16) -> u8 {
+        match self.mode {
+            Mode::Drawing => 0xff,
+            _ => self.video_ram[address as usize & 0x1FFF]
+        }
+    }
+    pub fn write_video_ram(&mut self, address: u16, value: u8) {
+        match self.mode {
+            Mode::Drawing => (),
+            _ => self.video_ram[address as usize & 0x1FFF] = value,
+        }
     }
     pub fn read_oam(&self, address: u16) -> u8 {
         match self.mode {
