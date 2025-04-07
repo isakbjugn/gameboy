@@ -1,6 +1,7 @@
 mod control;
 mod status;
 mod mode;
+mod sprite;
 
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -9,6 +10,7 @@ use itertools::Itertools;
 use log::debug;
 use crate::ppu::control::Control;
 use crate::ppu::mode::Mode;
+use crate::ppu::sprite::{Sprite, SpriteFlags};
 use crate::ppu::status::Status;
 
 const SCREEN_WIDTH: usize = 160;
@@ -16,14 +18,6 @@ const SCREEN_HEIGHT: usize = 144;
 const VIDEO_RAM_SIZE: usize = 0x2000;
 const OAM_SIZE: usize = 160;
 const SCANLINES: u8 = 154;
-
-#[derive(Clone)]
-pub struct Sprite {
-    y: u8,
-    x: u8,
-    tile_index: u8,
-    flags: u8,
-}
 
 pub struct Pixel {
     color: u8,
@@ -185,7 +179,7 @@ impl PPU {
                             y,
                             x,
                             tile_index,
-                            flags,
+                            flags: SpriteFlags::from_bits(flags).unwrap(),
                         })
                     } else {
                         None
@@ -315,14 +309,14 @@ impl PPU {
                 if sprite_x < 8 || sprite_x > SCREEN_WIDTH as u8 || overflow { continue }
 
                 let color = self.pixel_color_from_bits(tile_data_low, tile_data_high, x);
-                let palette=  if sprite.flags >> 4 == 1 { self.obj_palette_1 } else { self.obj_palette_0 };
+                let palette = if sprite.flags.contains(SpriteFlags::palette) { self.obj_palette_1 } else { self.obj_palette_0 };
 
                 // todo!("Må ta hensyn til x-flip og y-flip i sprite.flags")
 
                 pixels.entry((sprite.x + x) as usize).or_insert(Pixel {
                     color,
                     palette,
-                    background_priority: sprite.flags >> 7 == 1,
+                    background_priority: sprite.flags.contains(SpriteFlags::obj_to_bg_priority),
                 });
             }
         }
