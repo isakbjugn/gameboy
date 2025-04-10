@@ -1,4 +1,3 @@
-use std::cmp::Ordering;
 use bitflags::bitflags;
 
 bitflags! {

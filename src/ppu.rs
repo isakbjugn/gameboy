@@ -321,15 +321,18 @@ impl PPU {
             let tile_data_high = self.video_ram[(((sprite.tile_index as u16) << 4) | (tile_line as u16 + 1u16)) as usize];
 
             for x in 0..8 {
-                let (sprite_x, overflow) = sprite.x.overflowing_add(x);
-                if sprite_x < 8 || sprite_x > SCREEN_WIDTH as u8 || overflow { continue }
+                let sprite_x = sprite.x.wrapping_add(x);
+                if sprite_x > SCREEN_WIDTH as u8 { continue }
+                
+                let bit = match sprite.flags.contains(SpriteFlags::x_flip) {
+                    false => x,
+                    true => 7 - x,
+                };
 
-                let color = self.pixel_color_from_bits(tile_data_low, tile_data_high, x);
+                let color = self.pixel_color_from_bits(tile_data_low, tile_data_high, bit);
                 let palette = if sprite.flags.contains(SpriteFlags::palette) { self.obj_palette_1 } else { self.obj_palette_0 };
 
-                // todo!("Må ta hensyn til x-flip og y-flip i sprite.flags")
-
-                pixels.entry((sprite.x + x) as usize).or_insert(Pixel {
+                pixels.entry(sprite_x as usize).or_insert(Pixel {
                     color,
                     palette,
                     background_priority: sprite.flags.contains(SpriteFlags::obj_to_bg_priority),
