@@ -38,7 +38,7 @@ impl Control {
     pub fn tile_data_base_from_tile_number(&self, tile_number: u8) -> usize {
         match self.contains(Control::tile_data_select) {
             true => tile_number as usize * 16,
-            false => 0x1000u16.wrapping_add_signed(tile_number as i8 as i16) as usize,
+            false => 0x1000u16.wrapping_add_signed(tile_number as i8 as i16 * 16) as usize,
         }
     }
 }

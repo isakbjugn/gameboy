@@ -227,7 +227,7 @@ impl PPU {
                     bg_priority[key] = background_priority;
                 })
         }
-        if self.control.contains(Control::window_enable) && self.window_y_position <= self.scanline {
+        if self.control.contains(Control::window_enable) && self.control.contains(Control::bg_window_enable) && self.window_y_position <= self.scanline {
             self.fetch_window_pixels().into_iter()
                 .for_each(|(key, Pixel { color, palette, background_priority })| {
                     pixels[key] = self.color_from_palette(color, palette);
