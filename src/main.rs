@@ -42,8 +42,19 @@ fn main() -> Result<(), Error> {
         .arg(clap::Arg::new("cartridge_path")
             .help("Sets the path to the ROM file to load")
             .required(true))
+        .arg(clap::Arg::new("scale")
+            .help("Scales the display. Default is 2")
+            .short('x')
+            .long("scale")
+             .default_value("2")
+             .value_parser(|s: &str| {
+                 s.parse::<u8>()
+                     .map_err(|e| format!("Invalid scale value: {}", e))
+             }))
         .get_matches();
+    
     let cartridge_path = matches.get_one::<String>("cartridge_path").unwrap();
+    let scale = matches.get_one::<u8>("scale").copied().unwrap();
 
     let game_boy = match GameBoy::new(cartridge_path) {
         Ok(game_boy) => game_boy,
@@ -57,7 +68,7 @@ fn main() -> Result<(), Error> {
     event_loop.set_control_flow(ControlFlow::Poll);
     let mut input = WinitInputHelper::new();
     let window = {
-        let size = LogicalSize::new(SCREEN_WIDTH as f64, SCREEN_HEIGHT as f64);
+        let size = LogicalSize::new(SCREEN_WIDTH as f64 * scale as f64, SCREEN_HEIGHT as f64 * scale as f64);
         WindowBuilder::new()
             .with_title(if cfg!(feature = "test") { "Test mode".to_string() } else { game_boy.title() })
             .with_inner_size(size)
