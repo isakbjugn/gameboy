@@ -13,8 +13,7 @@ impl GameBoy {
     }
     pub fn emulate(&mut self) -> u32 {
         let m_cycles = self.cpu.cycle();
-        self.cpu.bus.cycle(m_cycles);
-        m_cycles
+        self.cpu.bus.cycle(m_cycles)
     }
     pub fn updated_frame_buffer(&mut self) -> Option<Vec<u8>> {
         match self.cpu.bus.ppu.check_and_reset_updated() {

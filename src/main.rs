@@ -52,7 +52,7 @@ fn main() -> Result<(), Error> {
                      .map_err(|e| format!("Invalid scale value: {}", e))
              }))
         .get_matches();
-    
+
     let cartridge_path = matches.get_one::<String>("cartridge_path").unwrap();
     let scale = matches.get_one::<u8>("scale").copied().unwrap();
 
