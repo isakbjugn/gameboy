@@ -35,38 +35,38 @@ impl Joypad {
     }
     pub fn key_down(&mut self, key: JoypadKey) {
         match key {
-            JoypadKey::A      => self.action_row &= !0x1,
-            JoypadKey::B      => self.action_row &= !0x2,
-            JoypadKey::Select => self.action_row &= !0x3,
-            JoypadKey::Start  => self.action_row &= !0x4,
-            JoypadKey::Right  => self.d_pad_row  &= !0x1,
-            JoypadKey::Left   => self.d_pad_row  &= !0x2,
-            JoypadKey::Up     => self.d_pad_row  &= !0x3,
-            JoypadKey::Down   => self.d_pad_row  &= !0x4,
+            JoypadKey::A      => self.action_row &= !(1 << 0),
+            JoypadKey::B      => self.action_row &= !(1 << 1),
+            JoypadKey::Select => self.action_row &= !(1 << 2),
+            JoypadKey::Start  => self.action_row &= !(1 << 3),
+            JoypadKey::Right  => self.d_pad_row  &= !(1 << 0),
+            JoypadKey::Left   => self.d_pad_row  &= !(1 << 1),
+            JoypadKey::Up     => self.d_pad_row  &= !(1 << 2),
+            JoypadKey::Down   => self.d_pad_row  &= !(1 << 3),
         }
         self.interrupt |= 1 << 4;
         self.update()
     }
     pub fn key_up(&mut self, key: JoypadKey) {
         match key {
-            JoypadKey::A      => self.action_row |= 0x1,
-            JoypadKey::B      => self.action_row |= 0x2,
-            JoypadKey::Select => self.action_row |= 0x3,
-            JoypadKey::Start  => self.action_row |= 0x4,
-            JoypadKey::Right  => self.d_pad_row  |= 0x1,
-            JoypadKey::Left   => self.d_pad_row  |= 0x2,
-            JoypadKey::Up     => self.d_pad_row  |= 0x3,
-            JoypadKey::Down   => self.d_pad_row  |= 0x4,
+            JoypadKey::A      => self.action_row |= 1 << 0,
+            JoypadKey::B      => self.action_row |= 1 << 1,
+            JoypadKey::Select => self.action_row |= 1 << 2,
+            JoypadKey::Start  => self.action_row |= 1 << 3,
+            JoypadKey::Right  => self.d_pad_row  |= 1 << 0,
+            JoypadKey::Left   => self.d_pad_row  |= 1 << 1,
+            JoypadKey::Up     => self.d_pad_row  |= 1 << 2,
+            JoypadKey::Down   => self.d_pad_row  |= 1 << 3,
         }
         self.update()
     }
     fn update(&mut self) {
         self.data &= 0xf0;
-        if self.data & 0x10 == 0 {
-            self.data &= self.action_row & 0x0f;
+        if self.data & 0x20 == 0x00 {
+            self.data |= self.action_row & 0x0f;
         }
-        if self.data & 0x20 == 0 {
-            self.data &= self.d_pad_row & 0x0f;
+        if self.data & 0x10 == 0x00 {
+            self.data |= self.d_pad_row & 0x0f;
         }
     }
 }

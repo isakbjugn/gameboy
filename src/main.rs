@@ -186,7 +186,7 @@ fn winit_to_joypad(key: winit::keyboard::Key<&str>) -> Option<JoypadKey> {
         Key::Named(NamedKey::ArrowDown) => Some(JoypadKey::Down),
         Key::Named(NamedKey::ArrowLeft) => Some(JoypadKey::Left),
         Key::Named(NamedKey::ArrowRight) => Some(JoypadKey::Right),
-        Key::Named(NamedKey::Space) => Some(JoypadKey::Select),
+        Key::Named(NamedKey::Backspace) => Some(JoypadKey::Select),
         Key::Named(NamedKey::Enter) => Some(JoypadKey::Start),
         _ => None,
     }
