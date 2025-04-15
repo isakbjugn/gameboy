@@ -18,7 +18,7 @@ impl Control {
         self.bits() >> 7 != 0
     }
     fn tall_sprite_mode(&self) -> bool {
-        self.bits() >> 2 != 0
+        self.contains(Control::sprite_size)
     }
     pub fn sprite_height(&self) -> u8 {
         if self.tall_sprite_mode() { 16 } else { 8 }
