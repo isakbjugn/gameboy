@@ -328,15 +328,19 @@ impl PPU {
                     false => x,
                     true => 7 - x,
                 };
+                
+                match self.pixel_color_from_bits(tile_data_low, tile_data_high, bit) {
+                    0x00 => continue,
+                    color => {
+                        let palette = if sprite.flags.contains(SpriteFlags::palette) { self.obj_palette_1 } else { self.obj_palette_0 };
 
-                let color = self.pixel_color_from_bits(tile_data_low, tile_data_high, bit);
-                let palette = if sprite.flags.contains(SpriteFlags::palette) { self.obj_palette_1 } else { self.obj_palette_0 };
-
-                pixels.entry(sprite_x as usize).or_insert(Pixel {
-                    color,
-                    palette,
-                    background_priority: sprite.flags.contains(SpriteFlags::obj_to_bg_priority),
-                });
+                        pixels.entry(sprite_x as usize).or_insert(Pixel {
+                            color,
+                            palette,
+                            background_priority: sprite.flags.contains(SpriteFlags::obj_to_bg_priority),
+                        });
+                    }
+                }
             }
         }
         pixels
