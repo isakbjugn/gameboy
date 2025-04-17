@@ -1,3 +1,6 @@
+use std::fs::File;
+use std::io::{Read, Write};
+use std::path::PathBuf;
 use crate::mbc::MBC;
 
 enum BankingMode {
@@ -14,23 +17,36 @@ pub struct MBC1 {
     rom_bank_number: usize,
     ram_bank_number: usize,
     banking_mode_select: BankingMode,
+    has_battery: bool,
+    battery_save_path: Option<PathBuf>,
 }
 
 impl MBC1 {
-    pub fn new(data: Vec<u8>) -> Self {
+    pub fn new(data: Vec<u8>, battery_save_path: Option<PathBuf>) -> Self {
         let rom_banks = 32;
         let ram_banks = 16;
         let ram_size = ram_banks * 0x2000;
+        let has_battery = data[0x147] == 0x03;
 
         Self {
             rom: data,
-            ram: vec![0; ram_size],
+            ram: {
+                let mut ram = vec![0; ram_size];
+                if has_battery && battery_save_path.is_some() {
+                    if let Ok(mut file) = File::open(battery_save_path.as_ref().unwrap()) {
+                        file.read_exact(&mut ram).expect("Failed to read battery data");
+                    }
+                }
+                ram
+            },
             rom_banks: rom_banks,
             ram_banks: ram_banks,
             ram_enable: false,
             rom_bank_number: 1,
             ram_bank_number: 0,
             banking_mode_select: BankingMode::Simple,
+            has_battery: has_battery,
+            battery_save_path: battery_save_path,
         }
     }
 }
@@ -87,5 +103,15 @@ impl MBC for MBC1 {
             BankingMode::Advanced => self.ram_bank_number & 0b00000011,
         };
         self.ram[(bank_number * 0x2000) | (address & 0x1fff) as usize] = value;
+    }
+}
+
+impl Drop for MBC1 {
+    fn drop(&mut self) {
+        if self.has_battery && self.battery_save_path.is_some() {
+            File::create(self.battery_save_path.as_ref().unwrap())
+                .and_then(|mut file| file.write_all(&self.ram))
+                .expect("Failed to save battery data");
+        }
     }
 }

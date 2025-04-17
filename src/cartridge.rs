@@ -22,7 +22,7 @@ impl Cartridge {
             mbc: match (data[0x147], data[0x148], data[0x149]) {
                 _ if cfg!(feature = "test") => Box::new(MBC0::new(data)),
                 (0x00, ..) => Box::new(MBC0::new(data)),
-                (0x03, 0x04, 0x02) => Box::new(MBC1::new(data)),
+                (0x03, 0x04, 0x02) => Box::new(MBC1::new(data, Some(cartridge_path.with_extension("gbsave")))),
                 (mbc, rom_size, ram_size) => {
                     panic!("Støtter ikke denne MBC-en:\nMBC: {:#04x}\nROM size: {:#04x}\nRAM size: {:#04x}", mbc, rom_size, ram_size)
                 },
