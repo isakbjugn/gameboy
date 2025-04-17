@@ -322,7 +322,7 @@ impl PPU {
 
             for x in 0..8 {
                 let sprite_x = sprite.x.wrapping_add(x);
-                if sprite_x > SCREEN_WIDTH as u8 { continue }
+                if sprite_x >= SCREEN_WIDTH as u8 { continue }
                 
                 let bit = match sprite.flags.contains(SpriteFlags::x_flip) {
                     false => x,

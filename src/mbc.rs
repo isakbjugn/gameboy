@@ -1,4 +1,5 @@
 pub mod mbc_0;
+pub mod mbc_1;
 
 pub trait MBC : Send {
     fn read_rom(&self, address: u16) -> u8;

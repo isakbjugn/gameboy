@@ -76,7 +76,7 @@ impl AddressBus {
             0x01 ..= 0x02 => panic!("Serial transfer not implemented"),
             0x04 ..= 0x07 => self.timer.read_byte(address),
             0x0f => self.interrupt_flag,
-            0x10 ..= 0x26 => panic!("Audio not implemented"),
+            0x10 ..= 0x26 => 0xff, // Audio not implemented
             0x30 ..= 0x3f => panic!("Wave pattern not implemented"),
             0x40 ..= 0x4b => self.ppu.read_byte(address),
             0x4f => panic!("VRAM Bank Select is CGB feature"),

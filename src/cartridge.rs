@@ -3,6 +3,7 @@ use std::io::Read;
 use std::path;
 use crate::mbc::MBC;
 use crate::mbc::mbc_0::MBC0;
+use crate::mbc::mbc_1::MBC1;
 
 pub struct Cartridge {
     header: Vec<u8>,
@@ -18,10 +19,13 @@ impl Cartridge {
         
         Ok(Self {
             header,
-            mbc: match data[0x147] {
+            mbc: match (data[0x147], data[0x148], data[0x149]) {
                 _ if cfg!(feature = "test") => Box::new(MBC0::new(data)),
-                0x00 => Box::new(MBC0::new(data)),
-                _ => panic!("Støtter ikke denne MBC-en.")
+                (0x00, ..) => Box::new(MBC0::new(data)),
+                (0x03, 0x04, 0x02) => Box::new(MBC1::new(data)),
+                (mbc, rom_size, ram_size) => {
+                    panic!("Støtter ikke denne MBC-en:\nMBC: {:#04x}\nROM size: {:#04x}\nRAM size: {:#04x}", mbc, rom_size, ram_size)
+                },
             }
         })
     }
