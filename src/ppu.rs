@@ -106,7 +106,7 @@ impl PPU {
     }
     fn set_control(&mut self, value: u8) {
         let lcd_enable_initial_state = self.control.lcd_on();
-        self.control = Control::from_bits(value).unwrap();
+        self.control = Control::from_bits_truncate(value);
         if !self.control.lcd_on() && lcd_enable_initial_state {
             // reset PPU
             self.mode = Mode::HorizontalBlank;
@@ -191,7 +191,7 @@ impl PPU {
                             y,
                             x,
                             tile_index,
-                            flags: SpriteFlags::from_bits(flags).unwrap(),
+                            flags: SpriteFlags::from_bits_truncate(flags),
                         })
                     } else {
                         None
