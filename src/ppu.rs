@@ -210,8 +210,8 @@ impl PPU {
     }
     fn sprite_order() -> fn(&(usize, Sprite), &(usize, Sprite)) -> Ordering {
         |&(a_index, ref a), &(b_index, ref b)| match a.x.cmp(&b.x) {
-            Ordering::Equal => b_index.cmp(&a_index),
-            order => order.reverse()
+            Ordering::Equal => a_index.cmp(&b_index),
+            order => order,
         }
     }
     fn draw(&mut self) {
