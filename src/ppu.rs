@@ -290,7 +290,7 @@ impl PPU {
         let mut pixels = HashMap::new();
         let y = self.scanline - self.window_y_position;
         let row = (y / 8) as usize;
-        let start_x = self.window_x_position.wrapping_sub(7) as usize;
+        let start_x = self.window_x_position.saturating_sub(7) as usize;
 
         for x in start_x..SCREEN_WIDTH {
             let col = x / 8;
@@ -328,7 +328,7 @@ impl PPU {
                     false => x,
                     true => 7 - x,
                 };
-                
+
                 match self.pixel_color_from_bits(tile_data_low, tile_data_high, bit) {
                     0x00 => continue,
                     color => {
