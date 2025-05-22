@@ -22,6 +22,7 @@ mod timer;
 mod game_boy;
 mod cartridge;
 mod frame_buffer;
+mod apu;
 
 const SCREEN_WIDTH: u32 = 160;
 const SCREEN_HEIGHT: u32 = 144;
