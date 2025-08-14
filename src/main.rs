@@ -1,5 +1,4 @@
-use std::sync::mpsc::{Receiver, SyncSender};
-use log::{error, info, LevelFilter};
+use log::{error, LevelFilter};
 use pixels::Error;
 use simplelog::{TermLogger, TerminalMode};
 
@@ -56,21 +55,17 @@ fn main() -> Result<(), Error> {
         Ok(game_boy) => game_boy,
         Err(error_str) => panic!("{}", error_str),
     };
-    
+
     run_game_loop(game_boy, scale)
 }
 
-fn run_game_loop(game_boy: Box<GameBoy>, scale: u8) -> Result<(), Error> {
-    use std::sync::mpsc;
+fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Error> {
     use std::thread;
+    use std::time::{Duration, Instant};
     use pixels::{Error, Pixels, SurfaceTexture};
     use winit::dpi::LogicalSize;
-    use winit::event::ElementState::{Pressed, Released};
     use winit::event_loop::{ControlFlow, EventLoop};
     use winit::window::WindowBuilder;
-    
-    let (key_sender, key_receiver) = mpsc::channel();
-    let (screen_sender, screen_receiver) = mpsc::sync_channel(1);
 
     let event_loop = EventLoop::new().unwrap();
     event_loop.set_control_flow(ControlFlow::Poll);
@@ -84,18 +79,36 @@ fn run_game_loop(game_boy: Box<GameBoy>, scale: u8) -> Result<(), Error> {
             .unwrap()
     };
 
-    let game_boy_thread = thread::spawn(move || run_game_boy(game_boy, screen_sender, key_receiver));
-
     let mut pixels = {
         let window_size = window.inner_size();
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
         Pixels::new(SCREEN_WIDTH, SCREEN_HEIGHT, surface_texture)?
     };
 
+    let frame_duration = Duration::from_millis(16);
+    let cpu_cycles_per_frame = (4194204f64 / 1000.0 * 16.0).round() as u32;
+    let mut cpu_cycles = 0;
+
     let res = event_loop.run(|event, elwt| {
         use winit::event::{Event, WindowEvent};
         use winit::event::ElementState::{Pressed, Released};
         use winit::keyboard::{Key, NamedKey};
+
+        let start = Instant::now();
+
+        while cpu_cycles < cpu_cycles_per_frame {
+            cpu_cycles += game_boy.emulate();
+        }
+
+        cpu_cycles -= cpu_cycles_per_frame;
+
+        if let Some(data) = game_boy.updated_frame_buffer() {
+            data.write_to_rbga_buffer(pixels.frame_mut());
+            if let Err(err) = pixels.render() {
+                error!("Feil under tegning til skjerm!");
+                elwt.exit();
+            }
+        }
 
         if let Event::WindowEvent { event: WindowEvent::KeyboardInput { event: key_event, .. }, .. } = &event {
             match (key_event.state, key_event.logical_key.as_ref()) {
@@ -105,12 +118,12 @@ fn run_game_loop(game_boy: Box<GameBoy>, scale: u8) -> Result<(), Error> {
                 }
                 (Pressed, winit_key) => {
                     if let Some(key) = winit_to_joypad(winit_key) {
-                        let _ = key_sender.send(GameBoyEvent::KeyDown(key));
+                        game_boy.key_down(key);
                     }
                 }
                 (Released, winit_key) => {
                     if let Some(key) = winit_to_joypad(winit_key) {
-                        let _ = key_sender.send(GameBoyEvent::KeyUp(key));
+                        game_boy.key_up(key);
                     }
                 }
             }
@@ -121,67 +134,13 @@ fn run_game_loop(game_boy: Box<GameBoy>, scale: u8) -> Result<(), Error> {
             window.request_redraw();
         }
 
-        match screen_receiver.recv() {
-            Ok(data) => {
-                data.write_to_rbga_buffer(pixels.frame_mut());
-                if let Err(err) = pixels.render() {
-                    error!("Feil under tegning til skjerm!");
-                    elwt.exit();
-                }
-            }
-            Err(..) => elwt.exit(),
-        }
-    });
-
-    drop(screen_receiver);
-    let _ = game_boy_thread.join();
-    res.map_err(|e| Error::UserDefined(Box::new(e)))
-}
-
-enum GameBoyEvent {
-    KeyUp(JoypadKey),
-    KeyDown(JoypadKey),
-}
-
-fn run_game_boy(mut game_boy: Box<GameBoy>, sender: SyncSender<Vec<u8>>, receiver: Receiver<GameBoyEvent>) {
-    use std::sync::mpsc::{TryRecvError, TrySendError};
-    use std::thread;
-    use std::time::{Duration, Instant};
-
-    let frame_duration = Duration::from_millis(16);
-    let cpu_cycles_per_frame = (4194204f64 / 1000.0 * 16.0).round() as u32;
-    let mut cpu_cycles = 0;
-    
-    'emulate: loop {
-        let start = Instant::now();
-        
-        while cpu_cycles < cpu_cycles_per_frame {
-            cpu_cycles += game_boy.emulate();
-        }
-        
-        cpu_cycles -= cpu_cycles_per_frame;
-
-        if let Some(data) = game_boy.updated_frame_buffer() {
-            if let Err(TrySendError::Disconnected(..)) = sender.try_send(data) {
-                info!("Game Boy mistet forbindelse med skjermen!");
-                break
-            }
-        }
-        
-        'joypad_input: loop {
-            match receiver.try_recv() {
-                Ok(GameBoyEvent::KeyDown(key)) => game_boy.key_down(key),
-                Ok(GameBoyEvent::KeyUp(key)) => game_boy.key_up(key),
-                Err(TryRecvError::Empty) => break 'joypad_input,
-                Err(TryRecvError::Disconnected) => break 'emulate,
-            }
-        }
-        
         let time_elapsed = start.elapsed();
         if frame_duration > time_elapsed {
             thread::sleep(frame_duration - time_elapsed);
         }
-    }
+    });
+
+    res.map_err(|e| Error::UserDefined(Box::new(e)))
 }
 
 fn winit_to_joypad(key: winit::keyboard::Key<&str>) -> Option<JoypadKey> {
