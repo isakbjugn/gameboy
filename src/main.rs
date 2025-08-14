@@ -7,7 +7,6 @@ use simplelog::{TermLogger, TerminalMode};
 use winit::dpi::LogicalSize;
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
-use winit_input_helper::WinitInputHelper;
 use crate::frame_buffer::FrameBuffer;
 use crate::game_boy::GameBoy;
 use crate::joypad::JoypadKey;
@@ -67,7 +66,6 @@ fn main() -> Result<(), Error> {
 
     let event_loop = EventLoop::new().unwrap();
     event_loop.set_control_flow(ControlFlow::Poll);
-    let mut input = WinitInputHelper::new();
     let window = {
         let size = LogicalSize::new(SCREEN_WIDTH as f64 * scale as f64, SCREEN_HEIGHT as f64 * scale as f64);
         WindowBuilder::new()
@@ -89,10 +87,14 @@ fn main() -> Result<(), Error> {
     let res = event_loop.run(|event, elwt| {
         use winit::event::{Event, WindowEvent};
         use winit::event::ElementState::{Pressed, Released};
-        use winit::keyboard::KeyCode;
+        use winit::keyboard::{Key, NamedKey};
 
         if let Event::WindowEvent { event: WindowEvent::KeyboardInput { event: key_event, .. }, .. } = &event {
             match (key_event.state, key_event.logical_key.as_ref()) {
+                (Pressed, Key::Named(NamedKey::Escape)) => {
+                    elwt.exit();
+                    window.request_redraw();
+                }
                 (Pressed, winit_key) => {
                     if let Some(key) = winit_to_joypad(winit_key) {
                         let _ = key_sender.send(GameBoyEvent::KeyDown(key));
@@ -105,13 +107,9 @@ fn main() -> Result<(), Error> {
                 }
             }
         }
-
-        if input.update(&event) {
-            if input.key_pressed(KeyCode::Escape) || input.close_requested() {
-                info!("Skrur av Game Boy!");
-                elwt.exit();
-            }
-
+        
+        if let Event::WindowEvent { event: WindowEvent::CloseRequested, .. } = &event {
+            elwt.exit();
             window.request_redraw();
         }
         
