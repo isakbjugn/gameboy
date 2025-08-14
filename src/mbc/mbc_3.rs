@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::PathBuf;
+use log::info;
 use crate::mbc::MBC;
 
 pub struct MBC3 {
@@ -78,7 +79,7 @@ impl MBC for MBC3 {
                     0x00..=0x03 => self.ram_bank_number = value as usize,
                     0x04..=0x07 => panic!("Invalid ROM address"),
                     0x08..=0x0c => {} // do nothing, does not support RTC at the moment
-                    _ => panic!("Invalid RAM bank number"),
+                    _ => {} // invalid RAM bank number, but no worries
                 }
             }
             0x6000..=0x7fff => {} // RTC Data Latch, RTC not implemented
