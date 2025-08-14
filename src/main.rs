@@ -1,12 +1,8 @@
-use std::sync::mpsc;
-use std::sync::mpsc::{Receiver, SyncSender};
-use std::thread;
 use log::{error, info, LevelFilter};
-use pixels::{Error, Pixels, SurfaceTexture};
+use pixels::Error;
 use simplelog::{TermLogger, TerminalMode};
-use winit::dpi::LogicalSize;
-use winit::event_loop::{ControlFlow, EventLoop};
-use winit::window::WindowBuilder;
+use std::sync::mpsc::{Receiver, SyncSender};
+
 use crate::frame_buffer::FrameBuffer;
 use crate::game_boy::GameBoy;
 use crate::joypad::JoypadKey;
@@ -60,7 +56,19 @@ fn main() -> Result<(), Error> {
         Ok(game_boy) => game_boy,
         Err(error_str) => panic!("{}", error_str),
     };
+    
+    run_game_loop(game_boy, scale)
+}
 
+fn run_game_loop(game_boy: Box<GameBoy>, scale: u8) -> Result<(), Error> {
+    use std::sync::mpsc;
+    use std::thread;
+    use pixels::{Error, Pixels, SurfaceTexture};
+    use winit::dpi::LogicalSize;
+    use winit::event::ElementState::{Pressed, Released};
+    use winit::event_loop::{ControlFlow, EventLoop};
+    use winit::window::WindowBuilder;
+    
     let (key_sender, key_receiver) = mpsc::channel();
     let (screen_sender, screen_receiver) = mpsc::sync_channel(1);
 
@@ -107,12 +115,12 @@ fn main() -> Result<(), Error> {
                 }
             }
         }
-        
+
         if let Event::WindowEvent { event: WindowEvent::CloseRequested, .. } = &event {
             elwt.exit();
             window.request_redraw();
         }
-        
+
         match screen_receiver.recv() {
             Ok(data) => {
                 data.write_to_rbga_buffer(pixels.frame_mut());
@@ -136,8 +144,9 @@ enum GameBoyEvent {
 }
 
 fn run_game_boy(mut game_boy: Box<GameBoy>, sender: SyncSender<Vec<u8>>, receiver: Receiver<GameBoyEvent>) {
-    use std::sync::mpsc::{TryRecvError, TrySendError};
+    use std::thread;
     use std::time::{Duration, Instant};
+    use std::sync::mpsc::{TryRecvError, TrySendError};
 
     let frame_duration = Duration::from_millis(16);
     let cpu_cycles_per_frame = (4194204f64 / 1000.0 * 16.0).round() as u32;
