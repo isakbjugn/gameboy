@@ -6,6 +6,7 @@ use pixels::{Error, Pixels, SurfaceTexture};
 use simplelog::{TermLogger, TerminalMode};
 use winit::dpi::LogicalSize;
 use winit::event_loop::{ControlFlow, EventLoop};
+use winit::keyboard::{Key, NamedKey};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
 use crate::frame_buffer::FrameBuffer;
@@ -94,12 +95,18 @@ fn main() -> Result<(), Error> {
         if let Event::WindowEvent { event: WindowEvent::KeyboardInput { event: key_event, .. }, .. } = &event {
             match (key_event.state, key_event.logical_key.as_ref()) {
                 (Pressed, winit_key) => {
-                    if let Some(key) = winit_to_joypad(winit_key) {
+                    if winit_key == Key::Named(NamedKey::Space) {
+                        let _ = key_sender.send(GameBoyEvent::FastForward);
+                    }
+                    else if let Some(key) = winit_to_joypad(winit_key) {
                         let _ = key_sender.send(GameBoyEvent::KeyDown(key));
                     }
                 }
                 (Released, winit_key) => {
-                    if let Some(key) = winit_to_joypad(winit_key) {
+                    if winit_key == Key::Named(NamedKey::Space) {
+                        let _ = key_sender.send(GameBoyEvent::NormalSpeed);
+                    }
+                    else if let Some(key) = winit_to_joypad(winit_key) {
                         let _ = key_sender.send(GameBoyEvent::KeyUp(key));
                     }
                 }
@@ -135,6 +142,8 @@ fn main() -> Result<(), Error> {
 enum GameBoyEvent {
     KeyUp(JoypadKey),
     KeyDown(JoypadKey),
+    FastForward,
+    NormalSpeed,
 }
 
 fn run_game_boy(mut game_boy: Box<GameBoy>, sender: SyncSender<Vec<u8>>, receiver: Receiver<GameBoyEvent>) {
@@ -144,6 +153,7 @@ fn run_game_boy(mut game_boy: Box<GameBoy>, sender: SyncSender<Vec<u8>>, receive
     let frame_duration = Duration::from_millis(16);
     let cpu_cycles_per_frame = (4194204f64 / 1000.0 * 16.0).round() as u32;
     let mut cpu_cycles = 0;
+    let mut fast_forward_active = false;
     
     'emulate: loop {
         let start = Instant::now();
@@ -165,14 +175,18 @@ fn run_game_boy(mut game_boy: Box<GameBoy>, sender: SyncSender<Vec<u8>>, receive
             match receiver.try_recv() {
                 Ok(GameBoyEvent::KeyDown(key)) => game_boy.key_down(key),
                 Ok(GameBoyEvent::KeyUp(key)) => game_boy.key_up(key),
+                Ok(GameBoyEvent::FastForward) => fast_forward_active = true,
+                Ok(GameBoyEvent::NormalSpeed) => fast_forward_active = false,
                 Err(TryRecvError::Empty) => break 'joypad_input,
                 Err(TryRecvError::Disconnected) => break 'emulate,
             }
         }
         
-        let time_elapsed = start.elapsed();
-        if frame_duration > time_elapsed {
-            thread::sleep(frame_duration - time_elapsed);
+        if !fast_forward_active {
+            let time_elapsed = start.elapsed();
+            if frame_duration > time_elapsed {
+                thread::sleep(frame_duration - time_elapsed);
+            }
         }
     }
 }
