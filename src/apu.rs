@@ -12,7 +12,7 @@ impl APU {
     }
     pub fn read_byte(&self, address: u8) -> u8 {
         // Audio not implemented
-        0xff
+        0x00
     }
     pub fn write_byte(&self, address: u8, value: u8) {
         // Audio not implemented
