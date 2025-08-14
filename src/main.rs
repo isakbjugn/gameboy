@@ -1,7 +1,7 @@
+use std::sync::mpsc::{Receiver, SyncSender};
 use log::{error, info, LevelFilter};
 use pixels::Error;
 use simplelog::{TermLogger, TerminalMode};
-use std::sync::mpsc::{Receiver, SyncSender};
 
 use crate::frame_buffer::FrameBuffer;
 use crate::game_boy::GameBoy;
@@ -144,9 +144,9 @@ enum GameBoyEvent {
 }
 
 fn run_game_boy(mut game_boy: Box<GameBoy>, sender: SyncSender<Vec<u8>>, receiver: Receiver<GameBoyEvent>) {
+    use std::sync::mpsc::{TryRecvError, TrySendError};
     use std::thread;
     use std::time::{Duration, Instant};
-    use std::sync::mpsc::{TryRecvError, TrySendError};
 
     let frame_duration = Duration::from_millis(16);
     let cpu_cycles_per_frame = (4194204f64 / 1000.0 * 16.0).round() as u32;
