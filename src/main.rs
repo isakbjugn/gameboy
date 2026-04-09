@@ -2,21 +2,9 @@ use log::{error, LevelFilter};
 use pixels::Error;
 use simplelog::{TermLogger, TerminalMode};
 
-use crate::frame_buffer::FrameBuffer;
-use crate::game_boy::GameBoy;
-use crate::joypad::JoypadKey;
-
-mod cpu;
-mod address_bus;
-mod mbc;
-mod ppu;
-mod joypad;
-mod bootrom;
-mod timer;
-mod game_boy;
-mod cartridge;
-mod frame_buffer;
-mod apu;
+use gameboy::frame_buffer::FrameBuffer;
+use gameboy::game_boy::GameBoy;
+use gameboy::joypad::JoypadKey;
 
 const SCREEN_WIDTH: u32 = 160;
 const SCREEN_HEIGHT: u32 = 144;

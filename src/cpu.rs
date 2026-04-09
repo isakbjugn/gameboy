@@ -20,15 +20,17 @@ pub struct CPU {
 }
 
 impl CPU {
-    pub fn new(cartridge_path: &str) -> Result<Self, &'static str> {
-        let cartridge = Cartridge::from_path(cartridge_path.into())?;
-        
-        Ok(Self {
+    pub fn from_cartridge(cartridge: Cartridge) -> Self {
+        Self {
             registers: Registers::new(),
             bus: AddressBus::new(cartridge),
             is_halted: false,
             interrupt_master_enable: InterruptMasterEnable::new(),
-        })
+        }
+    }
+    pub fn new(cartridge_path: &str) -> Result<Self, &'static str> {
+        let cartridge = Cartridge::from_path(cartridge_path.into())?;
+        Ok(Self::from_cartridge(cartridge))
     }
     pub fn cycle(&mut self) -> u32 {
         let interrupts_handle_time = self.handle_interrupts();

@@ -1,4 +1,5 @@
 use crate::cpu::CPU;
+use crate::cartridge::Cartridge;
 use crate::joypad::JoypadKey;
 
 pub struct GameBoy {
@@ -9,6 +10,12 @@ impl GameBoy {
     pub fn new(cartridge_name: &str) -> Result<Box<Self>, &'static str> {
         Ok(Box::new(Self {
             cpu: CPU::new(cartridge_name)?,
+        }))
+    }
+    pub fn from_bytes(data: Vec<u8>) -> Result<Box<Self>, &'static str> {
+        let cartridge = Cartridge::from_bytes(data, None)?;
+        Ok(Box::new(Self {
+            cpu: CPU::from_cartridge(cartridge),
         }))
     }
     pub fn emulate(&mut self) -> u32 {

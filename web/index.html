@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="utf-8">
+    <title>Game Boy Emulator</title>
+    <style>
+        body {
+            background: #1a1a2e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: sans-serif;
+            color: #e0e0e0;
+        }
+        canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            width: 480px;
+            height: 432px;
+            border: 2px solid #333;
+        }
+        input[type="file"] {
+            margin: 20px;
+        }
+        p {
+            font-size: 0.9em;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="160" height="144"></canvas>
+    <input type="file" id="rom" accept=".gb">
+    <p>Z = A, X = B, Piltaster = D-pad, Enter = Start, Backspace = Select</p>
+    <script type="module" src="index.js"></script>
+</body>
+</html>

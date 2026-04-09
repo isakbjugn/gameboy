@@ -3,15 +3,30 @@ name = "gameboy"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [dependencies]
 arrayvec = "0.7.6"
 bitflags = "2.9.0"
-clap = "4.5.32"
 itertools = "0.14.0"
 log = "0.4.26"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+clap = "4.5.32"
 pixels = "0.15.0"
 simplelog = "0.12.2"
 winit = "0.29"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+pixels = "0.15.0"
+winit = "0.29"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3", features = ["Document", "Window", "HtmlCanvasElement", "HtmlInputElement"] }
+js-sys = "0.3"
+console_log = "0.2"
+console_error_panic_hook = "0.1"
 
 [features]
 test = []
