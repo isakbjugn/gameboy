@@ -15,6 +15,9 @@ impl Cartridge {
     pub fn from_path(cartridge_path: path::PathBuf) -> Result<Self, &'static str> {
         let mut data = vec![];
         File::open(&cartridge_path).and_then(|mut f| f.read_to_end(&mut data)).map_err(|_| "Could not read ROM")?;
+        Self::from_bytes(data)
+    }
+    pub fn from_bytes(data: Vec<u8>) -> Result<Self, &'static str> {
         let mut header = vec![0; 0x14f - 0x100 + 1];
         header.copy_from_slice(&data[0x0100..=0x014f]);
         
