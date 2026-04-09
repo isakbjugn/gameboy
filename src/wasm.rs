@@ -1,6 +1,7 @@
 use log::info;
 use pixels::{PixelsBuilder, SurfaceTexture};
 use std::rc::Rc;
+use std::sync::Arc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use winit::dpi::LogicalSize;
@@ -8,7 +9,7 @@ use winit::event::{ElementState, Event, WindowEvent};
 use winit::event_loop::EventLoop;
 use winit::keyboard::{Key, NamedKey};
 use winit::platform::web::WindowExtWebSys;
-use winit::window::WindowBuilder;
+use winit::window::Window;
 
 use crate::frame_buffer::FrameBuffer;
 use crate::game_boy::GameBoy;
@@ -52,14 +53,18 @@ pub fn start_emulator(rom_data: &[u8]) {
 
         let event_loop = EventLoop::new().unwrap();
 
-        let window = Rc::new(
-            WindowBuilder::new()
-                .with_title("Game Boy Emulator")
-                .with_inner_size(LogicalSize::new(SCREEN_WIDTH as f64, SCREEN_HEIGHT as f64))
-                .with_min_inner_size(LogicalSize::new(SCREEN_WIDTH as f64, SCREEN_HEIGHT as f64))
-                .build(&event_loop)
+        #[allow(deprecated)]
+        let window = Arc::new(
+            event_loop
+                .create_window(
+                    Window::default_attributes()
+                        .with_title("Game Boy Emulator")
+                        .with_inner_size(LogicalSize::new(SCREEN_WIDTH as f64, SCREEN_HEIGHT as f64))
+                        .with_min_inner_size(LogicalSize::new(SCREEN_WIDTH as f64, SCREEN_HEIGHT as f64)),
+                )
                 .unwrap(),
         );
+        let window = Rc::new(window);
 
         // Legg winit-canvas til DOM
         web_sys::window()
@@ -89,7 +94,7 @@ pub fn start_emulator(rom_data: &[u8]) {
         let _ = window.request_inner_size(get_window_size());
 
         let window_size = get_window_size().to_physical::<u32>(window.scale_factor());
-        let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &*window);
+        let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, window.clone());
         let texture_format = pixels::wgpu::TextureFormat::Rgba8Unorm;
         let mut pixels = PixelsBuilder::new(SCREEN_WIDTH, SCREEN_HEIGHT, surface_texture)
             .texture_format(texture_format)
@@ -105,7 +110,6 @@ pub fn start_emulator(rom_data: &[u8]) {
         let mut last_timestamp = performance.now();
         let mut cycle_debt: f64 = 0.0;
 
-        let window = Rc::clone(&window);
         #[allow(deprecated)]
         event_loop.run(move |event, elwt| {
             match event {

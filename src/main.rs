@@ -1,6 +1,7 @@
 use log::{error, LevelFilter};
 use pixels::Error;
 use simplelog::{TermLogger, TerminalMode};
+use std::sync::Arc;
 
 use gameboy::frame_buffer::FrameBuffer;
 use gameboy::game_boy::GameBoy;
@@ -53,23 +54,26 @@ fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Error> {
     use pixels::{Error, Pixels, SurfaceTexture};
     use winit::dpi::LogicalSize;
     use winit::event_loop::{ControlFlow, EventLoop};
-    use winit::window::WindowBuilder;
+    use winit::window::Window;
 
     let event_loop = EventLoop::new().unwrap();
     event_loop.set_control_flow(ControlFlow::Poll);
-    let window = {
-        let size = LogicalSize::new(SCREEN_WIDTH as f64 * scale as f64, SCREEN_HEIGHT as f64 * scale as f64);
-        WindowBuilder::new()
-            .with_title(if cfg!(feature = "test") { "Test mode".to_string() } else { game_boy.title() })
-            .with_inner_size(size)
-            .with_min_inner_size(size)
-            .build(&event_loop)
-            .unwrap()
-    };
+
+    #[allow(deprecated)]
+    let window = Arc::new(
+        event_loop
+            .create_window(
+                Window::default_attributes()
+                    .with_title(if cfg!(feature = "test") { "Test mode".to_string() } else { game_boy.title() })
+                    .with_inner_size(LogicalSize::new(SCREEN_WIDTH as f64 * scale as f64, SCREEN_HEIGHT as f64 * scale as f64))
+                    .with_min_inner_size(LogicalSize::new(SCREEN_WIDTH as f64 * scale as f64, SCREEN_HEIGHT as f64 * scale as f64)),
+            )
+            .unwrap(),
+    );
 
     let mut pixels = {
         let window_size = window.inner_size();
-        let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
+        let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, window.clone());
         Pixels::new(SCREEN_WIDTH, SCREEN_HEIGHT, surface_texture)?
     };
 
@@ -77,7 +81,8 @@ fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Error> {
     let cpu_cycles_per_frame = (4194204f64 / 1000.0 * 16.0).round() as u32;
     let mut cpu_cycles = 0;
 
-    let res = event_loop.run(|event, elwt| {
+    #[allow(deprecated)]
+    let res = event_loop.run(move |event, elwt| {
         use winit::event::{Event, WindowEvent};
         use winit::event::ElementState::{Pressed, Released};
         use winit::keyboard::{Key, NamedKey};
@@ -133,7 +138,7 @@ fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Error> {
 
 fn winit_to_joypad(key: winit::keyboard::Key<&str>) -> Option<JoypadKey> {
     use winit::keyboard::{Key, NamedKey};
-    
+
     match key {
         Key::Character("Z" | "z") => Some(JoypadKey::A),
         Key::Character("X" | "x") => Some(JoypadKey::B),
