@@ -1,0 +1,12 @@
+[package]
+name = "gameboy"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+gameboy-core = { path = "../core" }
+clap = "4.5.32"
+log = "0.4.26"
+pixels = "0.15.0"
+simplelog = "0.12.2"
+winit = "0.29"
