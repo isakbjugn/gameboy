@@ -1,6 +1,7 @@
-use pixels::{Pixels, SurfaceTexture};
+use log::info;
+use pixels::{PixelsBuilder, SurfaceTexture};
 use wasm_bindgen::prelude::*;
-use winit::dpi::LogicalSize;
+use winit::dpi::PhysicalSize;
 use winit::event::{ElementState, Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::keyboard::{Key, NamedKey};
@@ -36,7 +37,7 @@ pub fn start_emulator(rom_data: &[u8]) {
     let rom = rom_data.to_vec();
 
     wasm_bindgen_futures::spawn_local(async move {
-        let mut game_boy = GameBoy::from_bytes(rom)
+        let mut game_boy = *GameBoy::from_bytes(rom)
             .expect("Kunne ikke laste ROM");
 
         let event_loop = EventLoop::new().unwrap();
@@ -48,20 +49,36 @@ pub fn start_emulator(rom_data: &[u8]) {
             .and_then(|e| e.dyn_into::<web_sys::HtmlCanvasElement>().ok())
             .expect("Fant ikke canvas-element med id 'canvas'");
 
-        // Leaker window slik at den får 'static lifetime — den lever hele siden uansett
+        let canvas_width = canvas.width();
+        let canvas_height = canvas.height();
+        info!("Canvas-størrelse: {}x{}", canvas_width, canvas_height);
+
         let window: &'static winit::window::Window = Box::leak(Box::new(
             WindowBuilder::new()
                 .with_canvas(Some(canvas))
-                .with_inner_size(LogicalSize::new(SCREEN_WIDTH, SCREEN_HEIGHT))
                 .build(&event_loop)
                 .unwrap()
         ));
 
+        // Sett vindusstørrelse eksplisitt etter bygging
+        let _ = window.request_inner_size(PhysicalSize::new(SCREEN_WIDTH, SCREEN_HEIGHT));
+
         let window_size = window.inner_size();
-        let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, window);
-        let mut pixels = Pixels::new_async(SCREEN_WIDTH, SCREEN_HEIGHT, surface_texture)
+        info!("Vindusstørrelse: {}x{}", window_size.width, window_size.height);
+
+        // Bruk kjente dimensjoner for surface, ikke window.inner_size() som kan være 0
+        let surface_width = if window_size.width > 0 { window_size.width } else { SCREEN_WIDTH };
+        let surface_height = if window_size.height > 0 { window_size.height } else { SCREEN_HEIGHT };
+        info!("Surface-størrelse: {}x{}", surface_width, surface_height);
+
+        let surface_texture = SurfaceTexture::new(surface_width, surface_height, window);
+        let mut pixels = PixelsBuilder::new(SCREEN_WIDTH, SCREEN_HEIGHT, surface_texture)
+            .wgpu_backend(pixels::wgpu::Backends::GL)
+            .build_async()
             .await
             .expect("Kunne ikke opprette Pixels");
+
+        info!("Pixels opprettet, starter emulering");
 
         let cpu_cycles_per_frame = (4194304f64 / 60.0).round() as u32;
         let mut cpu_cycles: u32 = 0;
@@ -78,6 +95,8 @@ pub fn start_emulator(rom_data: &[u8]) {
                         data.write_to_rbga_buffer(pixels.frame_mut());
                         let _ = pixels.render();
                     }
+
+                    window.request_redraw();
                 }
                 Event::WindowEvent { event: WindowEvent::KeyboardInput { event: key_event, .. }, .. } => {
                     match (key_event.state, key_event.logical_key.as_ref()) {
