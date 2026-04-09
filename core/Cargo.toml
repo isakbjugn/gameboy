@@ -1,0 +1,14 @@
+[package]
+name = "gameboy-core"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+arrayvec = "0.7.6"
+bitflags = "2.9.0"
+itertools = "0.14.0"
+log = "0.4.26"
+
+[features]
+test = []
+green = []

@@ -2,24 +2,10 @@ use log::{error, LevelFilter};
 use pixels::Error;
 use simplelog::{TermLogger, TerminalMode};
 
-use crate::frame_buffer::FrameBuffer;
-use crate::game_boy::GameBoy;
-use crate::joypad::JoypadKey;
-
-mod cpu;
-mod address_bus;
-mod mbc;
-mod ppu;
-mod joypad;
-mod bootrom;
-mod timer;
-mod game_boy;
-mod cartridge;
-mod frame_buffer;
-mod apu;
-
-const SCREEN_WIDTH: u32 = 160;
-const SCREEN_HEIGHT: u32 = 144;
+use gameboy_core::frame_buffer::FrameBuffer;
+use gameboy_core::game_boy::GameBoy;
+use gameboy_core::joypad::JoypadKey;
+use gameboy_core::{SCREEN_WIDTH, SCREEN_HEIGHT};
 
 fn main() -> Result<(), Error> {
     TermLogger::init(
@@ -41,11 +27,11 @@ fn main() -> Result<(), Error> {
             .help("Scales the display. Default is 2")
             .short('x')
             .long("scale")
-             .default_value("2")
-             .value_parser(|s: &str| {
-                 s.parse::<u8>()
-                     .map_err(|e| format!("Invalid scale value: {}", e))
-             }))
+            .default_value("2")
+            .value_parser(|s: &str| {
+                s.parse::<u8>()
+                    .map_err(|e| format!("Invalid scale value: {}", e))
+            }))
         .get_matches();
 
     let cartridge_path = matches.get_one::<String>("cartridge_path").unwrap();
@@ -145,7 +131,7 @@ fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Error> {
 
 fn winit_to_joypad(key: winit::keyboard::Key<&str>) -> Option<JoypadKey> {
     use winit::keyboard::{Key, NamedKey};
-    
+
     match key {
         Key::Character("Z" | "z") => Some(JoypadKey::A),
         Key::Character("X" | "x") => Some(JoypadKey::B),

@@ -5,4 +5,4 @@
 roms/*.gb
 roms/*.gbsave
 roms_test/*.gb
-dmg_boot.bin
+core/dmg_boot.bin
