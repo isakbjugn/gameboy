@@ -80,16 +80,30 @@ pub fn start_emulator(rom_data: &[u8]) {
 
         info!("Pixels opprettet, starter emulering");
 
-        let cpu_cycles_per_frame = (4194304f64 / 60.0).round() as u32;
-        let mut cpu_cycles: u32 = 0;
+        // Game Boy CPU: 4194304 Hz -> 4194.304 t-sykluser per millisekund
+        const CYCLES_PER_MS: f64 = 4194304.0 / 1000.0;
+        let performance = web_sys::window().unwrap().performance().unwrap();
+        let mut last_timestamp = performance.now();
+        let mut cycle_debt: f64 = 0.0;
 
         event_loop.spawn(move |event, _elwt| {
             match &event {
                 Event::AboutToWait => {
-                    while cpu_cycles < cpu_cycles_per_frame {
-                        cpu_cycles += game_boy.emulate();
+                    let now = performance.now();
+                    let elapsed_ms = now - last_timestamp;
+                    last_timestamp = now;
+
+                    // Begrens til maks 33ms (30 FPS) for å unngå spiral ved fryser/tab-bytte
+                    let capped_ms = elapsed_ms.min(33.0);
+                    cycle_debt += capped_ms * CYCLES_PER_MS;
+
+                    let cycles_to_run = cycle_debt as u32;
+                    cycle_debt -= cycles_to_run as f64;
+
+                    let mut cycles_run: u32 = 0;
+                    while cycles_run < cycles_to_run {
+                        cycles_run += game_boy.emulate();
                     }
-                    cpu_cycles -= cpu_cycles_per_frame;
 
                     if let Some(data) = game_boy.updated_frame_buffer() {
                         data.write_to_rbga_buffer(pixels.frame_mut());
