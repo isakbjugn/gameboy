@@ -47,13 +47,37 @@ Modulene (`cpu`, `game_boy`, `cartridge`, osv.) er i dag bare tilgjengelige fra 
 - I `native/src/main.rs`: erstatt `mod`-deklarasjonene med `use gameboy_core::*`
 - Konstantene `SCREEN_WIDTH` og `SCREEN_HEIGHT` kan legges i `core`
 
-### 2. Separer I/O fra konstruksjon
+### 2. Gjør core plattformuavhengig
 
-I dag leser `Cartridge::from_path` fra filsystemet og oppretter cartridge-objektet i ett steg. Ved å separere disse får du en renere konstruktør som ikke er knyttet til filsystemet.
+I dag er `core` knyttet til filsystemet på to måter: `Cartridge::from_path` leser ROM fra disk, og MBC1/MBC3 bruker `std::fs::File` og `PathBuf` direkte for å laste og lagre batteridata (save games). Begge deler må abstraheres bort for at `core` skal kunne brukes på web.
 
-- **`cartridge.rs`**: Lag en `from_bytes(data: Vec<u8>, save_path: Option<PathBuf>)` og la `from_path` kalle denne.
+#### 2a. Separer I/O fra konstruksjon
+
+- **`cartridge.rs`**: Lag en `from_bytes`-konstruktør som tar rå ROM-data. La `from_path` kalle denne.
 - **`cpu.rs`**: Lag en `from_cartridge(cartridge: Cartridge)` og la `new` kalle denne.
-- **`game_boy.rs`**: Lag en `from_bytes(data: Vec<u8>)` som bruker de nye konstruktørene.
+- **`game_boy.rs`**: Lag en `from_bytes` som bruker de nye konstruktørene.
+
+#### 2b. Abstraher batterilagring bak et trait
+
+MBC1 og MBC3 har `battery_save_path: Option<PathBuf>` og bruker `File::open`/`File::create` i konstruktøren og `Drop`. Dette gjør dem avhengige av et ekte filsystem. Løsningen er et trait i `core`:
+
+```rust
+// mbc.rs (eller egen fil)
+pub trait BatterySave: Send {
+    fn load(&self) -> Option<Vec<u8>>;
+    fn save(&self, data: &[u8]);
+}
+```
+
+Endringer:
+- **`mbc_1.rs` / `mbc_3.rs`**: Erstatt `has_battery: bool` og `battery_save_path: Option<PathBuf>` med ett felt: `battery: Option<Box<dyn BatterySave>>`. Konstruktøren kaller `battery.load()` i stedet for `File::open`, og `Drop` kaller `battery.save(&self.ram)` i stedet for `File::create`. Fjern `use std::fs::File` og `use std::path::PathBuf`.
+- **`cartridge.rs`**: `from_bytes` tar `Option<Box<dyn BatterySave>>` i stedet for `Option<PathBuf>`, og sender den videre til MBC-konstruktørene. `from_path` oppretter en `FileBatterySave` (se under) og kaller `from_bytes`.
+
+Implementasjonene av traitet lever utenfor `core`:
+- **Native** (`native/`): `FileBatterySave(PathBuf)` som wrapper `std::fs::read`/`std::fs::write`.
+- **Web** (`web/`): `LocalStorageBatterySave { key: String }` som base64-encoder batteridata og lagrer i `localStorage` via `web_sys`.
+
+Etter dette steget skal `core` ikke ha noen `use std::fs` eller `use std::path` — hele craten er plattformuavhengig.
 
 ### 3. Oppgrader `pixels` og `winit`
 
