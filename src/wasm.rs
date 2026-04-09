@@ -95,10 +95,9 @@ pub fn start_emulator(rom_data: &[u8]) {
 
         let window_size = get_window_size().to_physical::<u32>(window.scale_factor());
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, window.clone());
-        let texture_format = pixels::wgpu::TextureFormat::Rgba8Unorm;
         let mut pixels = PixelsBuilder::new(SCREEN_WIDTH, SCREEN_HEIGHT, surface_texture)
-            .texture_format(texture_format)
-            .surface_texture_format(texture_format)
+            .texture_format(pixels::wgpu::TextureFormat::Rgba8Unorm)
+            .surface_texture_format(pixels::wgpu::TextureFormat::Bgra8Unorm)
             .build_async()
             .await
             .expect("Kunne ikke opprette Pixels");
