@@ -1,9 +1,7 @@
 use log::info;
 use pixels::{PixelsBuilder, SurfaceTexture};
-use std::rc::Rc;
 use std::sync::Arc;
 use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
 use winit::dpi::LogicalSize;
 use winit::event::{ElementState, Event, WindowEvent};
 use winit::event_loop::EventLoop;
@@ -17,14 +15,6 @@ use crate::joypad::JoypadKey;
 
 const SCREEN_WIDTH: u32 = 160;
 const SCREEN_HEIGHT: u32 = 144;
-
-fn get_window_size() -> LogicalSize<f64> {
-    let client_window = web_sys::window().unwrap();
-    LogicalSize::new(
-        client_window.inner_width().unwrap().as_f64().unwrap(),
-        client_window.inner_height().unwrap().as_f64().unwrap(),
-    )
-}
 
 fn js_key_to_joypad(key: Key<&str>) -> Option<JoypadKey> {
     match key {
@@ -64,8 +54,6 @@ pub fn start_emulator(rom_data: &[u8]) {
                 )
                 .unwrap(),
         );
-        let window = Rc::new(window);
-
         // Legg winit-canvas til DOM
         web_sys::window()
             .and_then(|win| win.document())
@@ -77,24 +65,7 @@ pub fn start_emulator(rom_data: &[u8]) {
             })
             .expect("Kunne ikke legge canvas til DOM");
 
-        // Lytt på resize-events fra nettleseren
-        let resize_closure = wasm_bindgen::closure::Closure::wrap(Box::new({
-            let window = Rc::clone(&window);
-            move |_e: web_sys::Event| {
-                let _ = window.request_inner_size(get_window_size());
-            }
-        }) as Box<dyn FnMut(_)>);
-        web_sys::window()
-            .unwrap()
-            .add_event_listener_with_callback("resize", resize_closure.as_ref().unchecked_ref())
-            .unwrap();
-        resize_closure.forget();
-
-        // Sett initial størrelse til nettleservinduet
-        let _ = window.request_inner_size(get_window_size());
-
-        let window_size = get_window_size().to_physical::<u32>(window.scale_factor());
-        let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, window.clone());
+        let surface_texture = SurfaceTexture::new(SCREEN_WIDTH, SCREEN_HEIGHT, window.clone());
         let mut pixels = PixelsBuilder::new(SCREEN_WIDTH, SCREEN_HEIGHT, surface_texture)
             .texture_format(pixels::wgpu::TextureFormat::Rgba8Unorm)
             .surface_texture_format(pixels::wgpu::TextureFormat::Bgra8Unorm)

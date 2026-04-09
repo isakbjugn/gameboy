@@ -15,12 +15,19 @@
             font-family: sans-serif;
             color: #e0e0e0;
         }
+        #screen {
+            width: 480px;
+            height: 432px;
+            max-width: 90vw;
+            max-height: 60vh;
+            aspect-ratio: 10 / 9;
+            border: 2px solid #333;
+        }
         #screen canvas {
             image-rendering: pixelated;
             image-rendering: crisp-edges;
-            width: 480px;
-            height: 432px;
-            border: 2px solid #333;
+            width: 100%;
+            height: 100%;
         }
         input[type="file"] {
             margin: 20px;
