@@ -1,3 +1,5 @@
+mod file_battery_save;
+
 use log::{error, LevelFilter};
 use pixels::Error;
 use simplelog::{TermLogger, TerminalMode};

@@ -1,7 +1,4 @@
-use std::fs::File;
-use std::io::{Read, Write};
-use std::path::PathBuf;
-use log::info;
+use crate::battery_save::BatterySave;
 use crate::mbc::MBC;
 
 pub struct MBC3 {
@@ -12,12 +9,11 @@ pub struct MBC3 {
     ram_enable: bool,
     rom_bank_number: usize,
     ram_bank_number: usize,
-    has_battery: bool,
-    battery_save_path: Option<PathBuf>,
+    battery_save: Option<Box<dyn BatterySave>>,
 }
 
 impl MBC3 {
-    pub fn new(data: Vec<u8>, battery_save_path: Option<PathBuf>) -> Self {
+    pub fn new(data: Vec<u8>, battery_save: Option<Box<dyn BatterySave>>) -> Self {
         let rom_banks = 64;
         let ram_banks = 4;
         let ram_size = ram_banks * 0x2000;
@@ -27,10 +23,8 @@ impl MBC3 {
             rom: data,
             ram: {
                 let mut ram = vec![0; ram_size];
-                if has_battery && battery_save_path.is_some() {
-                    if let Ok(mut file) = File::open(battery_save_path.as_ref().unwrap()) {
-                        file.read_exact(&mut ram).expect("Failed to read battery data");
-                    }
+                if has_battery && let Some(ref battery_save) = battery_save {
+                    battery_save.load(&mut ram);
                 }
                 ram
             },
@@ -39,8 +33,7 @@ impl MBC3 {
             ram_enable: false,
             rom_bank_number: 1,
             ram_bank_number: 0,
-            has_battery: has_battery,
-            battery_save_path: battery_save_path,            
+            battery_save: battery_save,
         }
     }
 }
@@ -99,10 +92,8 @@ impl MBC for MBC3 {
 
 impl Drop for MBC3 {
     fn drop(&mut self) {
-        if self.has_battery && self.battery_save_path.is_some() {
-            File::create(self.battery_save_path.as_ref().unwrap())
-                .and_then(|mut file| file.write_all(&self.ram))
-                .expect("Failed to save battery data");
+        if let Some(ref battery_save) = self.battery_save {
+            battery_save.save(&self.ram)
         }
     }
 }
