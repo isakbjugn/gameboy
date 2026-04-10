@@ -10,6 +10,7 @@ use std::fmt::Debug;
 use crate::cartridge::Cartridge;
 use crate::address_bus::AddressBus;
 use registers::Registers;
+use crate::battery_save::BatterySave;
 use crate::cpu::interrupt_master_enable::InterruptMasterEnable;
 
 pub struct CPU {
@@ -20,8 +21,8 @@ pub struct CPU {
 }
 
 impl CPU {
-    pub fn new(cartridge_path: &str) -> Result<Self, &'static str> {
-        let cartridge = Cartridge::from_path(cartridge_path.into())?;
+    pub fn new(cartridge_data: Vec<u8>, battery_save: Option<Box<dyn BatterySave>>) -> Result<Self, &'static str> {
+        let cartridge = Cartridge::from_bytes(cartridge_data, battery_save)?;
         
         Ok(Self {
             registers: Registers::new(),

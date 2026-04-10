@@ -1,3 +1,4 @@
+use crate::battery_save::BatterySave;
 use crate::cpu::CPU;
 use crate::joypad::JoypadKey;
 
@@ -6,9 +7,9 @@ pub struct GameBoy {
 }
 
 impl GameBoy {
-    pub fn new(cartridge_name: &str) -> Result<Box<Self>, &'static str> {
+    pub fn new(cartridge_data: Vec<u8>, battery_save: Option<Box<dyn BatterySave>>) -> Result<Box<Self>, &'static str> {
         Ok(Box::new(Self {
-            cpu: CPU::new(cartridge_name)?,
+            cpu: CPU::new(cartridge_data, battery_save)?,
         }))
     }
     pub fn emulate(&mut self) -> u32 {
