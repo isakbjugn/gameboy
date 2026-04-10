@@ -7,7 +7,7 @@ edition = "2024"
 gameboy-core = { path = "../core" }
 clap = "4.5.32"
 log = "0.4.26"
-pixels = "0.15.0"
+pixels = "0.16.0"
 simplelog = "0.12.2"
 winit = "0.29"
 
