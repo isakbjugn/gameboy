@@ -10,3 +10,6 @@ log = "0.4.26"
 pixels = "0.15.0"
 simplelog = "0.12.2"
 winit = "0.29"
+
+[features]
+test = ["gameboy-core/test"]
