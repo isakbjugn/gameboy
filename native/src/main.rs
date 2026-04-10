@@ -60,19 +60,18 @@ fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Error> {
     use pixels::{Error, Pixels, SurfaceTexture};
     use winit::dpi::LogicalSize;
     use winit::event_loop::{ControlFlow, EventLoop};
-    use winit::window::WindowBuilder;
+    use winit::window::Window;
 
     let event_loop = EventLoop::new().unwrap();
     event_loop.set_control_flow(ControlFlow::Poll);
-    let window = {
-        let size = LogicalSize::new(SCREEN_WIDTH as f64 * scale as f64, SCREEN_HEIGHT as f64 * scale as f64);
-        WindowBuilder::new()
+    let size = LogicalSize::new(SCREEN_WIDTH as f64 * scale as f64, SCREEN_HEIGHT as f64 * scale as f64);
+
+    let window = event_loop.create_window(
+        Window::default_attributes()
             .with_title(if cfg!(feature = "test") { "Test mode".to_string() } else { game_boy.title() })
             .with_inner_size(size)
             .with_min_inner_size(size)
-            .build(&event_loop)
-            .unwrap()
-    };
+    ).unwrap();
 
     let mut pixels = {
         let window_size = window.inner_size();

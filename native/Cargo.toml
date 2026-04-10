@@ -9,7 +9,7 @@ clap = "4.5.32"
 log = "0.4.26"
 pixels = "0.16.0"
 simplelog = "0.12.2"
-winit = "0.29"
+winit = "0.30.13"
 
 [features]
 test = ["gameboy-core/test"]
