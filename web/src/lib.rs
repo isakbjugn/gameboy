@@ -3,12 +3,16 @@ use std::rc::Rc;
 use pixels::{PixelsBuilder, SurfaceTexture};
 use wasm_bindgen::prelude::*;
 use winit::dpi::LogicalSize;
-use winit::event::{Event, WindowEvent};
 use winit::event_loop::EventLoop;
+use winit::keyboard::{Key, NamedKey};
 #[cfg(target_arch = "wasm32")]
 use winit::platform::web::WindowExtWebSys;
 use winit::window::Window;
+
 use gameboy_core::{SCREEN_HEIGHT, SCREEN_WIDTH};
+use gameboy_core::frame_buffer::FrameBuffer;
+use gameboy_core::game_boy::GameBoy;
+use gameboy_core::joypad::JoypadKey;
 
 #[wasm_bindgen]
 pub fn main() {
@@ -17,31 +21,13 @@ pub fn main() {
     wasm_bindgen_futures::spawn_local(run())
 }
 
-enum Color {
-    Red,
-    Green,
-    Blue,
-}
-
-struct World {
-    color: Color,
-}
-
-impl World {
-    fn draw(&self, frame: &mut [u8]) {
-        for pixel in frame.chunks_exact_mut(4) {
-            let color = match self.color {
-                Color::Red => [0xff, 0x00, 0x00, 0xff],
-                Color::Green => [0x00, 0xff, 0x00, 0xff],
-                Color::Blue => [0x00, 0x00, 0xff, 0xff],
-            };
-            pixel.copy_from_slice(&color);
-        }
-    }
-}
-
 async fn run() {
-    let mut world = World { color: Color::Red };
+    let cartridge = include_bytes!("../../roms/links_awakening.gb");
+    let mut game_boy = match GameBoy::new(Vec::from(cartridge), None) {
+        Ok(game_boy) => game_boy,
+        Err(error_str) => panic!("{}", error_str),
+    };
+
     let event_loop = EventLoop::new().unwrap();
     let window = {
         let size = LogicalSize::new(SCREEN_WIDTH as f64, SCREEN_HEIGHT as f64);
@@ -77,22 +63,44 @@ async fn run() {
 
     info!("Pixels opprettet");
 
-    world.draw(pixels.frame_mut());
-    pixels.render().expect("Klarte ikke å rendre pixels");
+    let cpu_cycles_per_frame = (4194204f64 / 1000.0 * 16.0).round() as u32;
+    let mut cpu_cycles: u32 = 0;
 
     let res = event_loop.run(|event, elwt| {
+        use winit::event::ElementState::{Pressed, Released};
+        use winit::event::{Event, WindowEvent};
+
+
         match event {
             Event::AboutToWait => {
+                while cpu_cycles < cpu_cycles_per_frame {
+                    cpu_cycles += game_boy.emulate();
+                }
+                cpu_cycles -= cpu_cycles_per_frame;
+
+                if let Some(data) = game_boy.updated_frame_buffer() {
+                    data.write_to_rbga_buffer(pixels.frame_mut());
+                    if let Err(err) = pixels.render() {
+                        error!("Feil under tegning til skjerm!");
+                        elwt.exit();
+                    }
+                }
+
                 window.request_redraw();
             }
-            Event::WindowEvent { event: WindowEvent::KeyboardInput { .. }, .. } => {
-                let new_color = match world.color {
-                    Color::Red => Color::Green,
-                    Color::Green => Color::Blue,
-                    Color::Blue => Color::Red,
-                };
-                world.color = new_color;
-                world.draw(pixels.frame_mut());
+            Event::WindowEvent { event: WindowEvent::KeyboardInput { event: key_event, .. }, .. } => {
+                match (key_event.state, key_event.logical_key.as_ref()) {
+                    (Pressed, winit_key) => {
+                        if let Some(key) = winit_to_joypad(winit_key) {
+                            game_boy.key_down(key);
+                        }
+                    }
+                    (Released, winit_key) => {
+                        if let Some(key) = winit_to_joypad(winit_key) {
+                            game_boy.key_up(key);
+                        }
+                    }
+                }
                 window.request_redraw();
             }
             Event::WindowEvent { event: WindowEvent::RedrawRequested, .. } => {
@@ -107,4 +115,18 @@ async fn run() {
         }
     });
     res.unwrap();
+}
+
+fn winit_to_joypad(key: Key<&str>) -> Option<JoypadKey> {
+    match key {
+        Key::Character("Z" | "z") => Some(JoypadKey::A),
+        Key::Character("X" | "x") => Some(JoypadKey::B),
+        Key::Named(NamedKey::ArrowUp) => Some(JoypadKey::Up),
+        Key::Named(NamedKey::ArrowDown) => Some(JoypadKey::Down),
+        Key::Named(NamedKey::ArrowLeft) => Some(JoypadKey::Left),
+        Key::Named(NamedKey::ArrowRight) => Some(JoypadKey::Right),
+        Key::Named(NamedKey::Backspace) => Some(JoypadKey::Select),
+        Key::Named(NamedKey::Enter) => Some(JoypadKey::Start),
+        _ => None,
+    }
 }
