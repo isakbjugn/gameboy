@@ -29,8 +29,9 @@ async fn run() {
     };
 
     let event_loop = EventLoop::new().unwrap();
+    let scale = 3;
     let window = {
-        let size = LogicalSize::new(SCREEN_WIDTH as f64, SCREEN_HEIGHT as f64);
+        let size = LogicalSize::new(SCREEN_WIDTH as f64 * scale as f64, SCREEN_HEIGHT as f64 * scale as f64);
         event_loop.create_window(
             Window::default_attributes()
                 .with_title("Game Boy Web")
@@ -53,7 +54,9 @@ async fn run() {
         .expect("Kunne ikke legge canvas til DOM");
 
     let mut pixels = {
-        let surface_texture = SurfaceTexture::new(SCREEN_WIDTH, SCREEN_HEIGHT, window.clone());
+        let surface_width = SCREEN_WIDTH * scale;
+        let surface_height = SCREEN_HEIGHT * scale;
+        let surface_texture = SurfaceTexture::new(surface_width, surface_height, window.clone());
         let builder = PixelsBuilder::new(SCREEN_WIDTH, SCREEN_HEIGHT, surface_texture)
             .texture_format(pixels::wgpu::TextureFormat::Rgba8Unorm)
             .surface_texture_format(pixels::wgpu::TextureFormat::Bgra8Unorm);
