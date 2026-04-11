@@ -3,9 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <title>Game Boy</title>
+    <style>
+        .bezel {
+          background-color: grey;
+          border-radius: 16px 16px 64px 16px;
+          padding: 32px 96px;
+          max-width: fit-content;
+          margin: auto;
+        }
+    </style>
 </head>
 <body>
-    <div id="screen"></div>
+    <div class="bezel">
+        <div id="screen"></div>
+    </div>
 </body>
 <script type="module">
     import init, { main } from "./pkg/gameboy_web.js";
