@@ -12,5 +12,16 @@
 
     await init();
     main();
+
+    // Videresend tastatur-events til canvas slik at winit
+    // fanger dem opp uansett hvilket element som har fokus.
+    for (const type of ["keydown", "keyup"]) {
+        document.addEventListener(type, (e) => {
+            const canvas = document.querySelector("#screen canvas");
+            if (canvas && e.target !== canvas) {
+                canvas.dispatchEvent(new KeyboardEvent(type, e));
+            }
+        });
+    }
 </script>
 </html>
