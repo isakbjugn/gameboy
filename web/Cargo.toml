@@ -7,5 +7,12 @@ edition = "2024"
 crate-type = ["cdylib"]
 
 [dependencies]
+console_error_panic_hook = "0.1.7"
+console_log = "1.0.0"
 gameboy-core = { path = "../core" }
 wasm-bindgen = "0.2.118"
+log = "0.4.26"
+wasm-bindgen-futures = "0.4.68"
+web-sys = { version = "0.3.95", features = ["Document", "Element", "Window"] }
+winit = "0.30.13"
+pixels = "0.16.0"
