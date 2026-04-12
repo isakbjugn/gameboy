@@ -88,6 +88,12 @@ impl MBC for MBC3 {
             _ => panic!("Invalid RAM address"),
         }
     }
+
+    fn manual_save(&self) {
+        if let Some(ref battery_save) = self.battery_save {
+            battery_save.save(&self.ram);
+        }
+    }
 }
 
 impl Drop for MBC3 {

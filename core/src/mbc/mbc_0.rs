@@ -25,4 +25,5 @@ impl MBC for MBC0 {
     fn write_ram(&mut self, address: u16, value: u8) {
         
     }
+    fn manual_save(&self) {}
 }

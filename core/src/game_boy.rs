@@ -31,4 +31,7 @@ impl GameBoy {
     pub fn key_up(&mut self, key: JoypadKey) {
         self.cpu.bus.joypad.key_up(key)
     }
+    pub fn manual_save(&self) {
+        self.cpu.bus.cartridge.manual_save()
+    }
 }
