@@ -1,3 +1,5 @@
+mod local_storage_battery_save;
+
 use log::{error, info};
 use std::rc::Rc;
 use pixels::{PixelsBuilder, SurfaceTexture};
@@ -13,6 +15,7 @@ use gameboy_core::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use gameboy_core::frame_buffer::FrameBuffer;
 use gameboy_core::game_boy::GameBoy;
 use gameboy_core::joypad::JoypadKey;
+use crate::local_storage_battery_save::LocalStorageBatterySave;
 
 #[wasm_bindgen]
 pub fn main() {
@@ -23,7 +26,9 @@ pub fn main() {
 
 async fn run() {
     let cartridge = include_bytes!("../../roms/links_awakening.gb");
-    let mut game_boy = match GameBoy::new(Vec::from(cartridge), None) {
+    let local_storage_battery_save = LocalStorageBatterySave::new("links_awakening");
+
+    let mut game_boy = match GameBoy::new(Vec::from(cartridge), Some(Box::new(local_storage_battery_save))) {
         Ok(game_boy) => game_boy,
         Err(error_str) => panic!("{}", error_str),
     };
@@ -69,10 +74,12 @@ async fn run() {
     let cpu_cycles_per_frame = (4194204f64 / 1000.0 * 16.0).round() as u32;
     let mut cpu_cycles: u32 = 0;
 
+    let frames_between_saves = 120;
+    let mut frames_since_save = 0;
+
     let res = event_loop.run(|event, elwt| {
         use winit::event::ElementState::{Pressed, Released};
         use winit::event::{Event, WindowEvent};
-
 
         match event {
             Event::AboutToWait => {
@@ -87,6 +94,12 @@ async fn run() {
                         error!("Feil under tegning til skjerm!");
                         elwt.exit();
                     }
+                }
+
+                frames_since_save += 1;
+                if frames_since_save >= frames_between_saves {
+                    game_boy.manual_save();
+                    frames_since_save = 0;
                 }
 
                 window.request_redraw();
