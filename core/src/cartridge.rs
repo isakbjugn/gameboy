@@ -33,4 +33,7 @@ impl Cartridge {
         
         String::from_utf8(self.header[TITLE_START..=TITLE_END].to_owned()).unwrap()
     }
+    pub fn manual_save(&self) {
+        self.mbc.manual_save()
+    }
 }

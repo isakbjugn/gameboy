@@ -100,6 +100,12 @@ impl MBC for MBC1 {
         };
         self.ram[(bank_number * 0x2000) | (address & 0x1fff) as usize] = value;
     }
+
+    fn manual_save(&self) {
+        if let Some(ref battery_save) = self.battery_save {
+            battery_save.save(&self.ram);
+        }
+    }
 }
 
 impl Drop for MBC1 {
