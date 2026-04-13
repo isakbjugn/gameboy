@@ -19,18 +19,17 @@ use gameboy_core::joypad::JoypadKey;
 use crate::local_storage_battery_save::LocalStorageBatterySave;
 
 #[wasm_bindgen]
-pub fn main() {
+pub fn main(game_title: String, rom_data: Vec<u8>) {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
     console_log::init_with_level(log::Level::Info).expect("error initializing logger");
-    wasm_bindgen_futures::spawn_local(run())
+    wasm_bindgen_futures::spawn_local(run(game_title, rom_data))
 }
 
-async fn run() {
-    let cartridge = include_bytes!("../../roms/links_awakening.gb");
-    let local_storage_battery_save = LocalStorageBatterySave::new("links_awakening")
+async fn run(game_title: String, rom_data: Vec<u8>) {
+    let local_storage_battery_save = LocalStorageBatterySave::new(&game_title)
         .map(|battery_save| Box::new(battery_save) as Box<dyn BatterySave>);
 
-    let mut game_boy = match GameBoy::new(Vec::from(cartridge), local_storage_battery_save) {
+    let mut game_boy = match GameBoy::new(rom_data, local_storage_battery_save) {
         Ok(game_boy) => game_boy,
         Err(error_str) => panic!("{}", error_str),
     };
