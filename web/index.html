@@ -14,7 +14,7 @@
           max-width: fit-content;
           margin: auto;
         }
-        .rom-drop-zone {
+        #rom-drop-zone {
           background-color: white;
           display: flex;
           width: 480px;
@@ -30,7 +30,7 @@
 <body>
     <div class="bezel">
         <div id="screen"></div>
-        <label class="rom-drop-zone">
+        <label id="rom-drop-zone">
             Last opp Game Boy-spill
             <input type="file" id="game-pak-input" accept=".gb" />
         </label>
@@ -39,8 +39,14 @@
 <script type="module">
     import init, { main } from "./pkg/gameboy_web.js";
 
+    const romDropZone = document.getElementById("rom-drop-zone");
+    const fileInput = document.getElementById("game-pak-input");
+    fileInput.addEventListener("change", (e) => {
+      romDropZone.style.display = "none";
+      main()
+    });
+
     await init();
-    //main();
 
     // Videresend tastatur-events til canvas slik at winit
     // fanger dem opp uansett hvilket element som har fokus.
