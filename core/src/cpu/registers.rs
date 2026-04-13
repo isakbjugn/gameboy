@@ -38,21 +38,21 @@ pub enum Reg16 {
 impl Registers {
     pub fn new() -> Self {
         let mut registers = Registers {
-            a: 0x01,
-            b: 0x00,
-            c: 0x13,
-            d: 0x00,
-            e: 0xd8,
+            a: 0,
+            b: 0,
+            c: 0,
+            d: 0,
+            e: 0,
             f: FlagsRegister {
-                zero: true,
+                zero: false,
                 subtract: false,
-                half_carry: true,
-                carry: true,
+                half_carry: false,
+                carry: false,
             },
-            h: 0x01,
-            l: 0x4d,
+            h: 0,
+            l: 0,
             pc: 0,
-            sp: 0xfffe,
+            sp: 0,
         };
         if cfg!(feature = "test") {
             registers.set_state_after_boot_rom();
