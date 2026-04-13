@@ -12,6 +12,7 @@ use winit::platform::web::WindowExtWebSys;
 use winit::window::Window;
 
 use gameboy_core::{SCREEN_HEIGHT, SCREEN_WIDTH};
+use gameboy_core::battery_save::BatterySave;
 use gameboy_core::frame_buffer::FrameBuffer;
 use gameboy_core::game_boy::GameBoy;
 use gameboy_core::joypad::JoypadKey;
@@ -26,9 +27,10 @@ pub fn main() {
 
 async fn run() {
     let cartridge = include_bytes!("../../roms/links_awakening.gb");
-    let local_storage_battery_save = LocalStorageBatterySave::new("links_awakening");
+    let local_storage_battery_save = LocalStorageBatterySave::new("links_awakening")
+        .map(|battery_save| Box::new(battery_save) as Box<dyn BatterySave>);
 
-    let mut game_boy = match GameBoy::new(Vec::from(cartridge), Some(Box::new(local_storage_battery_save))) {
+    let mut game_boy = match GameBoy::new(Vec::from(cartridge), local_storage_battery_save) {
         Ok(game_boy) => game_boy,
         Err(error_str) => panic!("{}", error_str),
     };
