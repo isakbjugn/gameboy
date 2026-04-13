@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <title>Game Boy</title>
     <style>
+         body {
+           font-family: sans-serif;
+         }
         .bezel {
           background-color: grey;
           border-radius: 16px 16px 64px 16px;
@@ -11,18 +14,33 @@
           max-width: fit-content;
           margin: auto;
         }
+        .rom-drop-zone {
+          background-color: white;
+          display: flex;
+          width: 480px;
+          height: 432px;
+          align-items: center;
+          justify-content: center;
+        }
+        #game-pak-input {
+          display: none;
+        }
     </style>
 </head>
 <body>
     <div class="bezel">
         <div id="screen"></div>
+        <label class="rom-drop-zone">
+            Last opp Game Boy-spill
+            <input type="file" id="game-pak-input" accept=".gb" />
+        </label>
     </div>
 </body>
 <script type="module">
     import init, { main } from "./pkg/gameboy_web.js";
 
     await init();
-    main();
+    //main();
 
     // Videresend tastatur-events til canvas slik at winit
     // fanger dem opp uansett hvilket element som har fokus.
