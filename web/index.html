@@ -47,10 +47,11 @@
       if (!rom_file) {
         return;
       }
-      romDropZone.style.display = "none";
       const game_title = rom_file.name.split(".")[0];
       const buffer = await rom_file.arrayBuffer();
       const bytes = new Uint8Array(buffer);
+
+      romDropZone.style.display = "none";
       main(game_title, bytes);
     });
 
