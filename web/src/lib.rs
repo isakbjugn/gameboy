@@ -1,4 +1,5 @@
 mod local_storage_battery_save;
+mod uploaded_game_pak;
 
 use log::{error, info};
 use std::rc::Rc;
@@ -15,8 +16,10 @@ use gameboy_core::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use gameboy_core::battery_save::BatterySave;
 use gameboy_core::frame_buffer::FrameBuffer;
 use gameboy_core::game_boy::GameBoy;
+use gameboy_core::game_pak::GamePak;
 use gameboy_core::joypad::JoypadKey;
 use crate::local_storage_battery_save::LocalStorageBatterySave;
+use crate::uploaded_game_pak::UploadedGamePak;
 
 #[wasm_bindgen]
 pub fn main() {
@@ -26,11 +29,12 @@ pub fn main() {
 }
 
 async fn run() {
-    let cartridge = include_bytes!("../../roms/links_awakening.gb");
+    let game_pak = UploadedGamePak::new();
+    info!("Start spillet {}", game_pak.title());
     let local_storage_battery_save = LocalStorageBatterySave::new("links_awakening")
         .map(|battery_save| Box::new(battery_save) as Box<dyn BatterySave>);
 
-    let mut game_boy = match GameBoy::new(Vec::from(cartridge), local_storage_battery_save) {
+    let mut game_boy = match GameBoy::new(Box::new(game_pak), local_storage_battery_save) {
         Ok(game_boy) => game_boy,
         Err(error_str) => panic!("{}", error_str),
     };

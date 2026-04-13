@@ -1,7 +1,6 @@
 mod file_battery_save;
+mod file_game_pak;
 
-use std::fs::File;
-use std::io::Read;
 use std::path::PathBuf;
 use log::{error, LevelFilter};
 use pixels::Error;
@@ -12,6 +11,7 @@ use gameboy_core::game_boy::GameBoy;
 use gameboy_core::joypad::JoypadKey;
 use gameboy_core::{SCREEN_WIDTH, SCREEN_HEIGHT};
 use crate::file_battery_save::FileBatterySave;
+use crate::file_game_pak::FileGamePak;
 
 fn main() -> Result<(), Error> {
     TermLogger::init(
@@ -42,11 +42,10 @@ fn main() -> Result<(), Error> {
 
     let scale = matches.get_one::<u8>("scale").copied().unwrap();
     let cartridge_path = PathBuf::from(matches.get_one::<String>("cartridge_path").unwrap());
-    let file_battery_save = FileBatterySave::new(cartridge_path.clone());
-    let mut cartridge_data = vec![];
-    File::open(&cartridge_path).and_then(|mut f| f.read_to_end(&mut cartridge_data)).expect("Could not read ROM");
+    let file_game_pak = FileGamePak::new(cartridge_path.clone());
+    let file_battery_save = FileBatterySave::new(cartridge_path);
 
-    let game_boy = match GameBoy::new(cartridge_data, Some(Box::new(file_battery_save))) {
+    let game_boy = match GameBoy::new(Box::new(file_game_pak), Some(Box::new(file_battery_save))) {
         Ok(game_boy) => game_boy,
         Err(error_str) => panic!("{}", error_str),
     };

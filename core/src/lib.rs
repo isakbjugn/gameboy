@@ -10,6 +10,7 @@ pub mod cartridge;
 pub mod frame_buffer;
 pub mod apu;
 pub mod battery_save;
+pub mod game_pak;
 
 pub const SCREEN_WIDTH: u32 = 160;
 pub const SCREEN_HEIGHT: u32 = 144;

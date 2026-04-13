@@ -1,4 +1,5 @@
 use crate::battery_save::BatterySave;
+use crate::game_pak::GamePak;
 use crate::mbc::MBC;
 use crate::mbc::mbc_0::MBC0;
 use crate::mbc::mbc_1::MBC1;
@@ -10,9 +11,9 @@ pub struct Cartridge {
 }
 
 impl Cartridge {
-    pub fn from_bytes(data: Vec<u8>, battery_save: Option<Box<dyn BatterySave>>) -> Result<Self, &'static str> {
-        let mut header = vec![0; 0x14f - 0x100 + 1];
-        header.copy_from_slice(&data[0x0100..=0x014f]);
+    pub fn from_game_pak(game_pak: Box<dyn GamePak>, battery_save: Option<Box<dyn BatterySave>>) -> Result<Self, &'static str> {
+        let data = game_pak.read_rom();
+        let header = game_pak.read_header();
         
         Ok(Self {
             header,
