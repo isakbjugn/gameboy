@@ -1,7 +1,27 @@
 import init, { main } from "./pkg/gameboy_web.js";
 
+await init();
+
+// Videresend tastatur-events til canvas slik at winit
+// fanger dem opp uansett hvilket element som har fokus.
+for (const type of ["keydown", "keyup"]) {
+  document.addEventListener(type, (e) => {
+    const canvas = document.querySelector("#screen canvas");
+    if (canvas && e.target !== canvas) {
+      canvas.dispatchEvent(new KeyboardEvent(type, e));
+    }
+  });
+}
+
 const romDropZone = document.getElementById("rom-drop-zone");
 const fileInput = document.getElementById("game-pak-input");
+
+const romTitleFromLocalStorage = localStorage.getItem('rom-title');
+const romDataFromLocalStorage = localStorage.getItem('rom-data');
+if (romTitleFromLocalStorage && romDataFromLocalStorage) {
+  const romFile = new Uint8Array(JSON.parse(romDataFromLocalStorage));
+  await loadRom(romTitleFromLocalStorage, romFile);
+}
 
 window.addEventListener("drop", (e) => {
   if ([...e.dataTransfer.items].some((item) => item.kind === "file")) {
@@ -33,7 +53,9 @@ romDropZone.addEventListener("drop", async (e) => {
     return;
   }
 
-  await loadRom(rom_file);
+  const game_title = rom_file.name.split(".")[0];
+  const bytes = new Uint8Array(await rom_file.arrayBuffer());
+  await loadRom(game_title, bytes);
 });
 
 fileInput.addEventListener("change", async (e) => {
@@ -41,26 +63,14 @@ fileInput.addEventListener("change", async (e) => {
   if (!rom_file) {
     return;
   }
-  await loadRom(rom_file);
+  const game_title = rom_file.name.split(".")[0];
+  const bytes = new Uint8Array(await rom_file.arrayBuffer());
+  await loadRom(game_title, bytes);
 });
 
-async function loadRom(file) {
-  const game_title = file.name.split(".")[0];
-  const bytes = new Uint8Array(await file.arrayBuffer());
+async function loadRom(romTitle, romData) {
   romDropZone.style.display = "none";
-  localStorage.setItem('rom', JSON.stringify(Array.from(bytes)));
-  main(game_title, bytes);
-}
-
-await init();
-
-// Videresend tastatur-events til canvas slik at winit
-// fanger dem opp uansett hvilket element som har fokus.
-for (const type of ["keydown", "keyup"]) {
-  document.addEventListener(type, (e) => {
-    const canvas = document.querySelector("#screen canvas");
-    if (canvas && e.target !== canvas) {
-      canvas.dispatchEvent(new KeyboardEvent(type, e));
-    }
-  });
+  localStorage.setItem('rom-title', romTitle);
+  localStorage.setItem('rom-data', JSON.stringify(Array.from(romData)));
+  main(romTitle, romData);
 }
