@@ -22,17 +22,8 @@ window.addEventListener("dragover", (e) => {
 });
 
 romDropZone.addEventListener("dragover", (e) => {
-  const fileItems = [...e.dataTransfer.items].filter(
-    (item) => item.kind === "file",
-  );
-  if (fileItems.length > 0) {
-    e.preventDefault();
-    if (fileItems.some((item) => item.name.endsWith(".gb"))) {
-      e.dataTransfer.dropEffect = "copy";
-    } else {
-      e.dataTransfer.dropEffect = "none";
-    }
-  }
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "copy";
 });
 
 romDropZone.addEventListener("drop", async (e) => {
