@@ -74,3 +74,11 @@ async function loadRom(romTitle, romData) {
   localStorage.setItem('rom-data', JSON.stringify(Array.from(romData)));
   main(romTitle, romData);
 }
+
+const ejectButton = document.getElementById("eject-button");
+ejectButton.addEventListener("click", () => {
+  localStorage.removeItem('rom-title');
+  localStorage.removeItem('rom-data');
+  document.getElementById("game-menu").hidePopover();
+  location.reload();
+});
