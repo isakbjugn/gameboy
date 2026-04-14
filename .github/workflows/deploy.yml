@@ -30,8 +30,8 @@ jobs:
       - name: Bygg WebAssembly-bibliotek
         run: wasm-pack build web --release --target web --out-dir ../dist/pkg
 
-      - name: Kopier index.html
-        run: cp web/index.html dist/
+      - name: Kopier fra web til dist
+        run: cp web/index.html web/main.js dist/
 
       - name: Last opp til GitHub Pages
         uses: actions/upload-pages-artifact@v3
