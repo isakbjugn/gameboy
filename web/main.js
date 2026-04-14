@@ -22,17 +22,8 @@ window.addEventListener("dragover", (e) => {
 });
 
 romDropZone.addEventListener("dragover", (e) => {
-  const fileItems = [...e.dataTransfer.items].filter(
-    (item) => item.kind === "file",
-  );
-  if (fileItems.length > 0) {
-    e.preventDefault();
-    if (fileItems.some((item) => item.name.endsWith(".gb"))) {
-      e.dataTransfer.dropEffect = "copy";
-    } else {
-      e.dataTransfer.dropEffect = "none";
-    }
-  }
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "copy";
 });
 
 romDropZone.addEventListener("drop", async (e) => {
@@ -41,12 +32,8 @@ romDropZone.addEventListener("drop", async (e) => {
   if (!rom_file) {
     return;
   }
-  const game_title = rom_file.name.split(".")[0];
-  const buffer = await rom_file.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
 
-  romDropZone.style.display = "none";
-  main(game_title, bytes);
+  await loadRom(rom_file);
 });
 
 fileInput.addEventListener("change", async (e) => {
@@ -54,13 +41,15 @@ fileInput.addEventListener("change", async (e) => {
   if (!rom_file) {
     return;
   }
-  const game_title = rom_file.name.split(".")[0];
-  const buffer = await rom_file.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
+  await loadRom(rom_file);
+});
 
+async function loadRom(file) {
+  const game_title = file.name.split(".")[0];
+  const bytes = new Uint8Array(await file.arrayBuffer());
   romDropZone.style.display = "none";
   main(game_title, bytes);
-});
+}
 
 await init();
 
