@@ -48,6 +48,7 @@ async function loadRom(file) {
   const game_title = file.name.split(".")[0];
   const bytes = new Uint8Array(await file.arrayBuffer());
   romDropZone.style.display = "none";
+  localStorage.setItem('rom', JSON.stringify(Array.from(bytes)));
   main(game_title, bytes);
 }
 
