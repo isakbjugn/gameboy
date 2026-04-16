@@ -31,7 +31,7 @@ jobs:
         run: wasm-pack build web --release --target web --out-dir ../dist/pkg
 
       - name: Kopier fra web til dist
-        run: cp web/index.html web/main.js dist/
+        run: cp web/index.html web/main.js web/menu.css web/buttons.css dist/
 
       - name: Last opp til GitHub Pages
         uses: actions/upload-pages-artifact@v3
