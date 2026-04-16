@@ -51,8 +51,6 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  -webkit-user-select: none;
-  user-select: none;
 }
 .dpad button:active { background: #555; }
 .dpad-up    { grid-area: 1 / 2; }
@@ -88,8 +86,6 @@
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
-  -webkit-user-select: none;
-  user-select: none;
   box-shadow: 8px 8px grey;
 }
 
@@ -128,8 +124,6 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   cursor: pointer;
-  -webkit-user-select: none;
-  user-select: none;
 }
 
 @media (min-width: 480px) {
