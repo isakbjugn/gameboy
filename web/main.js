@@ -75,13 +75,53 @@ async function loadRom(romTitle, romData) {
   main(romTitle, romData);
 }
 
-// Knapper: send tastatur-events til canvas ved trykk/slipp
-for (const btn of document.querySelectorAll("[data-key]")) {
-  for (const [pointer, keyboard] of [["pointerdown", "keydown"], ["pointerup", "keyup"]]) {
-    btn.addEventListener(pointer, (e) => {
-      e.preventDefault();
-      document.dispatchEvent(new KeyboardEvent(keyboard, { key: btn.dataset.key }));
-    });
+// Knapper: multi-touch-støtte for å kunne trykke flere knapper samtidig.
+// Sporer hvilke taster som er aktive per touch-punkt, og sender
+// keydown/keyup-events når fingre treffer eller forlater knapper.
+const activeKeys = new Map(); // touch-identifier → data-key
+
+function keyForTouch(touch) {
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  return el?.closest("[data-key]")?.dataset.key ?? null;
+}
+
+function syncTouches(e) {
+  e.preventDefault();
+  const currentTouches = new Set();
+  for (const touch of e.touches) {
+    currentTouches.add(touch.identifier);
+    const key = keyForTouch(touch);
+    const prev = activeKeys.get(touch.identifier);
+    if (prev !== key) {
+      if (prev) document.dispatchEvent(new KeyboardEvent("keyup", { key: prev }));
+      if (key) document.dispatchEvent(new KeyboardEvent("keydown", { key }));
+      if (key) activeKeys.set(touch.identifier, key);
+      else activeKeys.delete(touch.identifier);
+    }
+  }
+  // Fjern touch-punkter som ikke lenger finnes (touchend/touchcancel)
+  for (const [id, key] of activeKeys) {
+    if (!currentTouches.has(id)) {
+      document.dispatchEvent(new KeyboardEvent("keyup", { key }));
+      activeKeys.delete(id);
+    }
+  }
+}
+
+const gameboy = document.querySelector(".gameboy");
+for (const event of ["touchstart", "touchmove", "touchend", "touchcancel"]) {
+  gameboy.addEventListener(event, syncTouches, { passive: false });
+}
+
+// Fallback for desktop (mus/pointer)
+if (!("ontouchstart" in window)) {
+  for (const btn of document.querySelectorAll("[data-key]")) {
+    for (const [pointer, keyboard] of [["pointerdown", "keydown"], ["pointerup", "keyup"]]) {
+      btn.addEventListener(pointer, (e) => {
+        e.preventDefault();
+        document.dispatchEvent(new KeyboardEvent(keyboard, { key: btn.dataset.key }));
+      });
+    }
   }
 }
 
