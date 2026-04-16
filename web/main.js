@@ -86,7 +86,12 @@ function keyForTouch(touch) {
 }
 
 function syncTouches(e) {
-  e.preventDefault();
+  // Bare preventDefault for touch på spillknapper, slik at meny etc. fungerer normalt.
+  const touchesGameButton = [...e.touches].some((t) => {
+    const el = document.elementFromPoint(t.clientX, t.clientY);
+    return el?.closest("[data-key]");
+  });
+  if (touchesGameButton) e.preventDefault();
   const currentTouches = new Set();
   for (const touch of e.touches) {
     currentTouches.add(touch.identifier);
@@ -124,6 +129,20 @@ if (!("ontouchstart" in window)) {
     }
   }
 }
+
+const resetComboButton = document.getElementById("reset-combo-button");
+resetComboButton.addEventListener("click", () => {
+  document.getElementById("game-menu").hidePopover();
+  const keys = ["Enter", "Backspace", "z", "x"];
+  for (const key of keys) {
+    document.dispatchEvent(new KeyboardEvent("keydown", { key }));
+  }
+  setTimeout(() => {
+    for (const key of keys) {
+      document.dispatchEvent(new KeyboardEvent("keyup", { key }));
+    }
+  }, 200);
+});
 
 const ejectButton = document.getElementById("eject-button");
 ejectButton.addEventListener("click", () => {
