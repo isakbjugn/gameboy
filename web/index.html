@@ -2,17 +2,37 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Game Boy</title>
+    <link rel="stylesheet" href="menu.css">
+    <link rel="stylesheet" href="buttons.css">
     <style>
-         body {
-           font-family: sans-serif;
-         }
-        .bezel {
-          background-color: grey;
-          border-radius: 16px 16px 64px 16px;
-          padding: 32px 96px;
-          max-width: fit-content;
+        body {
+          font-family: sans-serif;
+        }
+        .gameboy {
+          width: fit-content;
           margin: auto;
+          background-color: lightgray;
+          padding: 36px;
+          color: darkblue;
+        }
+        @media (min-width: 480px) {
+          .gameboy {
+            border-radius: 36px 36px 128px 36px;
+          }
+        }
+        .bezel {
+          background: grey;
+          border-radius: 12px 12px 56px 12px;
+          margin: 24px 8px;
+          padding: 18px 48px;
+        }
+        @media (min-width: 480px) {
+          .bezel {
+            padding: 32px 96px;
+            max-width: fit-content;
+          }
         }
         #rom-drop-zone {
           background-color: white;
@@ -25,64 +45,77 @@
         #game-pak-input {
           display: none;
         }
-        #menu-button {
-          position: fixed;
-          top: 8px;
-          right: 8px;
-          background: none;
-          border: none;
-          cursor: pointer;
-          padding: 4px;
-          font-size: 20px;
-          line-height: 1;
-        }
-        #menu-button:hover {
-          opacity: 0.6;
-        }
-        #game-menu {
-          margin: 0;
-          padding: 4px 0;
-          border: 1px solid #ccc;
-          border-radius: 8px;
-          background: white;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-          min-width: 180px;
-          position: fixed;
-          inset: unset;
-          top: 36px;
-          right: 8px;
-        }
-        #game-menu::backdrop {
-          background: transparent;
-        }
-        .menu-item {
-          display: block;
-          width: 100%;
-          padding: 10px 16px;
-          background: none;
-          border: none;
-          text-align: left;
-          cursor: pointer;
-          font-size: 14px;
-          white-space: nowrap;
-          box-sizing: border-box;
-        }
-        .menu-item:hover {
-          background-color: #f0f0f0;
+
+        @media (max-width: 480px) {
+          body {
+            margin: 0;
+            overflow: hidden;
+          }
+          .gameboy {
+            width: 100%;
+            min-height: 100dvh;
+            padding: 16px;
+            border-radius: 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+          }
+          #rom-drop-zone {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 10 / 9;
+          }
+          #screen canvas {
+            width: 100% !important;
+            height: auto !important;
+          }
         }
     </style>
 </head>
 <body>
-    <button id="menu-button" popovertarget="game-menu" popovertargetaction="toggle" aria-label="Meny">&#9776;</button>
-    <div popover id="game-menu">
-        <button class="menu-item" id="eject-button">Løs ut kassett</button>
-    </div>
-    <div class="bezel">
-        <div id="screen"></div>
-        <label id="rom-drop-zone">
-            Last opp Game Boy-spillet ditt her
-            <input type="file" id="game-pak-input" accept=".gb" />
-        </label>
+    <div class="gameboy">
+        <button id="menu-button" popovertarget="game-menu" popovertargetaction="toggle" aria-label="Meny">&#9776;</button>
+        <div popover id="game-menu">
+            <button class="menu-item" id="eject-button">Løs ut kassett</button>
+        </div>
+        <div class="bezel">
+            <div id="screen"></div>
+            <label id="rom-drop-zone">
+                Last opp Game Boy-spillet ditt her
+                <input type="file" id="game-pak-input" accept=".gb" />
+            </label>
+        </div>
+        <div class="controls-upper-row">
+            <div class="dpad">
+                <button class="dpad-up" data-key="ArrowUp" aria-label="Opp"></button>
+                <button class="dpad-left" data-key="ArrowLeft" aria-label="Venstre"></button>
+                <div class="dpad-center"></div>
+                <button class="dpad-right" data-key="ArrowRight" aria-label="Høyre"></button>
+                <button class="dpad-down" data-key="ArrowDown" aria-label="Ned"></button>
+            </div>
+            <div class="ab-buttons">
+                <label class="button-with-text-below">
+                    <button data-key="x" aria-label="B"></button>
+                    B
+                </label>
+                <label class="button-with-text-below">
+                    <button data-key="z" aria-label="A"></button>
+                    A
+                </label>
+            </div>
+        </div>
+        <div class="controls-lower-row">
+            <div class="meta-buttons">
+                <label class="button-with-text-below">
+                    <button data-key="Backspace" aria-label="Select"></button>
+                    SELECT
+                </label>
+                <label class="button-with-text-below">
+                    <button data-key="Enter" aria-label="Start"></button>
+                    START
+                </label>
+            </div>
+        </div>
     </div>
 </body>
 <script type="module" src="main.js"></script>

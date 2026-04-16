@@ -75,6 +75,16 @@ async function loadRom(romTitle, romData) {
   main(romTitle, romData);
 }
 
+// Knapper: send tastatur-events til canvas ved trykk/slipp
+for (const btn of document.querySelectorAll("[data-key]")) {
+  for (const [pointer, keyboard] of [["pointerdown", "keydown"], ["pointerup", "keyup"]]) {
+    btn.addEventListener(pointer, (e) => {
+      e.preventDefault();
+      document.dispatchEvent(new KeyboardEvent(keyboard, { key: btn.dataset.key }));
+    });
+  }
+}
+
 const ejectButton = document.getElementById("eject-button");
 ejectButton.addEventListener("click", () => {
   localStorage.removeItem('rom-title');
