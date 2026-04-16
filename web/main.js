@@ -78,36 +78,92 @@ async function loadRom(romTitle, romData) {
 // Knapper: multi-touch-støtte for å kunne trykke flere knapper samtidig.
 // Sporer hvilke taster som er aktive per touch-punkt, og sender
 // keydown/keyup-events når fingre treffer eller forlater knapper.
-const activeKeys = new Map(); // touch-identifier → data-key
+const activeKeys = new Map(); // touch-identifier → Set<key>
 
-function keyForTouch(touch) {
+// Geometrisk d-pad: regn ut aktive retninger basert på vinkel fra midtpunktet.
+// Deler sirkelen i 8 sektorer à 45°. Kardinalsektorer gir én retning,
+// diagonalsektorer gir to naboretninger samtidig.
+function dpadKeysForTouch(touch, dpadEl) {
+  const rect = dpadEl.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const dx = touch.clientX - cx;
+  const dy = touch.clientY - cy;
+
+  // Vinkel i grader, 0° = høyre, positiv med klokka
+  let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+  if (angle < 0) angle += 360;
+
+  // 8 sektorer à 45°, med sektor 0 sentrert rundt 0° (høyre)
+  //   0: høyre        (337.5–22.5)
+  //   1: ned+høyre    (22.5–67.5)
+  //   2: ned          (67.5–112.5)
+  //   3: ned+venstre  (112.5–157.5)
+  //   4: venstre      (157.5–202.5)
+  //   5: opp+venstre  (202.5–247.5)
+  //   6: opp          (247.5–292.5)
+  //   7: opp+høyre    (292.5–337.5)
+  const sector = Math.floor(((angle + 22.5) % 360) / 45);
+  const map = [
+    ["ArrowRight"],                  // 0
+    ["ArrowDown", "ArrowRight"],     // 1
+    ["ArrowDown"],                   // 2
+    ["ArrowDown", "ArrowLeft"],      // 3
+    ["ArrowLeft"],                   // 4
+    ["ArrowUp", "ArrowLeft"],        // 5
+    ["ArrowUp"],                     // 6
+    ["ArrowUp", "ArrowRight"],       // 7
+  ];
+  return map[sector];
+}
+
+function keysForTouch(touch) {
   const el = document.elementFromPoint(touch.clientX, touch.clientY);
-  return el?.closest("[data-key]")?.dataset.key ?? null;
+  const dpad = el?.closest("[data-dpad]");
+  if (dpad) return dpadKeysForTouch(touch, dpad);
+  const key = el?.closest("[data-key]")?.dataset.key;
+  return key ? [key] : [];
+}
+
+// Hjelpefunksjon: sammenlign to sorterte nøkkelsett
+function sameKeys(a, b) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
 }
 
 function syncTouches(e) {
   // Bare preventDefault for touch på spillknapper, slik at meny etc. fungerer normalt.
   const touchesGameButton = [...e.touches].some((t) => {
     const el = document.elementFromPoint(t.clientX, t.clientY);
-    return el?.closest("[data-key]");
+    return el?.closest("[data-key]") || el?.closest("[data-dpad]");
   });
   if (touchesGameButton) e.preventDefault();
   const currentTouches = new Set();
   for (const touch of e.touches) {
     currentTouches.add(touch.identifier);
-    const key = keyForTouch(touch);
-    const prev = activeKeys.get(touch.identifier);
-    if (prev !== key) {
-      if (prev) document.dispatchEvent(new KeyboardEvent("keyup", { key: prev }));
-      if (key) document.dispatchEvent(new KeyboardEvent("keydown", { key }));
-      if (key) activeKeys.set(touch.identifier, key);
+    const keys = keysForTouch(touch);
+    const prev = activeKeys.get(touch.identifier) ?? [];
+    if (!sameKeys(prev, keys)) {
+      // Slipp taster som ikke lenger er aktive
+      for (const k of prev) {
+        if (!keys.includes(k)) document.dispatchEvent(new KeyboardEvent("keyup", { key: k }));
+      }
+      // Trykk ned nye taster
+      for (const k of keys) {
+        if (!prev.includes(k)) {
+          document.dispatchEvent(new KeyboardEvent("keydown", { key: k }));
+          navigator.vibrate?.(15);
+        }
+      }
+      if (keys.length) activeKeys.set(touch.identifier, keys);
       else activeKeys.delete(touch.identifier);
     }
   }
   // Fjern touch-punkter som ikke lenger finnes (touchend/touchcancel)
-  for (const [id, key] of activeKeys) {
+  for (const [id, keys] of activeKeys) {
     if (!currentTouches.has(id)) {
-      document.dispatchEvent(new KeyboardEvent("keyup", { key }));
+      for (const k of keys) document.dispatchEvent(new KeyboardEvent("keyup", { key: k }));
       activeKeys.delete(id);
     }
   }
@@ -127,6 +183,34 @@ if (!("ontouchstart" in window)) {
         document.dispatchEvent(new KeyboardEvent(keyboard, { key: btn.dataset.key }));
       });
     }
+  }
+  // D-pad med mus: geometrisk retningsberegning
+  const dpadOverlay = document.querySelector("[data-dpad]");
+  if (dpadOverlay) {
+    let activeDpadKeys = [];
+    dpadOverlay.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      dpadOverlay.setPointerCapture(e.pointerId);
+      activeDpadKeys = dpadKeysForTouch(e, dpadOverlay);
+      for (const k of activeDpadKeys) document.dispatchEvent(new KeyboardEvent("keydown", { key: k }));
+    });
+    dpadOverlay.addEventListener("pointermove", (e) => {
+      if (!dpadOverlay.hasPointerCapture(e.pointerId)) return;
+      const keys = dpadKeysForTouch(e, dpadOverlay);
+      if (!sameKeys(activeDpadKeys, keys)) {
+        for (const k of activeDpadKeys) {
+          if (!keys.includes(k)) document.dispatchEvent(new KeyboardEvent("keyup", { key: k }));
+        }
+        for (const k of keys) {
+          if (!activeDpadKeys.includes(k)) document.dispatchEvent(new KeyboardEvent("keydown", { key: k }));
+        }
+        activeDpadKeys = keys;
+      }
+    });
+    dpadOverlay.addEventListener("pointerup", (e) => {
+      for (const k of activeDpadKeys) document.dispatchEvent(new KeyboardEvent("keyup", { key: k }));
+      activeDpadKeys = [];
+    });
   }
 }
 
