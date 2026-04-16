@@ -1,0 +1,76 @@
+body {
+  font-family: sans-serif;
+}
+
+.bezel {
+  background-color: grey;
+  border-radius: 16px 16px 64px 16px;
+  padding: 32px 96px;
+  max-width: fit-content;
+  margin: auto;
+}
+
+.rom-drop-zone {
+  background-color: white;
+  display: flex;
+  width: 480px;
+  height: 432px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.rom-drop-zone input {
+  display: none;
+}
+
+.menu-button {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.menu-button:hover {
+  opacity: 0.6;
+}
+
+.game-menu {
+  margin: 0;
+  padding: 4px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  min-width: 180px;
+  position: fixed;
+  inset: unset;
+  top: 36px;
+  right: 8px;
+}
+
+.game-menu::backdrop {
+  background: transparent;
+}
+
+.menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.menu-item:hover {
+  background-color: #f0f0f0;
+}
