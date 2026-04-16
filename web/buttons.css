@@ -25,6 +25,7 @@
 
 /* D-pad */
 .dpad {
+  position: relative;
   display: grid;
   grid-template: 36px 36px 36px / 36px 36px 36px;
   gap: 0;
@@ -32,6 +33,13 @@
   background-color: lightgray;
   padding: 12px;
   filter: brightness(95%);
+}
+
+.dpad-touch-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  z-index: 1;
 }
 
 @media (min-width: 480px) {
