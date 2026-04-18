@@ -35,6 +35,13 @@ jobs:
         if: steps.cache-wasm-pack.outputs.cache-hit != 'true'
         run: cargo install wasm-pack --version 0.14.0
 
+      - name: Cache Cargo-bygg
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: cargo-wasm-${{ hashFiles('Cargo.lock', 'core/src/**', 'web/src/**') }}
+          restore-keys: cargo-wasm-
+
       - name: Bygg WebAssembly-bibliotek
         run: wasm-pack build web --release --target web --out-dir ../dist/pkg
 
