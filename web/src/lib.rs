@@ -65,7 +65,7 @@ async fn run(game_title: String, rom_data: Vec<u8>) {
         let surface_texture = SurfaceTexture::new(surface_width, surface_height, window.clone());
         let builder = PixelsBuilder::new(SCREEN_WIDTH, SCREEN_HEIGHT, surface_texture)
             .texture_format(pixels::wgpu::TextureFormat::Rgba8Unorm)
-            .surface_texture_format(pixels::wgpu::TextureFormat::Bgra8Unorm);
+            .surface_texture_format(pixels::wgpu::TextureFormat::Rgba8Unorm);
 
         builder.build_async().await.expect("Pixels error")
     };
