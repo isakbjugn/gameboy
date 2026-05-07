@@ -3,6 +3,7 @@ mod pulse_channel;
 use log::info;
 use crate::apu::pulse_channel::PulseChannel;
 
+#[derive(Default)]
 pub struct APU {
     master_volume: u8,
     sound_panning: u8,
@@ -11,14 +12,6 @@ pub struct APU {
 }
 
 impl APU {
-    pub fn new() -> Self {
-        Self {
-            master_volume: 0,
-            sound_panning: 0,
-            audio_master_control: 0,
-            channel_2: PulseChannel::default(),
-        }
-    }
     pub fn cycle(&mut self, _t_cycles: u32) {
 
     }

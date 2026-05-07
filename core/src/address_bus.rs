@@ -27,7 +27,7 @@ impl AddressBus {
         let mut address_bus = Self {
             cartridge: cart,
             ppu: PPU::new(),
-            apu: APU::new(),
+            apu: APU::default(),
             work_ram: [0; WORK_RAM_SIZE],
             high_ram: [0; HIGH_RAM_SIZE],
             interrupt_enable_register: 0,
