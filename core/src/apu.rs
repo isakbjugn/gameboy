@@ -1,4 +1,7 @@
+mod pulse_channel;
+
 use log::info;
+use crate::apu::pulse_channel::PulseChannel;
 
 pub struct APU {
     master_volume: u8,
@@ -45,16 +48,5 @@ impl APU {
     }
     pub fn write_wave_byte(&self, _address: u8, _value: u8) {
         // Wave pattern not implemented
-    }
-}
-
-struct PulseChannel;
-
-impl PulseChannel {
-    fn read_byte(&self, address: u8) -> u8 {
-        0
-    }
-    fn write_byte(&mut self, address: u8, value: u8) {
-
     }
 }
