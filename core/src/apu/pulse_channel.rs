@@ -47,6 +47,15 @@ enum EnvelopeDirection {
     Down,
 }
 
+impl EnvelopeDirection {
+    fn as_bit(&self) -> u8 {
+        match self {
+            EnvelopeDirection::Up => 1,
+            EnvelopeDirection::Down => 0,
+        }
+    }
+}
+
 #[derive(Default)]
 struct Envelope {
     initial_volume: u8,
@@ -58,7 +67,7 @@ impl PulseChannel {
     pub fn read_byte(&self, address: u8) -> u8 {
         match address {
             0x16 => self.duty_cycle.to_bits() << 6,
-            0x17 => self.envelope.initial_volume << 4 | if self.envelope.direction == EnvelopeDirection::Up { 1 } else { 0 } << 3 | self.envelope.sweep_pace,
+            0x17 => self.envelope.initial_volume << 4 | self.envelope.direction.as_bit() << 3 | self.envelope.sweep_pace,
             0x18 => panic!("FF18 er write-only"),
             0x19 => if self.length_timer.enabled { 0b01000000 } else { 0 }
             _ => 0x00,
