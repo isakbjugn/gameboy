@@ -1,5 +1,6 @@
 
 pub struct APU {
+    master_volume: u8,
     sound_panning: u8,
     audio_master_control: u8,
 }
@@ -7,6 +8,7 @@ pub struct APU {
 impl APU {
     pub fn new() -> Self {
         Self {
+            master_volume: 0,
             sound_panning: 0,
             audio_master_control: 0,
         }
@@ -16,6 +18,7 @@ impl APU {
     }
     pub fn read_byte(&self, address: u8) -> u8 {
         match address {
+            0x24 => self.master_volume,
             0x25 => self.sound_panning,
             0x26 => self.audio_master_control,
             _ => 0x00 // Other audio channels not implemented
@@ -23,8 +26,9 @@ impl APU {
     }
     pub fn write_byte(&mut self, address: u8, value: u8) {
         match address {
+            0x24 => self.master_volume = value & 0b01110111,
             0x25 => self.audio_master_control = value,
-            0x26 => self.audio_master_control &= value | 0b1000000,
+            0x26 => self.audio_master_control = value & 0b1000000,
             _ => {} // Other audio channels not implemented
         }
     }
