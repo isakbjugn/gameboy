@@ -16,7 +16,7 @@ impl APU {
             master_volume: 0,
             sound_panning: 0,
             audio_master_control: 0,
-            channel_2: PulseChannel {}
+            channel_2: PulseChannel::default(),
         }
     }
     pub fn cycle(&mut self, _t_cycles: u32) {
