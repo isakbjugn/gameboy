@@ -24,7 +24,7 @@ impl APU {
     pub fn write_byte(&mut self, address: u8, value: u8) {
         match address {
             0x25 => self.audio_master_control = value,
-            0x26 => self.audio_master_control &= (value | 0b1000000),
+            0x26 => self.audio_master_control &= value | 0b1000000,
             _ => {} // Other audio channels not implemented
         }
     }
