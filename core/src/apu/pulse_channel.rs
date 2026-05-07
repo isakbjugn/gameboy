@@ -69,7 +69,7 @@ impl PulseChannel {
             0x16 => self.duty_cycle.to_bits() << 6,
             0x17 => self.envelope.initial_volume << 4 | self.envelope.direction.as_bit() << 3 | self.envelope.sweep_pace,
             0x18 => panic!("FF18 er write-only"),
-            0x19 => if self.length_timer.enabled { 0b01000000 } else { 0 }
+            0x19 if self.length_timer.enabled => 0b0100_0000,
             _ => 0x00,
         }
     }
@@ -77,20 +77,20 @@ impl PulseChannel {
         match address {
             0x16 => {
                 self.duty_cycle = DutyCycle::from_bits(value >> 6);
-                self.initial_length_timer = value & 0b00111111;
+                self.initial_length_timer = value & 0b0011_1111;
             }
             0x17 => {
-                self.envelope.initial_volume = (value & 0b11110000) >> 4;
-                self.envelope.direction = if value & 0b00001000 != 0 { EnvelopeDirection::Up } else { EnvelopeDirection::Down };
-                self.envelope.sweep_pace = value & 0b00000111;
+                self.envelope.initial_volume = (value & 0b1111_0000) >> 4;
+                self.envelope.direction = if value & 0b0000_1000 != 0 { EnvelopeDirection::Up } else { EnvelopeDirection::Down };
+                self.envelope.sweep_pace = value & 0b0000_0111;
             }
             0x18 => {
                 self.pulse_phase_timer.period = self.pulse_phase_timer.period & 0xff00 | value as u16;
             }
             0x19 => {
-                if value >> 7 != 0 { self.enabled = true }
-                self.length_timer.enabled = if value >> 6 & 0b01 != 0 { true } else { false };
-                self.pulse_phase_timer.period = (((value & 0b00000111) as u16) << 8) | (self.pulse_phase_timer.period & 0x00ff)
+                if value & 0b1000_0000 != 0 { self.enabled = true }
+                self.length_timer.enabled = value & 0b0100_0000 != 0;
+                self.pulse_phase_timer.period = (((value & 0b0000_0111) as u16) << 8) | (self.pulse_phase_timer.period & 0x00ff)
             }
             _ => {}
         }
