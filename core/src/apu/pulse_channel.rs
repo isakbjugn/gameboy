@@ -1,5 +1,3 @@
-use std::cmp::PartialEq;
-
 #[derive(Default)]
 pub struct PulseChannel {
     enabled: bool,
