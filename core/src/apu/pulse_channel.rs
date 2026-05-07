@@ -2,9 +2,12 @@ use std::cmp::PartialEq;
 
 #[derive(Default)]
 pub struct PulseChannel {
+    enabled: bool,
+    pulse_phase_timer: PulsePhaseTimer,
     duty_cycle: DutyCycle,
     initial_length_timer: u8,
     envelope: Envelope,
+    length_timer: LengthTimer,
 }
 
 #[derive(Default)]
@@ -56,6 +59,8 @@ impl PulseChannel {
         match address {
             0x16 => self.duty_cycle.to_bits() << 6,
             0x17 => self.envelope.initial_volume << 4 | if self.envelope.direction == EnvelopeDirection::Up { 1 } else { 0 } << 3 | self.envelope.sweep_pace,
+            0x18 => panic!("FF18 er write-only"),
+            0x19 => if self.length_timer.enabled { 0b01000000 } else { 0 }
             _ => 0x00,
         }
     }
@@ -67,10 +72,36 @@ impl PulseChannel {
             }
             0x17 => {
                 self.envelope.initial_volume = (value & 0b11110000) >> 4;
-                self.envelope.direction = if value == 0b00001000 { EnvelopeDirection::Up } else { EnvelopeDirection::Down };
+                self.envelope.direction = if value & 0b00001000 != 0 { EnvelopeDirection::Up } else { EnvelopeDirection::Down };
                 self.envelope.sweep_pace = value & 0b00000111;
+            }
+            0x18 => {
+                self.pulse_phase_timer.period = self.pulse_phase_timer.period & 0xaa00 | value as u16;
+            }
+            0x19 => {
+                if value >> 7 != 0 { self.enabled = true }
+                self.length_timer.enabled = if value >> 6 & 0b01 != 0 { true } else { false };
+                self.pulse_phase_timer.period = (((value & 0b00000111) as u16) << 8) | (self.pulse_phase_timer.period & 0x00aa)
             }
             _ => {}
         }
     }
+}
+
+#[derive(Default)]
+struct PulsePhaseTimer {
+    period: u16,
+}
+
+impl PulsePhaseTimer {
+
+}
+
+#[derive(Default)]
+struct LengthTimer {
+    enabled: bool,
+}
+
+impl LengthTimer {
+
 }
