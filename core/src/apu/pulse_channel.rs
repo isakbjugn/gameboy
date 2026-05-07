@@ -76,12 +76,12 @@ impl PulseChannel {
                 self.envelope.sweep_pace = value & 0b00000111;
             }
             0x18 => {
-                self.pulse_phase_timer.period = self.pulse_phase_timer.period & 0xaa00 | value as u16;
+                self.pulse_phase_timer.period = self.pulse_phase_timer.period & 0xff00 | value as u16;
             }
             0x19 => {
                 if value >> 7 != 0 { self.enabled = true }
                 self.length_timer.enabled = if value >> 6 & 0b01 != 0 { true } else { false };
-                self.pulse_phase_timer.period = (((value & 0b00000111) as u16) << 8) | (self.pulse_phase_timer.period & 0x00aa)
+                self.pulse_phase_timer.period = (((value & 0b00000111) as u16) << 8) | (self.pulse_phase_timer.period & 0x00ff)
             }
             _ => {}
         }
