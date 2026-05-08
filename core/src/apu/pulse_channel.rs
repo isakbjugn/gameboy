@@ -38,19 +38,22 @@ impl DutyCycle {
     }
 }
 
-#[derive(Default, PartialEq)]
+#[derive(Default)]
 enum EnvelopeDirection {
     #[default]
-    Up,
     Down,
+    Up,
 }
 
 impl EnvelopeDirection {
     fn as_bit(&self) -> u8 {
         match self {
-            EnvelopeDirection::Up => 1,
             EnvelopeDirection::Down => 0,
+            EnvelopeDirection::Up => 1,
         }
+    }
+    fn from_bit(bit: u8) -> Self {
+        if bit & 0b01 == 0 { EnvelopeDirection::Down } else { EnvelopeDirection::Up }
     }
 }
 
@@ -79,7 +82,7 @@ impl PulseChannel {
             }
             0x17 => {
                 self.envelope.initial_volume = (value & 0b1111_0000) >> 4;
-                self.envelope.direction = if value & 0b0000_1000 != 0 { EnvelopeDirection::Up } else { EnvelopeDirection::Down };
+                self.envelope.direction = EnvelopeDirection::from_bit(value >> 3);
                 self.envelope.sweep_pace = value & 0b0000_0111;
             }
             0x18 => {
