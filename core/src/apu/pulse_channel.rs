@@ -103,15 +103,7 @@ struct PulsePhaseTimer {
     period: u16,
 }
 
-impl PulsePhaseTimer {
-
-}
-
 #[derive(Default)]
 struct LengthTimer {
     enabled: bool,
-}
-
-impl LengthTimer {
-
 }
