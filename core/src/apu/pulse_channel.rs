@@ -8,7 +8,7 @@ pub struct PulseChannel {
     length_timer: LengthTimer,
 }
 
-#[derive(Default)]
+#[derive(Clone, Copy, Default)]
 enum DutyCycle {
     #[default]
     Eight,
@@ -18,7 +18,7 @@ enum DutyCycle {
 }
 
 impl DutyCycle {
-    fn to_bits(&self) -> u8 {
+    fn to_bits(self) -> u8 {
         match self {
             DutyCycle::Eight => 0b00,
             DutyCycle::Quarter => 0b01,
