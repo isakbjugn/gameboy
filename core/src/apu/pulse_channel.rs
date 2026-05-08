@@ -38,7 +38,7 @@ impl DutyCycle {
     }
 }
 
-#[derive(Default)]
+#[derive(Clone, Copy, Default)]
 enum EnvelopeDirection {
     #[default]
     Down,
@@ -46,7 +46,7 @@ enum EnvelopeDirection {
 }
 
 impl EnvelopeDirection {
-    fn as_bit(&self) -> u8 {
+    fn as_bit(self) -> u8 {
         match self {
             EnvelopeDirection::Down => 0,
             EnvelopeDirection::Up => 1,
