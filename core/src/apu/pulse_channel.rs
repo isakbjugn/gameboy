@@ -8,6 +8,21 @@ pub struct PulseChannel {
     length_timer: LengthTimer,
 }
 
+impl PulseChannel {
+    pub fn tick(&mut self) {
+        self.pulse_phase_timer.tick();
+    }
+    fn sample(&self) -> u8 {
+        if !self.enabled {
+            return 0;
+        }
+        let phase = self.pulse_phase_timer.phase;
+        let waveform_step = self.duty_cycle.waveform_step(phase);
+        let volume = self.envelope.initial_volume;
+        waveform_step * volume
+    }
+}
+
 #[derive(Clone, Copy, Default)]
 enum DutyCycle {
     #[default]
@@ -26,7 +41,6 @@ impl DutyCycle {
             DutyCycle::ThreeQuarter => 0b11,
         }
     }
-
     fn from_bits(byte: u8) -> Self {
         match byte {
             0b00 => DutyCycle::Eight,
@@ -35,6 +49,15 @@ impl DutyCycle {
             0b11 => DutyCycle::ThreeQuarter,
             _ => unreachable!()
         }
+    }
+    fn waveform_step(self, phase: u8) -> u8 {
+        let waveform = match self {
+            DutyCycle::Eight => [0, 0, 0, 0, 0, 0, 0, 1],
+            DutyCycle::Quarter => [1, 0, 0, 0, 0, 0, 0, 1],
+            DutyCycle::Half => [1, 0, 0, 0, 0, 1, 1, 1],
+            DutyCycle::ThreeQuarter => [0, 1, 1, 1, 1, 1, 1, 0],
+        };
+        waveform[phase as usize]
     }
 }
 
@@ -101,6 +124,18 @@ impl PulseChannel {
 #[derive(Default)]
 struct PulsePhaseTimer {
     period: u16,
+    counter: u16,
+    pub phase: u8,
+}
+
+impl PulsePhaseTimer {
+    fn tick(&mut self) {
+        self.counter -= 1;
+        if self.counter == 0 {
+            self.counter = 4 * (2048 - self.period);
+            self.phase = (self.phase + 1) % 8;
+        }
+    }
 }
 
 #[derive(Default)]

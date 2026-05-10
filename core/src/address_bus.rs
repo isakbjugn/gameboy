@@ -45,14 +45,17 @@ impl AddressBus {
         self.timer.cycle(m_cycles);
         self.interrupt_flag |= self.timer.interrupt;
         self.timer.interrupt = 0;
-        
+
         self.interrupt_flag |= self.joypad.interrupt;
         self.joypad.interrupt = 0;
-        
+
         let t_cycles = 4 * m_cycles;
         self.ppu.cycle(t_cycles);
         self.interrupt_flag |= self.ppu.interrupt;
         self.ppu.interrupt = 0;
+
+        self.apu.cycle(t_cycles);
+
         t_cycles
     }
     pub fn read_byte(&self, address: u16) -> u8 {

@@ -12,8 +12,10 @@ pub struct APU {
 }
 
 impl APU {
-    pub fn cycle(&mut self, _t_cycles: u32) {
-
+    pub fn cycle(&mut self, t_cycles: u32) {
+        for _ in 0..t_cycles {
+            self.channel_2.tick()
+        }
     }
     pub fn read_byte(&self, address: u8) -> u8 {
         info!("Leser lyd-byte fra {:02x}", address);
