@@ -1,6 +1,6 @@
 #[derive(Default)]
 pub struct PulseChannel {
-    enabled: bool,
+    pub enabled: bool,
     pulse_phase_timer: PulsePhaseTimer,
     duty_cycle: DutyCycle,
     initial_length_timer: u8,
