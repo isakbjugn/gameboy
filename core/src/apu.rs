@@ -30,7 +30,7 @@ impl APU {
         match address {
             0x16..=0x19 => self.channel_2.write_byte(address, value),
             0x24 => self.master_volume = value & 0b01110111,
-            0x25 => self.audio_master_control = value,
+            0x25 => self.sound_panning = value,
             0x26 => self.audio_master_control = value & 0b1000000,
             _ => {} // Other audio channels not implemented
         }
