@@ -57,7 +57,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Box<dyn Error>> {
     use std::thread;
     use std::time::{Duration, Instant};
-    use pixels::{Pixels, SurfaceTexture};
+    use pixels::{PixelsBuilder, SurfaceTexture};
+    use pixels::wgpu::PresentMode::Mailbox;
     use winit::dpi::LogicalSize;
     use winit::event_loop::{ControlFlow, EventLoop};
     use winit::window::Window;
@@ -76,7 +77,10 @@ fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Box<dyn Er
     let mut pixels = {
         let window_size = window.inner_size();
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
-        Pixels::new(SCREEN_WIDTH, SCREEN_HEIGHT, surface_texture)?
+        PixelsBuilder::new(SCREEN_WIDTH, SCREEN_HEIGHT, surface_texture)
+            .enable_vsync(false)
+            .present_mode(Mailbox)
+            .build()?
     };
 
     let frame_duration = Duration::from_millis(16);
