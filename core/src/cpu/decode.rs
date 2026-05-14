@@ -2,7 +2,6 @@ use log::debug;
 use crate::cpu::condition::Condition::{Carry, NotCarry, NotZero, True, Zero};
 use crate::cpu::CPU;
 use crate::cpu::read_write::Operand::{RegA, RegB, RegC, RegD, RegE, RegH, RegL, AddressBC, AddressDE, AddressHL, AddressHLI, AddressHLD, Immediate8};
-use crate::cpu::registers::Reg8::{A, B, C, D, E, H, L};
 use crate::cpu::registers::Reg16::{AF, BC, DE, HL, SP};
 
 impl CPU {

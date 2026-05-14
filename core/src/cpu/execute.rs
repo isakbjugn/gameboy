@@ -273,7 +273,7 @@ impl CPU {
     pub fn alu_add_s8(&mut self, value: u16) -> u16 {
         let byte = self.fetch_byte() as i8 as i32;
         let value_i32 = value as u32 as i32;
-        let (sum, carry) = value_i32.overflowing_add(byte);
+        let (sum, _carry) = value_i32.overflowing_add(byte);
         
         self.registers.f.zero = false;
         self.registers.f.subtract = false;

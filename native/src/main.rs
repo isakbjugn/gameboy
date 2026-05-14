@@ -98,7 +98,7 @@ fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Error> {
 
         if let Some(data) = game_boy.updated_frame_buffer() {
             data.write_to_rbga_buffer(pixels.frame_mut());
-            if let Err(err) = pixels.render() {
+            if let Err(_err) = pixels.render() {
                 error!("Feil under tegning til skjerm!");
                 elwt.exit();
             }
