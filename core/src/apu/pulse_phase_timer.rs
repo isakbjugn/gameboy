@@ -13,4 +13,7 @@ impl PulsePhaseTimer {
         }
         self.counter -= 1;
     }
+    pub fn trigger(&mut self) {
+        self.counter = 4 * (2048 - self.period);
+    }
 }

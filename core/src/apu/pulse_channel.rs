@@ -27,7 +27,8 @@ impl PulseChannel {
     }
     fn trigger(&mut self) {
         self.enabled = true;
-        self.length_timer.trigger()
+        self.length_timer.trigger();
+        self.pulse_phase_timer.trigger();
     }
     pub fn read_byte(&self, address: u8) -> u8 {
         match address {
