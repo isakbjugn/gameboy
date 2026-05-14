@@ -8,9 +8,8 @@ pub struct PulseChannel {
     pub enabled: bool,
     pulse_phase_timer: PulsePhaseTimer,
     duty_cycle: DutyCycle,
-    initial_length_timer: u8,
     envelope: Envelope,
-    length_timer: LengthTimer,
+    pub length_timer: LengthTimer,
 }
 
 impl PulseChannel {
@@ -28,6 +27,7 @@ impl PulseChannel {
     }
     fn trigger(&mut self) {
         self.enabled = true;
+        self.length_timer.trigger()
     }
     pub fn read_byte(&self, address: u8) -> u8 {
         match address {
@@ -42,7 +42,7 @@ impl PulseChannel {
         match address {
             0x16 => {
                 self.duty_cycle = DutyCycle::from_bits(value >> 6);
-                self.initial_length_timer = value & 0b0011_1111;
+                self.length_timer.load(value & 0b0011_1111);
             }
             0x17 => {
                 self.envelope.initial_volume = (value & 0b1111_0000) >> 4;

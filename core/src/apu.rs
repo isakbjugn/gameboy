@@ -9,6 +9,7 @@ use crate::apu::pulse_channel::PulseChannel;
 
 const CPU_CLOCK_SPEED: u32 = 4_194_304;
 const SAMPLE_RATE: u32 = 48_000;
+const FRAME_SEQUENCER_PERIOD: u32 = 8192;
 
 #[derive(Default)]
 pub struct APU {
@@ -18,6 +19,8 @@ pub struct APU {
     channel_2: PulseChannel,
     sound_buffer: Vec<f32>,
     sample_counter: u32,
+    frame_sequencer: u8,
+    frame_sequencer_counter: u32,
 }
 
 impl APU {
@@ -33,6 +36,24 @@ impl APU {
                 };
                 self.sound_buffer.push(analog_sample);
             }
+
+            self.frame_sequencer_counter += 1;
+            if self.frame_sequencer_counter >= FRAME_SEQUENCER_PERIOD {
+                self.frame_sequencer_counter = 0;
+                self.tick_frame_sequencer();
+            }
+        }
+    }
+    fn tick_frame_sequencer(&mut self) {
+        self.frame_sequencer = (self.frame_sequencer + 1) % 8;
+        match self.frame_sequencer {
+            0 | 2 | 4 | 6 => self.tick_length_timer(),
+            _ => {}
+        }
+    }
+    pub fn tick_length_timer(&mut self) {
+        if self.channel_2.length_timer.tick() {
+            self.channel_2.enabled = false;
         }
     }
     pub fn read_sound_buffer(&mut self) -> Vec<f32> {
