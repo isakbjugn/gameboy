@@ -21,6 +21,9 @@ impl PulseChannel {
         let volume = self.envelope.initial_volume;
         Some(waveform_step * volume)
     }
+    fn trigger(&mut self) {
+        self.enabled = true;
+    }
 }
 
 #[derive(Clone, Copy, Default)]
@@ -112,7 +115,7 @@ impl PulseChannel {
                 self.pulse_phase_timer.period = self.pulse_phase_timer.period & 0xff00 | value as u16;
             }
             0x19 => {
-                if value & 0b1000_0000 != 0 { self.enabled = true }
+                if value & 0b1000_0000 != 0 { self.trigger() }
                 self.length_timer.enabled = value & 0b0100_0000 != 0;
                 self.pulse_phase_timer.period = (((value & 0b0000_0111) as u16) << 8) | (self.pulse_phase_timer.period & 0x00ff)
             }
