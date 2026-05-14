@@ -1,3 +1,8 @@
+use crate::apu::duty_cycle::DutyCycle;
+use crate::apu::envelope::{Envelope, EnvelopeDirection};
+use crate::apu::length_timer::LengthTimer;
+use crate::apu::pulse_phase_timer::PulsePhaseTimer;
+
 #[derive(Default)]
 pub struct PulseChannel {
     pub enabled: bool,
@@ -24,73 +29,6 @@ impl PulseChannel {
     fn trigger(&mut self) {
         self.enabled = true;
     }
-}
-
-#[derive(Clone, Copy, Default)]
-enum DutyCycle {
-    #[default]
-    Eight,
-    Quarter,
-    Half,
-    ThreeQuarter,
-}
-
-impl DutyCycle {
-    fn to_bits(self) -> u8 {
-        match self {
-            DutyCycle::Eight => 0b00,
-            DutyCycle::Quarter => 0b01,
-            DutyCycle::Half => 0b10,
-            DutyCycle::ThreeQuarter => 0b11,
-        }
-    }
-    fn from_bits(byte: u8) -> Self {
-        match byte {
-            0b00 => DutyCycle::Eight,
-            0b01 => DutyCycle::Quarter,
-            0b10 => DutyCycle::Half,
-            0b11 => DutyCycle::ThreeQuarter,
-            _ => unreachable!()
-        }
-    }
-    fn waveform_step(self, phase: u8) -> u8 {
-        let waveform = match self {
-            DutyCycle::Eight => [0, 0, 0, 0, 0, 0, 0, 1],
-            DutyCycle::Quarter => [1, 0, 0, 0, 0, 0, 0, 1],
-            DutyCycle::Half => [1, 0, 0, 0, 0, 1, 1, 1],
-            DutyCycle::ThreeQuarter => [0, 1, 1, 1, 1, 1, 1, 0],
-        };
-        waveform[phase as usize]
-    }
-}
-
-#[derive(Clone, Copy, Default)]
-enum EnvelopeDirection {
-    #[default]
-    Down,
-    Up,
-}
-
-impl EnvelopeDirection {
-    fn as_bit(self) -> u8 {
-        match self {
-            EnvelopeDirection::Down => 0,
-            EnvelopeDirection::Up => 1,
-        }
-    }
-    fn from_bit(bit: u8) -> Self {
-        if bit & 0b01 == 0 { EnvelopeDirection::Down } else { EnvelopeDirection::Up }
-    }
-}
-
-#[derive(Default)]
-struct Envelope {
-    initial_volume: u8,
-    direction: EnvelopeDirection,
-    sweep_pace: u8,
-}
-
-impl PulseChannel {
     pub fn read_byte(&self, address: u8) -> u8 {
         match address {
             0x16 => self.duty_cycle.to_bits() << 6,
@@ -122,26 +60,4 @@ impl PulseChannel {
             _ => {}
         }
     }
-}
-
-#[derive(Default)]
-struct PulsePhaseTimer {
-    period: u16,
-    counter: u16,
-    pub phase: u8,
-}
-
-impl PulsePhaseTimer {
-    fn tick(&mut self) {
-        if self.counter == 0 {
-            self.counter = 4 * (2048 - self.period);
-            self.phase = (self.phase + 1) % 8;
-        }
-        self.counter -= 1;
-    }
-}
-
-#[derive(Default)]
-struct LengthTimer {
-    enabled: bool,
 }

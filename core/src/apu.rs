@@ -1,4 +1,8 @@
 mod pulse_channel;
+mod duty_cycle;
+mod envelope;
+mod length_timer;
+mod pulse_phase_timer;
 
 use log::info;
 use crate::apu::pulse_channel::PulseChannel;
