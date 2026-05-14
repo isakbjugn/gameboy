@@ -5,11 +5,11 @@ pub struct LengthTimer {
 
 impl LengthTimer {
     pub fn tick(&mut self) -> bool {
-        if self.enabled {
-            self.counter -= 1;
-            return self.counter == 0
+        if !self.enabled || self.counter == 0 {
+            return false
         }
-        false
+        self.counter -= 1;
+        self.counter == 0
     }
     pub fn trigger(&mut self) {
         if self.counter == 0 {
