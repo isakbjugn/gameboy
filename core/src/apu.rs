@@ -4,7 +4,6 @@ mod envelope;
 mod length_timer;
 mod pulse_phase_timer;
 
-use log::info;
 use crate::apu::pulse_channel::PulseChannel;
 
 const CPU_CLOCK_SPEED: u32 = 4_194_304;
@@ -64,7 +63,6 @@ impl APU {
         std::mem::take(&mut self.sound_buffer)
     }
     pub fn read_byte(&self, address: u8) -> u8 {
-        info!("Leser lyd-byte fra {:02x}", address);
         match address {
             0x16..=0x19 => self.channel_2.read_byte(address),
             0x24 => self.master_volume,
@@ -82,7 +80,6 @@ impl APU {
                 return;
             }
         }
-        info!("Skriver lyd-byte til {:02x}", address);
         match address {
             0x16..=0x19 => self.channel_2.write_byte(address, value),
             0x24 => self.master_volume = value & 0b0111_0111,
