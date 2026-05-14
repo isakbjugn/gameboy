@@ -1,10 +1,10 @@
 mod file_battery_save;
 
+use std::error::Error;
 use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 use log::{error, LevelFilter};
-use pixels::Error;
 use simplelog::{TermLogger, TerminalMode};
 
 use gameboy_core::frame_buffer::FrameBuffer;
@@ -13,7 +13,7 @@ use gameboy_core::joypad::JoypadKey;
 use gameboy_core::{SCREEN_WIDTH, SCREEN_HEIGHT};
 use crate::file_battery_save::FileBatterySave;
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<(), Box<dyn Error>> {
     TermLogger::init(
         LevelFilter::Info,
         simplelog::Config::default(),
@@ -54,15 +54,15 @@ fn main() -> Result<(), Error> {
     run_game_loop(game_boy, scale)
 }
 
-fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Error> {
+fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Box<dyn Error>> {
     use std::thread;
     use std::time::{Duration, Instant};
-    use pixels::{Error, Pixels, SurfaceTexture};
+    use pixels::{Pixels, SurfaceTexture};
     use winit::dpi::LogicalSize;
     use winit::event_loop::{ControlFlow, EventLoop};
     use winit::window::Window;
 
-    let event_loop = EventLoop::new().unwrap();
+    let event_loop = EventLoop::new()?;
     event_loop.set_control_flow(ControlFlow::Poll);
     let size = LogicalSize::new(SCREEN_WIDTH as f64 * scale as f64, SCREEN_HEIGHT as f64 * scale as f64);
 
@@ -71,7 +71,7 @@ fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Error> {
             .with_title(if cfg!(feature = "test") { "Test mode".to_string() } else { game_boy.title() })
             .with_inner_size(size)
             .with_min_inner_size(size)
-    ).unwrap();
+    )?;
 
     let mut pixels = {
         let window_size = window.inner_size();
@@ -134,7 +134,7 @@ fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Error> {
         }
     });
 
-    res.map_err(|e| Error::UserDefined(Box::new(e)))
+    Ok(res?)
 }
 
 fn winit_to_joypad(key: winit::keyboard::Key<&str>) -> Option<JoypadKey> {
