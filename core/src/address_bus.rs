@@ -12,7 +12,7 @@ const HIGH_RAM_SIZE: usize = 0x7f;
 pub struct AddressBus {
     pub cartridge: Cartridge,
     pub ppu: PPU,
-    apu: APU,
+    pub apu: APU,
     work_ram: [u8; WORK_RAM_SIZE],
     high_ram: [u8; HIGH_RAM_SIZE],
     pub interrupt_enable_register: u8,

@@ -3,19 +3,36 @@ mod pulse_channel;
 use log::info;
 use crate::apu::pulse_channel::PulseChannel;
 
+const CPU_CLOCK_SPEED: u32 = 4_194_304;
+const SAMPLE_RATE: u32 = 48_000;
+
 #[derive(Default)]
 pub struct APU {
     enabled: bool,
     master_volume: u8,
     sound_panning: u8,
     channel_2: PulseChannel,
+    sound_buffer: Vec<f32>,
+    sample_counter: u32,
 }
 
 impl APU {
     pub fn cycle(&mut self, t_cycles: u32) {
         for _ in 0..t_cycles {
-            self.channel_2.tick()
+            self.channel_2.tick();
+            self.sample_counter += SAMPLE_RATE;
+            if self.sample_counter >= CPU_CLOCK_SPEED {
+                self.sample_counter -= CPU_CLOCK_SPEED;
+                let analog_sample = match self.channel_2.sample() {
+                    Some(digital_sample) => (digital_sample as f32 / 7.5) - 1.0,
+                    None => 0.0
+                };
+                self.sound_buffer.push(analog_sample);
+            }
         }
+    }
+    pub fn read_sound_buffer(&mut self) -> Vec<f32> {
+        std::mem::take(&mut self.sound_buffer)
     }
     pub fn read_byte(&self, address: u8) -> u8 {
         info!("Leser lyd-byte fra {:02x}", address);

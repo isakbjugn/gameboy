@@ -12,14 +12,14 @@ impl PulseChannel {
     pub fn tick(&mut self) {
         self.pulse_phase_timer.tick();
     }
-    fn sample(&self) -> u8 {
+    pub fn sample(&self) -> Option<u8> {
         if !self.enabled {
-            return 0;
+            return None;
         }
         let phase = self.pulse_phase_timer.phase;
         let waveform_step = self.duty_cycle.waveform_step(phase);
         let volume = self.envelope.initial_volume;
-        waveform_step * volume
+        Some(waveform_step * volume)
     }
 }
 
@@ -130,11 +130,11 @@ struct PulsePhaseTimer {
 
 impl PulsePhaseTimer {
     fn tick(&mut self) {
-        self.counter -= 1;
         if self.counter == 0 {
             self.counter = 4 * (2048 - self.period);
             self.phase = (self.phase + 1) % 8;
         }
+        self.counter -= 1;
     }
 }
 
