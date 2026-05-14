@@ -8,7 +8,7 @@ pub struct PulseChannel {
     pub enabled: bool,
     pulse_phase_timer: PulsePhaseTimer,
     duty_cycle: DutyCycle,
-    envelope: Envelope,
+    pub envelope: Envelope,
     pub length_timer: LengthTimer,
 }
 
@@ -29,6 +29,7 @@ impl PulseChannel {
         self.enabled = true;
         self.length_timer.trigger();
         self.pulse_phase_timer.trigger();
+        self.envelope.trigger();
     }
     pub fn read_byte(&self, address: u8) -> u8 {
         match address {

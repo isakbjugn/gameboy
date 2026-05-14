@@ -48,13 +48,17 @@ impl APU {
         self.frame_sequencer = (self.frame_sequencer + 1) % 8;
         match self.frame_sequencer {
             0 | 2 | 4 | 6 => self.tick_length_timer(),
+            7 => self.tick_envelope(),
             _ => {}
         }
     }
-    pub fn tick_length_timer(&mut self) {
+    fn tick_length_timer(&mut self) {
         if self.channel_2.length_timer.tick() {
             self.channel_2.enabled = false;
         }
+    }
+    fn tick_envelope(&mut self) {
+        self.channel_2.envelope.tick();
     }
     pub fn read_sound_buffer(&mut self) -> Vec<f32> {
         std::mem::take(&mut self.sound_buffer)
