@@ -80,7 +80,7 @@ fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Error> {
     };
 
     let frame_duration = Duration::from_millis(16);
-    let cpu_cycles_per_frame = (4194204f64 / 1000.0 * 16.0).round() as u32;
+    let cpu_cycles_per_frame = (4_194_304f64 / 1000.0 * 16.0).round() as u32;
     let mut cpu_cycles = 0;
 
     let res = event_loop.run(|event, elwt| {

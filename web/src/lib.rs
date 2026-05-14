@@ -72,7 +72,7 @@ async fn run(game_title: String, rom_data: Vec<u8>) {
 
     info!("Pixels opprettet");
 
-    let cpu_cycles_per_frame = (4194204f64 / 1000.0 * 16.0).round() as u32;
+    let cpu_cycles_per_frame = (4_194_304f64 / 1000.0 * 16.0).round() as u32;
     let mut cpu_cycles: u32 = 0;
 
     let frames_between_saves = 120;
