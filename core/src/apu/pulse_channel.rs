@@ -48,6 +48,9 @@ impl PulseChannel {
             0x17 => {
                 self.envelope.initial_volume = (value & 0b1111_0000) >> 4;
                 self.envelope.direction = EnvelopeDirection::from_bit(value >> 3);
+                if self.envelope.initial_volume == 0 && self.envelope.direction == EnvelopeDirection::Down {
+                    self.enabled = false;
+                }
                 self.envelope.sweep_pace = value & 0b0000_0111;
             }
             0x18 => {
