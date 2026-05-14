@@ -83,16 +83,15 @@ fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Box<dyn Er
             .build()?
     };
 
-    let frame_duration = Duration::from_millis(16);
-    let cpu_cycles_per_frame = (4_194_304f64 / 1000.0 * 16.0).round() as u32;
+    let frame_duration = Duration::from_nanos(16_742_006);
+    let cpu_cycles_per_frame = 70224;
     let mut cpu_cycles = 0;
+    let mut next_frame = Instant::now() + frame_duration;
 
     let res = event_loop.run(|event, elwt| {
         use winit::event::{Event, WindowEvent};
         use winit::event::ElementState::{Pressed, Released};
         use winit::keyboard::{Key, NamedKey};
-
-        let start = Instant::now();
 
         while cpu_cycles < cpu_cycles_per_frame {
             cpu_cycles += game_boy.emulate();
@@ -132,10 +131,11 @@ fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Box<dyn Er
             window.request_redraw();
         }
 
-        let time_elapsed = start.elapsed();
-        if frame_duration > time_elapsed {
-            thread::sleep(frame_duration - time_elapsed);
+        let now = Instant::now();
+        if next_frame > now {
+            thread::sleep(next_frame - now);
         }
+        next_frame += frame_duration;
     });
 
     Ok(res?)
