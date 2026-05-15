@@ -5,8 +5,8 @@ mod length_timer;
 mod pulse_phase_timer;
 
 use crate::apu::pulse_channel::PulseChannel;
+use crate::CPU_CLOCK_SPEED;
 
-const CPU_CLOCK_SPEED: u32 = 4_194_304;
 const SAMPLE_RATE: u32 = 48_000;
 const FRAME_SEQUENCER_PERIOD: u32 = 8192;
 

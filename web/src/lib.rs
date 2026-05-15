@@ -11,7 +11,7 @@ use winit::keyboard::{Key, NamedKey};
 use winit::platform::web::WindowExtWebSys;
 use winit::window::Window;
 
-use gameboy_core::{SCREEN_HEIGHT, SCREEN_WIDTH};
+use gameboy_core::{CPU_CYCLES_PER_FRAME, SCREEN_HEIGHT, SCREEN_WIDTH};
 use gameboy_core::battery_save::BatterySave;
 use gameboy_core::frame_buffer::FrameBuffer;
 use gameboy_core::game_boy::GameBoy;
@@ -72,7 +72,6 @@ async fn run(game_title: String, rom_data: Vec<u8>) {
 
     info!("Pixels opprettet");
 
-    let cpu_cycles_per_frame = (4_194_304f64 / 1000.0 * 16.0).round() as u32;
     let mut cpu_cycles: u32 = 0;
 
     let frames_between_saves = 120;
@@ -84,10 +83,10 @@ async fn run(game_title: String, rom_data: Vec<u8>) {
 
         match event {
             Event::AboutToWait => {
-                while cpu_cycles < cpu_cycles_per_frame {
+                while cpu_cycles < CPU_CYCLES_PER_FRAME {
                     cpu_cycles += game_boy.emulate();
                 }
-                cpu_cycles -= cpu_cycles_per_frame;
+                cpu_cycles -= CPU_CYCLES_PER_FRAME;
 
                 if let Some(data) = game_boy.updated_frame_buffer() {
                     data.write_to_rbga_buffer(pixels.frame_mut());

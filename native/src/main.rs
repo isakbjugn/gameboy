@@ -10,7 +10,7 @@ use simplelog::{TermLogger, TerminalMode};
 use gameboy_core::frame_buffer::FrameBuffer;
 use gameboy_core::game_boy::GameBoy;
 use gameboy_core::joypad::JoypadKey;
-use gameboy_core::{SCREEN_WIDTH, SCREEN_HEIGHT};
+use gameboy_core::{SCREEN_WIDTH, SCREEN_HEIGHT, NANOSECONDS_PER_FRAME, CPU_CYCLES_PER_FRAME};
 use crate::file_battery_save::FileBatterySave;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -85,8 +85,7 @@ fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Box<dyn Er
             .build()?
     };
 
-    let frame_duration = Duration::from_nanos(16_742_006);
-    let cpu_cycles_per_frame = 70224;
+    let frame_duration = Duration::from_nanos(NANOSECONDS_PER_FRAME);
     let mut cpu_cycles = 0;
     let mut next_frame = Instant::now() + frame_duration;
 
@@ -111,11 +110,11 @@ fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Box<dyn Er
         use winit::event::ElementState::{Pressed, Released};
         use winit::keyboard::{Key, NamedKey};
 
-        while cpu_cycles < cpu_cycles_per_frame {
+        while cpu_cycles < CPU_CYCLES_PER_FRAME {
             cpu_cycles += game_boy.emulate();
         }
 
-        cpu_cycles -= cpu_cycles_per_frame;
+        cpu_cycles -= CPU_CYCLES_PER_FRAME;
 
         if let Some(data) = game_boy.updated_frame_buffer() {
             data.write_to_rbga_buffer(pixels.frame_mut());
