@@ -22,6 +22,7 @@ impl GameBoy {
             false => None
         }
     }
+    #[cfg(feature = "sound")]
     pub fn sound_buffer(&mut self) -> Vec<f32> {
         self.cpu.bus.apu.read_sound_buffer()
     }

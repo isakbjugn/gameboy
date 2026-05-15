@@ -12,3 +12,4 @@ log = "0.4.26"
 [features]
 test = []
 green = []
+sound = []
