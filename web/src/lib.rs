@@ -4,6 +4,7 @@ use log::{error, info};
 use std::rc::Rc;
 use pixels::{PixelsBuilder, SurfaceTexture};
 use wasm_bindgen::prelude::*;
+use web_sys::{AudioBuffer, AudioBufferOptions, AudioContext, AudioContextOptions, AudioContextState};
 use winit::dpi::LogicalSize;
 use winit::event_loop::EventLoop;
 use winit::keyboard::{Key, NamedKey};
@@ -77,6 +78,12 @@ async fn run(game_title: String, rom_data: Vec<u8>) {
     let frames_between_saves = 120;
     let mut frames_since_save = 0;
 
+    let audio_context_options = AudioContextOptions::new();
+    audio_context_options.set_sample_rate(48_000.0);
+    let audio_context = AudioContext::new_with_context_options(&audio_context_options).unwrap();
+    let audio_sample_rate = audio_context.sample_rate();
+    let mut next_start_time = audio_context.current_time() + 0.05;
+
     let performance = web_sys::window()
         .and_then(|w| w.performance())
         .expect("performance.now() ikke tilgjengelig");
@@ -112,6 +119,26 @@ async fn run(game_title: String, rom_data: Vec<u8>) {
                     }
                 }
 
+                let sound_data = game_boy.sound_buffer();
+                if audio_context.state() == AudioContextState::Running {
+                    let now = audio_context.current_time();
+                    if next_start_time < now {
+                        next_start_time = now + 0.05;
+                    }
+                    let number_of_audio_samples = sound_data.len() as u32;
+                    let buffer = AudioBuffer::new(
+                        &AudioBufferOptions::new(number_of_audio_samples, audio_sample_rate)
+                    ).unwrap();
+                    buffer.copy_to_channel(&sound_data, 0).unwrap();
+
+                    let source = audio_context.create_buffer_source().unwrap();
+                    source.set_buffer(Some(&buffer));
+                    source.connect_with_audio_node(&audio_context.destination()).unwrap();
+                    source.start_with_when(next_start_time).unwrap();
+
+                    next_start_time += number_of_audio_samples as f64 / audio_sample_rate as f64;
+                }
+
                 frames_since_save += 1;
                 if frames_since_save >= frames_between_saves {
                     game_boy.manual_save();
@@ -121,6 +148,10 @@ async fn run(game_title: String, rom_data: Vec<u8>) {
                 window.request_redraw();
             }
             Event::WindowEvent { event: WindowEvent::KeyboardInput { event: key_event, .. }, .. } => {
+                if audio_context.state() == AudioContextState::Suspended {
+                    let _ = audio_context.resume();
+                    next_start_time = audio_context.current_time() + 0.05;
+                }
                 match (key_event.state, key_event.logical_key.as_ref()) {
                     (Pressed, winit_key) => {
                         if let Some(key) = winit_to_joypad(winit_key) {
