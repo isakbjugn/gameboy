@@ -11,7 +11,7 @@ use winit::keyboard::{Key, NamedKey};
 use winit::platform::web::WindowExtWebSys;
 use winit::window::Window;
 
-use gameboy_core::{CPU_CYCLES_PER_FRAME, SCREEN_HEIGHT, SCREEN_WIDTH};
+use gameboy_core::{CPU_CYCLES_PER_FRAME, NANOSECONDS_PER_FRAME, SCREEN_HEIGHT, SCREEN_WIDTH};
 use gameboy_core::battery_save::BatterySave;
 use gameboy_core::frame_buffer::FrameBuffer;
 use gameboy_core::game_boy::GameBoy;
@@ -77,12 +77,28 @@ async fn run(game_title: String, rom_data: Vec<u8>) {
     let frames_between_saves = 120;
     let mut frames_since_save = 0;
 
+    let performance = web_sys::window()
+        .and_then(|w| w.performance())
+        .expect("performance.now() ikke tilgjengelig");
+    let frame_duration_ms = NANOSECONDS_PER_FRAME as f64 / 1_000_000.0;
+    let mut next_frame_ms = performance.now() + frame_duration_ms;
+
     let res = event_loop.run(|event, elwt| {
         use winit::event::ElementState::{Pressed, Released};
         use winit::event::{Event, WindowEvent};
 
         match event {
             Event::AboutToWait => {
+                let now = performance.now();
+                if now < next_frame_ms {
+                    window.request_redraw();
+                    return;
+                }
+                next_frame_ms += frame_duration_ms;
+                if next_frame_ms < now {
+                    next_frame_ms = now + frame_duration_ms;
+                }
+
                 while cpu_cycles < CPU_CYCLES_PER_FRAME {
                     cpu_cycles += game_boy.emulate();
                 }
