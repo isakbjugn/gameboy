@@ -1,4 +1,5 @@
 use log::debug;
+#[cfg(feature = "sound")]
 use crate::apu::APU;
 use crate::bootrom::Bootrom;
 use crate::cartridge::Cartridge;
@@ -12,7 +13,8 @@ const HIGH_RAM_SIZE: usize = 0x7f;
 pub struct AddressBus {
     pub cartridge: Cartridge,
     pub ppu: PPU,
-    apu: APU,
+    #[cfg(feature = "sound")]
+    pub apu: APU,
     work_ram: [u8; WORK_RAM_SIZE],
     high_ram: [u8; HIGH_RAM_SIZE],
     pub interrupt_enable_register: u8,
@@ -27,7 +29,8 @@ impl AddressBus {
         let mut address_bus = Self {
             cartridge: cart,
             ppu: PPU::new(),
-            apu: APU::new(),
+            #[cfg(feature = "sound")]
+            apu: APU::default(),
             work_ram: [0; WORK_RAM_SIZE],
             high_ram: [0; HIGH_RAM_SIZE],
             interrupt_enable_register: 0,
@@ -45,14 +48,18 @@ impl AddressBus {
         self.timer.cycle(m_cycles);
         self.interrupt_flag |= self.timer.interrupt;
         self.timer.interrupt = 0;
-        
+
         self.interrupt_flag |= self.joypad.interrupt;
         self.joypad.interrupt = 0;
-        
+
         let t_cycles = 4 * m_cycles;
         self.ppu.cycle(t_cycles);
         self.interrupt_flag |= self.ppu.interrupt;
         self.ppu.interrupt = 0;
+
+        #[cfg(feature = "sound")]
+        self.apu.cycle(t_cycles);
+
         t_cycles
     }
     pub fn read_byte(&self, address: u16) -> u8 {
@@ -79,8 +86,22 @@ impl AddressBus {
             0x01 ..= 0x02 => panic!("Serial transfer not implemented"),
             0x04 ..= 0x07 => self.timer.read_byte(address),
             0x0f => self.interrupt_flag,
-            0x10 ..= 0x26 => self.apu.read_byte(address),
-            0x30 ..= 0x3f => self.apu.read_wave_byte(address),
+            0x10 ..= 0x26 => {
+                #[cfg(feature = "sound")] {
+                    self.apu.read_byte(address)
+                }
+                #[cfg(not(feature = "sound"))] {
+                    if address == 0x26 { 0b1111_0000 } else { 0x00 }
+                }
+            },
+            0x30 ..= 0x3f => {
+                #[cfg(feature = "sound")] {
+                    self.apu.read_wave_byte(address)
+                }
+                #[cfg(not(feature = "sound"))] {
+                    0xff
+                }
+            },
             0x40 ..= 0x4b => self.ppu.read_byte(address),
             0x4f => panic!("VRAM Bank Select is CGB feature"),
             0x50 => panic!("write-only"),
@@ -110,8 +131,14 @@ impl AddressBus {
             0x01 ..= 0x02 => self.write_serial(byte),
             0x04 ..= 0x07 => self.timer.write_byte(address, byte),
             0x0f => self.interrupt_flag = byte,
-            0x10 ..= 0x26 => self.apu.write_byte(address, byte),
-            0x30 ..= 0x3f => self.apu.write_wave_byte(address, byte),
+            0x10 ..= 0x26 => {
+                #[cfg(feature = "sound")]
+                self.apu.write_byte(address, byte)
+            }
+            0x30 ..= 0x3f => {
+                #[cfg(feature = "sound")]
+                self.apu.write_wave_byte(address, byte)
+            },
             0x40 ..= 0x45 | 0x47 ..= 0x4b => self.ppu.write_byte(address, byte),
             0x46 => self.oam_dma(byte),
             0x4f => debug!("VRAM Bank Select is CGB feature"),

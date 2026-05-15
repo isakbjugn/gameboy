@@ -59,6 +59,8 @@ fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Box<dyn Er
     use std::time::{Duration, Instant};
     use pixels::{PixelsBuilder, SurfaceTexture};
     use pixels::wgpu::PresentMode::Mailbox;
+    #[cfg(feature = "sound")]
+    use sdl2::audio::AudioSpecDesired;
     use winit::dpi::LogicalSize;
     use winit::event_loop::{ControlFlow, EventLoop};
     use winit::window::Window;
@@ -88,6 +90,22 @@ fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Box<dyn Er
     let mut cpu_cycles = 0;
     let mut next_frame = Instant::now() + frame_duration;
 
+    #[cfg(feature = "sound")]
+    let audio = sdl2::init()?.audio()?;
+
+    #[cfg(feature = "sound")]
+    let audio_queue = audio.open_queue(
+        None,
+        &AudioSpecDesired {
+            freq: Some(48000),
+            channels: Some(1),
+            samples: None,
+        }
+    )?;
+
+    #[cfg(feature = "sound")]
+    audio_queue.resume();
+
     let res = event_loop.run(|event, elwt| {
         use winit::event::{Event, WindowEvent};
         use winit::event::ElementState::{Pressed, Released};
@@ -105,6 +123,11 @@ fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Box<dyn Er
                 error!("Feil under tegning til skjerm!");
                 elwt.exit();
             }
+        }
+
+        #[cfg(feature = "sound")] {
+            let sound_data = game_boy.sound_buffer();
+            let _ = audio_queue.queue_audio(&sound_data);
         }
 
         if let Event::WindowEvent { event: WindowEvent::KeyboardInput { event: key_event, .. }, .. } = &event {
