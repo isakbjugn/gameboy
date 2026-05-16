@@ -55,7 +55,8 @@ impl APU {
     fn tick_frame_sequencer(&mut self) {
         self.frame_sequencer = (self.frame_sequencer + 1) % 8;
         match self.frame_sequencer {
-            0 | 2 | 4 | 6 => self.tick_length_timer(),
+            0 | 4 => self.tick_length_timer(),
+            2 | 6 => { self.tick_length_timer(); self.tick_sweep(); },
             7 => self.tick_envelope(),
             _ => {}
         }
@@ -71,6 +72,13 @@ impl APU {
     fn tick_envelope(&mut self) {
         self.channel_1.envelope.tick();
         self.channel_2.envelope.tick();
+    }
+    fn tick_sweep(&mut self) {
+        let (new_frequency, disable) = self.channel_1.sweep.tick();
+        if let Some(new_frequency) = new_frequency {
+            self.channel_1.pulse_phase_timer.period = new_frequency
+        }
+        if disable { self.channel_1.enabled = false; }
     }
     pub fn read_sound_buffer(&mut self) -> Vec<f32> {
         std::mem::take(&mut self.sound_buffer)

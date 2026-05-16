@@ -7,11 +7,11 @@ use crate::apu::sweep::{Sweep, SweepDirection};
 #[derive(Default)]
 pub struct PulseChannelWithSweep {
     pub enabled: bool,
-    pulse_phase_timer: PulsePhaseTimer,
+    pub pulse_phase_timer: PulsePhaseTimer,
     duty_cycle: DutyCycle,
     pub envelope: Envelope,
     pub length_timer: LengthTimer,
-    sweep: Sweep,
+    pub sweep: Sweep,
 }
 
 impl PulseChannelWithSweep {
@@ -38,7 +38,7 @@ impl PulseChannelWithSweep {
             0x10 => {
                 self.sweep.period << 4
                 | self.sweep.direction.as_bit() << 3
-                | self.sweep.shift_amount
+                | self.sweep.sweep_shift
             }
             0x11 => self.duty_cycle.to_bits() << 6,
             0x12 => self.envelope.initial_volume << 4 | self.envelope.direction.as_bit() << 3 | self.envelope.sweep_pace,
@@ -52,7 +52,7 @@ impl PulseChannelWithSweep {
             0x10 => {
                 self.sweep.period = (value & 0b0111_0000) >> 4;
                 self.sweep.direction = SweepDirection::from_bit((value & 0b0000_1000) >> 3);
-                self.sweep.shift_amount = value & 0b0000_0111;
+                self.sweep.sweep_shift = value & 0b0000_0111;
             }
             0x11 => {
                 self.duty_cycle = DutyCycle::from_bits(value >> 6);
