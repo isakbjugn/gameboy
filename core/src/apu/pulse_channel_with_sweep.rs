@@ -2,6 +2,7 @@ use crate::apu::duty_cycle::DutyCycle;
 use crate::apu::envelope::{Envelope, EnvelopeDirection};
 use crate::apu::length_timer::LengthTimer;
 use crate::apu::pulse_phase_timer::PulsePhaseTimer;
+use crate::apu::sweep::{Sweep, SweepDirection};
 
 #[derive(Default)]
 pub struct PulseChannelWithSweep {
@@ -10,6 +11,7 @@ pub struct PulseChannelWithSweep {
     duty_cycle: DutyCycle,
     pub envelope: Envelope,
     pub length_timer: LengthTimer,
+    sweep: Sweep,
 }
 
 impl PulseChannelWithSweep {
@@ -33,6 +35,11 @@ impl PulseChannelWithSweep {
     }
     pub fn read_byte(&self, address: u8) -> u8 {
         match address {
+            0x10 => {
+                self.sweep.period << 4
+                | self.sweep.direction.as_bit() << 3
+                | self.sweep.shift_amount
+            }
             0x11 => self.duty_cycle.to_bits() << 6,
             0x12 => self.envelope.initial_volume << 4 | self.envelope.direction.as_bit() << 3 | self.envelope.sweep_pace,
             0x13 => panic!("FF18 er write-only"),
@@ -42,6 +49,11 @@ impl PulseChannelWithSweep {
     }
     pub fn write_byte(&mut self, address: u8, value: u8) {
         match address {
+            0x10 => {
+                self.sweep.period = (value & 0b0111_0000) >> 4;
+                self.sweep.direction = SweepDirection::from_bit((value & 0b0000_1000) >> 3);
+                self.sweep.shift_amount = value & 0b0000_0111;
+            }
             0x11 => {
                 self.duty_cycle = DutyCycle::from_bits(value >> 6);
                 self.length_timer.load(value & 0b0011_1111);
