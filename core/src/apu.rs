@@ -3,6 +3,7 @@ mod duty_cycle;
 mod envelope;
 mod length_timer;
 mod pulse_phase_timer;
+mod pulse_channel_with_sweep;
 
 use crate::apu::pulse_channel::PulseChannel;
 use crate::{AUDIO_SAMPLE_RATE, CPU_CLOCK_SPEED};
