@@ -5,9 +5,8 @@ mod length_timer;
 mod pulse_phase_timer;
 
 use crate::apu::pulse_channel::PulseChannel;
-use crate::CPU_CLOCK_SPEED;
+use crate::{AUDIO_SAMPLE_RATE, CPU_CLOCK_SPEED};
 
-const SAMPLE_RATE: u32 = 48_000;
 const FRAME_SEQUENCER_PERIOD: u32 = 8192;
 
 #[derive(Default)]
@@ -26,7 +25,7 @@ impl APU {
     pub fn cycle(&mut self, t_cycles: u32) {
         for _ in 0..t_cycles {
             self.channel_2.tick();
-            self.sample_counter += SAMPLE_RATE;
+            self.sample_counter += AUDIO_SAMPLE_RATE;
             if self.sample_counter >= CPU_CLOCK_SPEED {
                 self.sample_counter -= CPU_CLOCK_SPEED;
                 let analog_sample = match self.channel_2.sample() {

@@ -12,7 +12,7 @@ use winit::keyboard::{Key, NamedKey};
 use winit::platform::web::WindowExtWebSys;
 use winit::window::Window;
 
-use gameboy_core::{CPU_CYCLES_PER_FRAME, NANOSECONDS_PER_FRAME, SCREEN_HEIGHT, SCREEN_WIDTH};
+use gameboy_core::{AUDIO_SAMPLE_RATE, CPU_CYCLES_PER_FRAME, NANOSECONDS_PER_FRAME, SCREEN_HEIGHT, SCREEN_WIDTH};
 use gameboy_core::battery_save::BatterySave;
 use gameboy_core::frame_buffer::FrameBuffer;
 use gameboy_core::game_boy::GameBoy;
@@ -79,7 +79,7 @@ async fn run(game_title: String, rom_data: Vec<u8>) {
     let mut frames_since_save = 0;
 
     let audio_context_options = AudioContextOptions::new();
-    audio_context_options.set_sample_rate(48_000.0);
+    audio_context_options.set_sample_rate(AUDIO_SAMPLE_RATE as f32);
     let audio_context = AudioContext::new_with_context_options(&audio_context_options).unwrap();
     let audio_sample_rate = audio_context.sample_rate();
     let mut next_start_time = audio_context.current_time() + 0.05;

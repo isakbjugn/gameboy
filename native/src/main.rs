@@ -10,7 +10,7 @@ use simplelog::{TermLogger, TerminalMode};
 use gameboy_core::frame_buffer::FrameBuffer;
 use gameboy_core::game_boy::GameBoy;
 use gameboy_core::joypad::JoypadKey;
-use gameboy_core::{SCREEN_WIDTH, SCREEN_HEIGHT, NANOSECONDS_PER_FRAME, CPU_CYCLES_PER_FRAME};
+use gameboy_core::{SCREEN_WIDTH, SCREEN_HEIGHT, NANOSECONDS_PER_FRAME, CPU_CYCLES_PER_FRAME, AUDIO_SAMPLE_RATE};
 use crate::file_battery_save::FileBatterySave;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -96,7 +96,7 @@ fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Box<dyn Er
     let audio_queue = audio.open_queue(
         None,
         &AudioSpecDesired {
-            freq: Some(48000),
+            freq: Some(AUDIO_SAMPLE_RATE as i32),
             channels: Some(1),
             samples: None,
         }

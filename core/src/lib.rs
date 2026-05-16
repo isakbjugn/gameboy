@@ -16,3 +16,6 @@ pub const SCREEN_HEIGHT: u32 = 144;
 pub const CPU_CLOCK_SPEED: u32 = 4_194_304;
 pub const CPU_CYCLES_PER_FRAME: u32 = 70224;
 pub const NANOSECONDS_PER_FRAME: u64 = 16_742_006;
+
+#[cfg(feature = "sound")]
+pub const AUDIO_SAMPLE_RATE: u32 = 48_000;
