@@ -3,9 +3,12 @@ mod duty_cycle;
 mod envelope;
 mod length_timer;
 mod pulse_phase_timer;
+mod pulse_channel_with_sweep;
+mod sweep;
 
 use crate::apu::pulse_channel::PulseChannel;
 use crate::{AUDIO_SAMPLE_RATE, CPU_CLOCK_SPEED};
+use crate::apu::pulse_channel_with_sweep::PulseChannelWithSweep;
 
 const FRAME_SEQUENCER_PERIOD: u32 = 8192;
 
@@ -14,6 +17,7 @@ pub struct APU {
     enabled: bool,
     master_volume: u8,
     sound_panning: u8,
+    channel_1: PulseChannelWithSweep,
     channel_2: PulseChannel,
     sound_buffer: Vec<f32>,
     sample_counter: u32,
@@ -24,14 +28,20 @@ pub struct APU {
 impl APU {
     pub fn cycle(&mut self, t_cycles: u32) {
         for _ in 0..t_cycles {
+            self.channel_1.tick();
             self.channel_2.tick();
             self.sample_counter += AUDIO_SAMPLE_RATE;
             if self.sample_counter >= CPU_CLOCK_SPEED {
                 self.sample_counter -= CPU_CLOCK_SPEED;
-                let analog_sample = match self.channel_2.sample() {
+                let analog_sample_1 = match self.channel_1.sample() {
                     Some(digital_sample) => (digital_sample as f32 / 7.5) - 1.0,
                     None => 0.0
                 };
+                let analog_sample_2 = match self.channel_2.sample() {
+                    Some(digital_sample) => (digital_sample as f32 / 7.5) - 1.0,
+                    None => 0.0
+                };
+                let analog_sample = (analog_sample_1 + analog_sample_2) / 2.0;
                 self.sound_buffer.push(analog_sample);
             }
 
@@ -45,24 +55,37 @@ impl APU {
     fn tick_frame_sequencer(&mut self) {
         self.frame_sequencer = (self.frame_sequencer + 1) % 8;
         match self.frame_sequencer {
-            0 | 2 | 4 | 6 => self.tick_length_timer(),
+            0 | 4 => self.tick_length_timer(),
+            2 | 6 => { self.tick_length_timer(); self.tick_sweep(); },
             7 => self.tick_envelope(),
             _ => {}
         }
     }
     fn tick_length_timer(&mut self) {
+        if self.channel_1.length_timer.tick() {
+            self.channel_1.enabled = false;
+        }
         if self.channel_2.length_timer.tick() {
             self.channel_2.enabled = false;
         }
     }
     fn tick_envelope(&mut self) {
+        self.channel_1.envelope.tick();
         self.channel_2.envelope.tick();
+    }
+    fn tick_sweep(&mut self) {
+        let (new_frequency, disable) = self.channel_1.sweep.tick();
+        if let Some(new_frequency) = new_frequency {
+            self.channel_1.pulse_phase_timer.period = new_frequency
+        }
+        if disable { self.channel_1.enabled = false; }
     }
     pub fn read_sound_buffer(&mut self) -> Vec<f32> {
         std::mem::take(&mut self.sound_buffer)
     }
     pub fn read_byte(&self, address: u8) -> u8 {
         match address {
+            0x10..=0x14 => self.channel_1.read_byte(address),
             0x16..=0x19 => self.channel_2.read_byte(address),
             0x24 => self.master_volume,
             0x25 => self.sound_panning,
@@ -80,6 +103,7 @@ impl APU {
             }
         }
         match address {
+            0x10..=0x14 => self.channel_1.write_byte(address, value),
             0x16..=0x19 => self.channel_2.write_byte(address, value),
             0x24 => self.master_volume = value & 0b0111_0111,
             0x25 => self.sound_panning = value,
@@ -97,5 +121,6 @@ impl APU {
     fn audio_master_control(&self) -> u8 {
         0b1111_0000
         | (self.channel_2.enabled as u8) << 1
+        | self.channel_1.enabled as u8
     }
 }
