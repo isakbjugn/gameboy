@@ -39,10 +39,13 @@ impl Sweep {
             };
             if self.enabled && self.period > 0 {
                 let (new_frequency, overflow) = self.calculate_frequency();
+                if overflow {
+                    return (None, true)
+                }
                 if new_frequency <= 2047 && self.sweep_shift > 0 {
                     self.shadow_frequency = new_frequency;
-                    let (_, possible_overflow) = self.calculate_frequency();
-                    return (Some(new_frequency), overflow | possible_overflow)
+                    let (_, overflow) = self.calculate_frequency();
+                    return (Some(new_frequency), overflow)
                 }
             }
         }
