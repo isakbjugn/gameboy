@@ -32,6 +32,9 @@ impl PulseChannelWithSweep {
         self.length_timer.trigger();
         self.pulse_phase_timer.trigger();
         self.envelope.trigger();
+        if self.sweep.trigger(self.pulse_phase_timer.period) {
+            self.enabled = false;
+        }
     }
     pub fn read_byte(&self, address: u8) -> u8 {
         match address {

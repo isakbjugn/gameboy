@@ -57,4 +57,17 @@ impl Sweep {
 
         (new_frequency, new_frequency > 2047)
     }
+    pub fn trigger(&mut self, current_frequency: u16) -> bool {
+        self.shadow_frequency = current_frequency;
+        self.sweep_timer = match self.period {
+            0 => 8,
+            n => n,
+        };
+        self.enabled = self.period != 0 || self.sweep_shift != 0;
+        if self.sweep_shift != 0 {
+            let (_, disable) = self.calculate_frequency();
+            return disable
+        }
+        false
+    }
 }
