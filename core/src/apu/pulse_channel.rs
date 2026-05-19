@@ -22,7 +22,7 @@ impl PulseChannel {
         }
         let phase = self.pulse_phase_timer.phase;
         let waveform_step = self.duty_cycle.waveform_step(phase);
-        let volume = self.envelope.initial_volume;
+        let volume = self.envelope.volume;
         Some(waveform_step * volume)
     }
     fn trigger(&mut self) {
