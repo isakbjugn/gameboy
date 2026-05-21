@@ -5,6 +5,7 @@ mod length_timer;
 mod pulse_phase_timer;
 mod pulse_channel_with_sweep;
 mod sweep;
+mod wave_channel;
 
 use crate::apu::pulse_channel::PulseChannel;
 use crate::{AUDIO_SAMPLE_RATE, CPU_CLOCK_SPEED};
