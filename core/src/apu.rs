@@ -6,10 +6,12 @@ mod pulse_phase_timer;
 mod pulse_channel_with_sweep;
 mod sweep;
 mod wave_channel;
+mod wave_length_timer;
 
 use crate::apu::pulse_channel::PulseChannel;
 use crate::{AUDIO_SAMPLE_RATE, CPU_CLOCK_SPEED};
 use crate::apu::pulse_channel_with_sweep::PulseChannelWithSweep;
+use crate::apu::wave_channel::WaveChannel;
 
 const FRAME_SEQUENCER_PERIOD: u32 = 8192;
 
@@ -20,6 +22,7 @@ pub struct APU {
     sound_panning: u8,
     channel_1: PulseChannelWithSweep,
     channel_2: PulseChannel,
+    channel_3: WaveChannel,
     sound_buffer: Vec<(f32, f32)>,
     sample_counter: u32,
     frame_sequencer: u8,
@@ -120,6 +123,7 @@ impl APU {
         match address {
             0x10..=0x14 => self.channel_1.read_byte(address),
             0x16..=0x19 => self.channel_2.read_byte(address),
+            0x1a..=0x1e => self.channel_3.read_byte(address),
             0x24 => self.master_volume,
             0x25 => self.sound_panning,
             0x26 => self.audio_master_control(),
@@ -138,6 +142,7 @@ impl APU {
         match address {
             0x10..=0x14 => self.channel_1.write_byte(address, value),
             0x16..=0x19 => self.channel_2.write_byte(address, value),
+            0x1a..=0x1e => self.channel_3.write_byte(address, value),
             0x24 => self.master_volume = value & 0b0111_0111,
             0x25 => self.sound_panning = value,
             0x26 => self.enabled = value & 0b1000_0000 != 0,
