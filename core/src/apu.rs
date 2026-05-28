@@ -12,6 +12,7 @@ mod noise_channel;
 
 use crate::apu::pulse_channel::PulseChannel;
 use crate::{AUDIO_SAMPLE_RATE, CPU_CLOCK_SPEED};
+use crate::apu::noise_channel::NoiseChannel;
 use crate::apu::pulse_channel_with_sweep::PulseChannelWithSweep;
 use crate::apu::wave_channel::WaveChannel;
 
@@ -25,6 +26,7 @@ pub struct APU {
     channel_1: PulseChannelWithSweep,
     channel_2: PulseChannel,
     channel_3: WaveChannel,
+    channel_4: NoiseChannel,
     sound_buffer: Vec<(f32, f32)>,
     sample_counter: u32,
     frame_sequencer: u8,

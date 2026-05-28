@@ -1,2 +1,3 @@
 
-struct NoiseChannel;
+#[derive(Default)]
+pub struct NoiseChannel;
