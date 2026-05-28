@@ -7,6 +7,7 @@ mod pulse_channel_with_sweep;
 mod sweep;
 mod wave_channel;
 mod wave_length_timer;
+mod pulse_timer;
 
 use crate::apu::pulse_channel::PulseChannel;
 use crate::{AUDIO_SAMPLE_RATE, CPU_CLOCK_SPEED};
@@ -35,6 +36,7 @@ impl APU {
         for _ in 0..t_cycles {
             self.channel_1.tick();
             self.channel_2.tick();
+            self.channel_3.tick();
             self.sample_counter += AUDIO_SAMPLE_RATE;
             if self.sample_counter >= CPU_CLOCK_SPEED {
                 self.sample_counter -= CPU_CLOCK_SPEED;
@@ -57,19 +59,25 @@ impl APU {
             Some(digital_sample) => (digital_sample as f32 / 7.5) - 1.0,
             None => 0.0
         };
-        let stereo_pairs = self.pan((analog_sample_1, analog_sample_2));
+        let analog_sample_3 = match self.channel_3.sample() {
+            Some(digital_sample) => (digital_sample as f32 / 7.5) - 1.0,
+            None => 0.0
+        };
+        let stereo_pairs = self.pan((analog_sample_1, analog_sample_2, analog_sample_3));
         let mixed_stereo_pairs = self.mix(stereo_pairs);
         self.sound_buffer.push(mixed_stereo_pairs);
     }
-    fn pan(&self, samples: (f32, f32)) -> (f32, f32) {
+    fn pan(&self, samples: (f32, f32, f32)) -> (f32, f32) {
         let left_channel = (
             (self.sound_panning & 0b0001_0000 != 0) as u8 as f32 * samples.0 +
-            (self.sound_panning & 0b0010_0000 != 0) as u8 as f32 * samples.1
-        ) / 2.0;
+            (self.sound_panning & 0b0010_0000 != 0) as u8 as f32 * samples.1 +
+            (self.sound_panning & 0b0100_0000 != 0) as u8 as f32 * samples.2
+        ) / 3.0;
         let right_channel = (
             (self.sound_panning & 0b0000_0001 != 0) as u8 as f32 * samples.0 +
-            (self.sound_panning & 0b0000_0010 != 0) as u8 as f32 * samples.1
-        ) / 2.0;
+            (self.sound_panning & 0b0000_0010 != 0) as u8 as f32 * samples.1 +
+            (self.sound_panning & 0b0000_0100 != 0) as u8 as f32 * samples.2
+        ) / 3.0;
 
         (left_channel, right_channel)
     }
@@ -103,6 +111,9 @@ impl APU {
         }
         if self.channel_2.length_timer.tick() {
             self.channel_2.enabled = false;
+        }
+        if self.channel_3.length_timer.tick() {
+            self.channel_3.enabled = false;
         }
     }
     fn tick_envelope(&mut self) {
@@ -149,15 +160,15 @@ impl APU {
             _ => {} // Other audio channels not implemented
         }
     }
-    pub fn read_wave_byte(&self, _address: u8) -> u8 {
-        // Wave pattern not implemented
-        0xff
+    pub fn read_wave_byte(&self, address: u8) -> u8 {
+        self.channel_3.wave_ram[address as usize - 0x30]
     }
-    pub fn write_wave_byte(&self, _address: u8, _value: u8) {
-        // Wave pattern not implemented
+    pub fn write_wave_byte(&mut self, address: u8, value: u8) {
+        self.channel_3.wave_ram[address as usize - 0x30] = value
     }
     fn audio_master_control(&self) -> u8 {
         0b1111_0000
+        | (self.channel_3.enabled as u8) << 2
         | (self.channel_2.enabled as u8) << 1
         | self.channel_1.enabled as u8
     }
