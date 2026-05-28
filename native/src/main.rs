@@ -97,7 +97,7 @@ fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Box<dyn Er
         None,
         &AudioSpecDesired {
             freq: Some(AUDIO_SAMPLE_RATE as i32),
-            channels: Some(1),
+            channels: Some(2),
             samples: None,
         }
     )?;
@@ -125,7 +125,10 @@ fn run_game_loop(mut game_boy: Box<GameBoy>, scale: u8) -> Result<(), Box<dyn Er
         }
 
         #[cfg(feature = "sound")] {
-            let sound_data = game_boy.sound_buffer();
+            let sound_data: Vec<f32> = game_boy.sound_buffer()
+                .into_iter()
+                .flat_map(|(l, r)| [l, r])
+                .collect();
             let _ = audio_queue.queue_audio(&sound_data);
         }
 
