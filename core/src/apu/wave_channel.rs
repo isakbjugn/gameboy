@@ -20,12 +20,12 @@ impl WaveChannel {
             return None;
         }
         let wave_sample_index = self.pulse_timer.wave_sample_index;
-        let lower_nibble = wave_sample_index % 2 == 0;
+        let upper_nibble = wave_sample_index % 2 == 0;
         let wave_byte_index = wave_sample_index / 2;
         let wave_byte = self.wave_ram[wave_byte_index as usize];
-        let wave_sample = match lower_nibble {
-            false => (wave_byte & 0xf0) >> 4,
-            true => wave_byte & 0x0f
+        let wave_sample = match upper_nibble {
+            true => (wave_byte & 0xf0) >> 4,
+            false => wave_byte & 0x0f
         };
         let bit_shift = match self.output_level {
             0 => 4,
