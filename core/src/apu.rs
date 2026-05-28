@@ -23,6 +23,7 @@ pub struct APU {
     sample_counter: u32,
     frame_sequencer: u8,
     frame_sequencer_counter: u32,
+    hp_capacitor: (f32, f32),
 }
 
 impl APU {
@@ -68,10 +69,20 @@ impl APU {
 
         (left_channel, right_channel)
     }
-    fn mix(&self, channels: (f32, f32)) -> (f32, f32) {
+    fn mix(&mut self, channels: (f32, f32)) -> (f32, f32) {
         let left_volume = (1.0 + ((self.master_volume & 0b0111_0000) >> 4) as f32) / 8.0;
         let right_volume = (1.0 + (self.master_volume & 0b0000_0111) as f32) / 8.0;
-        (channels.0 * left_volume, channels.1 * right_volume)
+        let left = channels.0 * left_volume;
+        let right = channels.1 * right_volume;
+
+        // Høypassfilter simulerer kondensatorkoblet analog output (DC-blokkering).
+        // DMG-verdi 0.999958 er per T-syklus; skalert til 48 kHz: 0.999958^(4194304/48000)
+        const HP_CHARGE_FACTOR: f32 = 0.99633;
+        let out_left = left - self.hp_capacitor.0;
+        let out_right = right - self.hp_capacitor.1;
+        self.hp_capacitor.0 = left - out_left * HP_CHARGE_FACTOR;
+        self.hp_capacitor.1 = right - out_right * HP_CHARGE_FACTOR;
+        (out_left, out_right)
     }
     fn tick_frame_sequencer(&mut self) {
         self.frame_sequencer = (self.frame_sequencer + 1) % 8;
