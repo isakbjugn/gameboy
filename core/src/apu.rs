@@ -71,9 +71,9 @@ impl APU {
         (left_channel, right_channel)
     }
     fn mix(&self, channels: (f32, f32)) -> (f32, f32) {
-        let left_volume = (1 + ((self.master_volume & 0b0111_0000) >> 4)) / 8;
-        let right_volume = (1 + (self.master_volume & 0b0000_0111)) / 8;
-        (channels.0 * left_volume as f32, channels.1 * right_volume as f32)
+        let left_volume = (1.0 + ((self.master_volume & 0b0111_0000) >> 4) as f32) / 8.0;
+        let right_volume = (1.0 + (self.master_volume & 0b0000_0111) as f32) / 8.0;
+        (channels.0 * left_volume, channels.1 * right_volume)
     }
     fn tick_frame_sequencer(&mut self) {
         self.frame_sequencer = (self.frame_sequencer + 1) % 8;
