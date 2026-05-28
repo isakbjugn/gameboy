@@ -9,6 +9,14 @@ pub struct NoiseShape {
 }
 
 impl NoiseShape {
+    pub fn tick(&mut self) {
+        let bit_fifteen = ((self.lfsr & 0x0002) >> 1) ^ (self.lfsr & 0x0001);
+        self.lfsr = self.lfsr & 0x7fff | bit_fifteen << 15;
+        if self.short_mode {
+            self.lfsr = self.lfsr & 0xff7f | bit_fifteen << 7;
+        }
+        self.lfsr >>= 1;
+    }
     pub fn read(&self) -> u8 {
         (self.clock_shift << 4)
         | (self.lfsr_width << 3)
