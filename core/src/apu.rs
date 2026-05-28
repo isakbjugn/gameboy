@@ -58,15 +58,14 @@ impl APU {
         self.sound_buffer.push(mono_sample);
     }
     fn pan(&self, samples: (f32, f32)) -> (f32, f32) {
-        let mut left_channel_input: Vec<f32> = vec![];
-        if self.sound_panning & 0b0001_0000 != 0 { left_channel_input.push(samples.0) }
-        if self.sound_panning & 0b0010_0000 != 0 { left_channel_input.push(samples.1) }
-        let left_channel = left_channel_input.iter().sum::<f32>() / left_channel_input.len() as f32;
-
-        let mut right_channel_input: Vec<f32> = vec![];
-        if self.sound_panning & 0b0000_0001 != 0 { right_channel_input.push(samples.0) }
-        if self.sound_panning & 0b0000_0010 != 0 { right_channel_input.push(samples.1) }
-        let right_channel = right_channel_input.iter().sum::<f32>() / right_channel_input.len() as f32;
+        let left_channel = (
+            (self.sound_panning & 0b0001_0000 != 0) as u8 as f32 * samples.0 +
+            (self.sound_panning & 0b0010_0000 != 0) as u8 as f32 * samples.1
+        ) / 2.0;
+        let right_channel = (
+            (self.sound_panning & 0b0000_0001 != 0) as u8 as f32 * samples.0 +
+            (self.sound_panning & 0b0000_0010 != 0) as u8 as f32 * samples.1
+        ) / 2.0;
 
         (left_channel, right_channel)
     }
