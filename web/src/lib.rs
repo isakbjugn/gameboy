@@ -119,17 +119,20 @@ async fn run(game_title: String, rom_data: Vec<u8>) {
                     }
                 }
 
-                let sound_data = game_boy.sound_buffer();
+                let (left_channel, right_channel): (Vec<f32>, Vec<f32>) = game_boy.sound_buffer()
+                    .into_iter()
+                    .unzip();
                 if audio_context.state() == AudioContextState::Running {
                     let now = audio_context.current_time();
                     if next_start_time < now {
                         next_start_time = now + 0.05;
                     }
-                    let number_of_audio_samples = sound_data.len() as u32;
-                    let buffer = AudioBuffer::new(
-                        &AudioBufferOptions::new(number_of_audio_samples, audio_sample_rate)
-                    ).unwrap();
-                    buffer.copy_to_channel(&sound_data, 0).unwrap();
+                    let number_of_audio_samples = left_channel.len() as u32;
+                    let audio_buffer_options = AudioBufferOptions::new(number_of_audio_samples, audio_sample_rate);
+                    audio_buffer_options.set_number_of_channels(2);
+                    let buffer = AudioBuffer::new(&audio_buffer_options).unwrap();
+                    buffer.copy_to_channel(&left_channel, 0).unwrap();
+                    buffer.copy_to_channel(&right_channel, 1).unwrap();
 
                     let source = audio_context.create_buffer_source().unwrap();
                     source.set_buffer(Some(&buffer));
