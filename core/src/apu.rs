@@ -33,16 +33,7 @@ impl APU {
             self.sample_counter += AUDIO_SAMPLE_RATE;
             if self.sample_counter >= CPU_CLOCK_SPEED {
                 self.sample_counter -= CPU_CLOCK_SPEED;
-                let analog_sample_1 = match self.channel_1.sample() {
-                    Some(digital_sample) => (digital_sample as f32 / 7.5) - 1.0,
-                    None => 0.0
-                };
-                let analog_sample_2 = match self.channel_2.sample() {
-                    Some(digital_sample) => (digital_sample as f32 / 7.5) - 1.0,
-                    None => 0.0
-                };
-                let analog_sample = (analog_sample_1 + analog_sample_2) / 2.0;
-                self.sound_buffer.push(analog_sample);
+                self.sample();
             }
 
             self.frame_sequencer_counter += 1;
@@ -51,6 +42,37 @@ impl APU {
                 self.tick_frame_sequencer();
             }
         }
+    }
+    fn sample(&mut self) {
+        let analog_sample_1 = match self.channel_1.sample() {
+            Some(digital_sample) => (digital_sample as f32 / 7.5) - 1.0,
+            None => 0.0
+        };
+        let analog_sample_2 = match self.channel_2.sample() {
+            Some(digital_sample) => (digital_sample as f32 / 7.5) - 1.0,
+            None => 0.0
+        };
+        let stereo_pairs = self.pan((analog_sample_1, analog_sample_2));
+        let mixed_stereo_pairs = self.mix(stereo_pairs);
+        let mono_sample = (mixed_stereo_pairs.0 + mixed_stereo_pairs.1) / 2.0;
+        self.sound_buffer.push(mono_sample);
+    }
+    fn pan(&self, samples: (f32, f32)) -> (f32, f32) {
+        let left_channel = (
+            (self.sound_panning & 0b0001_0000 != 0) as u8 as f32 * samples.0 +
+            (self.sound_panning & 0b0010_0000 != 0) as u8 as f32 * samples.1
+        ) / 2.0;
+        let right_channel = (
+            (self.sound_panning & 0b0000_0001 != 0) as u8 as f32 * samples.0 +
+            (self.sound_panning & 0b0000_0010 != 0) as u8 as f32 * samples.1
+        ) / 2.0;
+
+        (left_channel, right_channel)
+    }
+    fn mix(&self, channels: (f32, f32)) -> (f32, f32) {
+        let left_volume = (1.0 + ((self.master_volume & 0b0111_0000) >> 4) as f32) / 8.0;
+        let right_volume = (1.0 + (self.master_volume & 0b0000_0111) as f32) / 8.0;
+        (channels.0 * left_volume, channels.1 * right_volume)
     }
     fn tick_frame_sequencer(&mut self) {
         self.frame_sequencer = (self.frame_sequencer + 1) % 8;
