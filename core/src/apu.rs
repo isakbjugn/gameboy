@@ -19,7 +19,7 @@ pub struct APU {
     sound_panning: u8,
     channel_1: PulseChannelWithSweep,
     channel_2: PulseChannel,
-    sound_buffer: Vec<f32>,
+    sound_buffer: Vec<(f32, f32)>,
     sample_counter: u32,
     frame_sequencer: u8,
     frame_sequencer_counter: u32,
@@ -54,8 +54,7 @@ impl APU {
         };
         let stereo_pairs = self.pan((analog_sample_1, analog_sample_2));
         let mixed_stereo_pairs = self.mix(stereo_pairs);
-        let mono_sample = (mixed_stereo_pairs.0 + mixed_stereo_pairs.1) / 2.0;
-        self.sound_buffer.push(mono_sample);
+        self.sound_buffer.push(mixed_stereo_pairs);
     }
     fn pan(&self, samples: (f32, f32)) -> (f32, f32) {
         let left_channel = (
@@ -102,7 +101,7 @@ impl APU {
         }
         if disable { self.channel_1.enabled = false; }
     }
-    pub fn read_sound_buffer(&mut self) -> Vec<f32> {
+    pub fn read_sound_buffer(&mut self) -> Vec<(f32, f32)> {
         std::mem::take(&mut self.sound_buffer)
     }
     pub fn read_byte(&self, address: u8) -> u8 {
