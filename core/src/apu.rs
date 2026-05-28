@@ -33,17 +33,7 @@ impl APU {
             self.sample_counter += AUDIO_SAMPLE_RATE;
             if self.sample_counter >= CPU_CLOCK_SPEED {
                 self.sample_counter -= CPU_CLOCK_SPEED;
-                let analog_sample_1 = match self.channel_1.sample() {
-                    Some(digital_sample) => (digital_sample as f32 / 7.5) - 1.0,
-                    None => 0.0
-                };
-                let analog_sample_2 = match self.channel_2.sample() {
-                    Some(digital_sample) => (digital_sample as f32 / 7.5) - 1.0,
-                    None => 0.0
-                };
-                let stereo_pairs = self.pan_and_mix((analog_sample_1, analog_sample_2));
-                let mono_sample = (stereo_pairs.0 + stereo_pairs.1) / 2.0;
-                self.sound_buffer.push(mono_sample);
+                self.sample();
             }
 
             self.frame_sequencer_counter += 1;
@@ -52,6 +42,19 @@ impl APU {
                 self.tick_frame_sequencer();
             }
         }
+    }
+    fn sample(&mut self) {
+        let analog_sample_1 = match self.channel_1.sample() {
+            Some(digital_sample) => (digital_sample as f32 / 7.5) - 1.0,
+            None => 0.0
+        };
+        let analog_sample_2 = match self.channel_2.sample() {
+            Some(digital_sample) => (digital_sample as f32 / 7.5) - 1.0,
+            None => 0.0
+        };
+        let stereo_pairs = self.pan_and_mix((analog_sample_1, analog_sample_2));
+        let mono_sample = (stereo_pairs.0 + stereo_pairs.1) / 2.0;
+        self.sound_buffer.push(mono_sample);
     }
     fn pan_and_mix(&self, samples: (f32, f32)) -> (f32, f32) {
         let mut left_channel_input: Vec<f32> = vec![];
