@@ -9,6 +9,7 @@ mod wave_channel;
 mod wave_length_timer;
 mod pulse_timer;
 mod noise_channel;
+mod noise_shape;
 
 use crate::apu::pulse_channel::PulseChannel;
 use crate::{AUDIO_SAMPLE_RATE, CPU_CLOCK_SPEED};

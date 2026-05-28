@@ -1,11 +1,13 @@
 use crate::apu::envelope::{Envelope, EnvelopeDirection};
 use crate::apu::length_timer::LengthTimer;
+use crate::apu::noise_shape::NoiseShape;
 
 #[derive(Default)]
 pub struct NoiseChannel {
     enabled: bool,
     length_timer: LengthTimer,
     envelope: Envelope,
+    noise_shape: NoiseShape,
 }
 
 impl NoiseChannel {
@@ -13,6 +15,7 @@ impl NoiseChannel {
         match address {
             0x20 => panic!("FF20 er write-only"),
             0x21 => self.envelope.initial_volume << 4 | self.envelope.direction.as_bit() << 3 | self.envelope.sweep_pace,
+            0x22 => self.noise_shape.read(),
             _ => 0x00
         }
     }
@@ -27,6 +30,7 @@ impl NoiseChannel {
                 }
                 self.envelope.sweep_pace = value & 0b0000_0111;
             }
+            0x22 => self.noise_shape.write(value),
             _ => {}
         }
     }
