@@ -41,8 +41,9 @@ impl APU {
                     Some(digital_sample) => (digital_sample as f32 / 7.5) - 1.0,
                     None => 0.0
                 };
-                let analog_sample = (analog_sample_1 + analog_sample_2) / 2.0;
-                self.sound_buffer.push(analog_sample);
+                let stereo_pairs = self.pan_and_mix((analog_sample_1, analog_sample_2));
+                let mono_sample = (stereo_pairs.0 + stereo_pairs.1) / 2.0;
+                self.sound_buffer.push(mono_sample);
             }
 
             self.frame_sequencer_counter += 1;
@@ -51,6 +52,21 @@ impl APU {
                 self.tick_frame_sequencer();
             }
         }
+    }
+    fn pan_and_mix(&self, samples: (f32, f32)) -> (f32, f32) {
+        let mut left_channel_input: Vec<f32> = vec![];
+        if self.sound_panning & 0b0001_0000 != 0 { left_channel_input.push(samples.0) }
+        if self.sound_panning & 0b0010_0000 != 0 { left_channel_input.push(samples.1) }
+        let left_channel = left_channel_input.iter().sum::<f32>() / left_channel_input.len() as f32;
+
+        let mut right_channel_input: Vec<f32> = vec![];
+        if self.sound_panning & 0b0000_0001 != 0 { right_channel_input.push(samples.0) }
+        if self.sound_panning & 0b0000_0010 != 0 { right_channel_input.push(samples.1) }
+        let right_channel = right_channel_input.iter().sum::<f32>() / right_channel_input.len() as f32;
+
+        let left_volume = (1 + ((self.master_volume & 0b0111_0000) >> 4)) / 8;
+        let right_volume = (1 + (self.master_volume & 0b0000_0111)) / 8;
+        (left_channel * left_volume as f32, right_channel * right_volume as f32)
     }
     fn tick_frame_sequencer(&mut self) {
         self.frame_sequencer = (self.frame_sequencer + 1) % 8;
