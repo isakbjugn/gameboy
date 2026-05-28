@@ -58,9 +58,9 @@ impl PulseChannel {
                 self.pulse_phase_timer.period = self.pulse_phase_timer.period & 0xff00 | value as u16;
             }
             0x19 => {
-                if value & 0b1000_0000 != 0 { self.trigger() }
+                self.pulse_phase_timer.period = (((value & 0b0000_0111) as u16) << 8) | (self.pulse_phase_timer.period & 0x00ff);
                 self.length_timer.enabled = value & 0b0100_0000 != 0;
-                self.pulse_phase_timer.period = (((value & 0b0000_0111) as u16) << 8) | (self.pulse_phase_timer.period & 0x00ff)
+                if value & 0b1000_0000 != 0 { self.trigger() }
             }
             _ => {}
         }
