@@ -11,11 +11,15 @@ pub struct NoiseChannel {
 }
 
 impl NoiseChannel {
+    fn trigger(&mut self) {
+
+    }
     pub fn read_byte(&self, address: u8) -> u8 {
         match address {
             0x20 => panic!("FF20 er write-only"),
             0x21 => self.envelope.initial_volume << 4 | self.envelope.direction.as_bit() << 3 | self.envelope.sweep_pace,
             0x22 => self.noise_shape.read(),
+            0x23 => (self.length_timer.enabled as u8) << 6,
             _ => 0x00
         }
     }
@@ -31,6 +35,10 @@ impl NoiseChannel {
                 self.envelope.sweep_pace = value & 0b0000_0111;
             }
             0x22 => self.noise_shape.write(value),
+            0x23 => {
+                self.length_timer.enabled = value & 0b0100_0000 != 0;
+                if value & 0b1000_0000 != 0 { self.trigger(); }
+            }
             _ => {}
         }
     }
