@@ -12,7 +12,10 @@ pub struct NoiseChannel {
 
 impl NoiseChannel {
     fn trigger(&mut self) {
-
+        self.enabled = true;
+        self.length_timer.trigger();
+        self.envelope.trigger();
+        self.noise_shape.reset();
     }
     pub fn read_byte(&self, address: u8) -> u8 {
         match address {
