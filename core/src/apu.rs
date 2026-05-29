@@ -41,6 +41,7 @@ impl APU {
             self.channel_1.tick();
             self.channel_2.tick();
             self.channel_3.tick();
+            self.channel_4.tick();
             self.sample_counter += AUDIO_SAMPLE_RATE;
             if self.sample_counter >= CPU_CLOCK_SPEED {
                 self.sample_counter -= CPU_CLOCK_SPEED;
@@ -67,21 +68,27 @@ impl APU {
             Some(digital_sample) => (digital_sample as f32 / 7.5) - 1.0,
             None => 0.0
         };
-        let stereo_pairs = self.pan((analog_sample_1, analog_sample_2, analog_sample_3));
+        let analog_sample_4 = match self.channel_4.sample() {
+            Some(digital_sample) => (digital_sample as f32 / 7.5) - 1.0,
+            None => 0.0
+        };
+        let stereo_pairs = self.pan((analog_sample_1, analog_sample_2, analog_sample_3, analog_sample_4));
         let mixed_stereo_pairs = self.mix(stereo_pairs);
         self.sound_buffer.push(mixed_stereo_pairs);
     }
-    fn pan(&self, samples: (f32, f32, f32)) -> (f32, f32) {
+    fn pan(&self, samples: (f32, f32, f32, f32)) -> (f32, f32) {
         let left_channel = (
             (self.sound_panning & 0b0001_0000 != 0) as u8 as f32 * samples.0 +
             (self.sound_panning & 0b0010_0000 != 0) as u8 as f32 * samples.1 +
-            (self.sound_panning & 0b0100_0000 != 0) as u8 as f32 * samples.2
-        ) / 3.0;
+            (self.sound_panning & 0b0100_0000 != 0) as u8 as f32 * samples.2 +
+            (self.sound_panning & 0b1000_0000 != 0) as u8 as f32 * samples.3
+        ) / 4.0;
         let right_channel = (
             (self.sound_panning & 0b0000_0001 != 0) as u8 as f32 * samples.0 +
             (self.sound_panning & 0b0000_0010 != 0) as u8 as f32 * samples.1 +
-            (self.sound_panning & 0b0000_0100 != 0) as u8 as f32 * samples.2
-        ) / 3.0;
+            (self.sound_panning & 0b0000_0100 != 0) as u8 as f32 * samples.2 +
+            (self.sound_panning & 0b0000_1000 != 0) as u8 as f32 * samples.3
+        ) / 4.0;
 
         (left_channel, right_channel)
     }

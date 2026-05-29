@@ -20,6 +20,15 @@ impl NoiseChannel {
         self.envelope.trigger();
         self.noise_shape.reset();
     }
+    pub fn sample(&self) -> Option<u8> {
+        if !self.enabled {
+            return None;
+        }
+        match self.noise_shape.bit_0() {
+            false => Some(0),
+            true => Some(self.envelope.volume)
+        }
+    }
     pub fn read_byte(&self, address: u8) -> u8 {
         match address {
             0x20 => panic!("FF20 er write-only"),
