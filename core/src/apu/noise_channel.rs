@@ -4,9 +4,9 @@ use crate::apu::noise_shape::NoiseShape;
 
 #[derive(Default)]
 pub struct NoiseChannel {
-    enabled: bool,
-    length_timer: LengthTimer,
-    envelope: Envelope,
+    pub enabled: bool,
+    pub length_timer: LengthTimer,
+    pub envelope: Envelope,
     noise_shape: NoiseShape,
 }
 

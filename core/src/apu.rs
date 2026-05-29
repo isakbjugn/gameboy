@@ -126,10 +126,14 @@ impl APU {
         if self.channel_3.length_timer.tick() {
             self.channel_3.enabled = false;
         }
+        if self.channel_4.length_timer.tick() {
+            self.channel_4.enabled = false;
+        }
     }
     fn tick_envelope(&mut self) {
         self.channel_1.envelope.tick();
         self.channel_2.envelope.tick();
+        self.channel_4.envelope.tick();
     }
     fn tick_sweep(&mut self) {
         let (new_frequency, disable) = self.channel_1.sweep.tick();
