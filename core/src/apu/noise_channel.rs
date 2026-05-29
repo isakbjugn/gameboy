@@ -18,7 +18,7 @@ impl NoiseChannel {
         self.enabled = true;
         self.length_timer.trigger();
         self.envelope.trigger();
-        self.noise_shape.reset();
+        self.noise_shape.trigger();
     }
     pub fn sample(&self) -> Option<u8> {
         if !self.enabled {
