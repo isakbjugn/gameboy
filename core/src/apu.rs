@@ -185,6 +185,7 @@ impl APU {
     }
     fn audio_master_control(&self) -> u8 {
         0b1111_0000
+        | (self.channel_4.enabled as u8) << 3
         | (self.channel_3.enabled as u8) << 2
         | (self.channel_2.enabled as u8) << 1
         | self.channel_1.enabled as u8
