@@ -43,7 +43,6 @@ impl NoiseShape {
             0 => 8 * 2u32.pow(self.clock_shift as u32),
             n => 16 * n as u32 * 2u32.pow(self.clock_shift as u32),
         };
-        self.counter = self.period;
     }
     pub fn reset(&mut self) {
         self.lfsr = 0;
