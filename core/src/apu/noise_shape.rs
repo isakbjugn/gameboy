@@ -6,8 +6,8 @@ pub struct NoiseShape {
     short_mode: bool,
     clock_divider: u8,
     lfsr: u16,
-    counter: u16,
-    period: u16,
+    counter: u32,
+    period: u32,
 }
 
 impl NoiseShape {
@@ -40,9 +40,9 @@ impl NoiseShape {
         self.short_mode = matches!(self.lfsr_width, 1);
         self.clock_divider = value & 0b0000_0111;
         self.period = match self.clock_divider {
-            0 => 2u32.pow(self.clock_shift as u32) / (2 * 262144),
-            n => (n as u32 * 2u32.pow(self.clock_shift as u32)) / 262144,
-        } as u16;
+            0 => 8 * 2u32.pow(self.clock_shift as u32),
+            n => 16 * n as u32 * 2u32.pow(self.clock_shift as u32),
+        };
         self.counter = self.period;
     }
     pub fn reset(&mut self) {
