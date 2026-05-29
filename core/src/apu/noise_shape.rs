@@ -46,5 +46,6 @@ impl NoiseShape {
     }
     pub fn reset(&mut self) {
         self.lfsr = 0x7fff;
+        self.counter = self.period;
     }
 }
