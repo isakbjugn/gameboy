@@ -11,6 +11,9 @@ pub struct NoiseChannel {
 }
 
 impl NoiseChannel {
+    pub fn tick(&mut self) {
+        self.noise_shape.tick();
+    }
     fn trigger(&mut self) {
         self.enabled = true;
         self.length_timer.trigger();
