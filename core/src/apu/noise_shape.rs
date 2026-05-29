@@ -45,6 +45,6 @@ impl NoiseShape {
         };
     }
     pub fn reset(&mut self) {
-        self.lfsr = 0;
+        self.lfsr = 0x7fff;
     }
 }

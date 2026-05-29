@@ -25,8 +25,8 @@ impl NoiseChannel {
             return None;
         }
         match self.noise_shape.bit_0() {
-            false => Some(0),
-            true => Some(self.envelope.volume)
+            true => Some(0),
+            false => Some(self.envelope.volume)
         }
     }
     pub fn read_byte(&self, address: u8) -> u8 {
