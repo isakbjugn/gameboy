@@ -8,9 +8,12 @@ mod sweep;
 mod wave_channel;
 mod wave_length_timer;
 mod pulse_timer;
+mod noise_channel;
+mod noise_shape;
 
 use crate::apu::pulse_channel::PulseChannel;
 use crate::{AUDIO_SAMPLE_RATE, CPU_CLOCK_SPEED};
+use crate::apu::noise_channel::NoiseChannel;
 use crate::apu::pulse_channel_with_sweep::PulseChannelWithSweep;
 use crate::apu::wave_channel::WaveChannel;
 
@@ -24,6 +27,7 @@ pub struct APU {
     channel_1: PulseChannelWithSweep,
     channel_2: PulseChannel,
     channel_3: WaveChannel,
+    channel_4: NoiseChannel,
     sound_buffer: Vec<(f32, f32)>,
     sample_counter: u32,
     frame_sequencer: u8,
@@ -37,6 +41,7 @@ impl APU {
             self.channel_1.tick();
             self.channel_2.tick();
             self.channel_3.tick();
+            self.channel_4.tick();
             self.sample_counter += AUDIO_SAMPLE_RATE;
             if self.sample_counter >= CPU_CLOCK_SPEED {
                 self.sample_counter -= CPU_CLOCK_SPEED;
@@ -63,21 +68,27 @@ impl APU {
             Some(digital_sample) => (digital_sample as f32 / 7.5) - 1.0,
             None => 0.0
         };
-        let stereo_pairs = self.pan((analog_sample_1, analog_sample_2, analog_sample_3));
+        let analog_sample_4 = match self.channel_4.sample() {
+            Some(digital_sample) => (digital_sample as f32 / 7.5) - 1.0,
+            None => 0.0
+        };
+        let stereo_pairs = self.pan((analog_sample_1, analog_sample_2, analog_sample_3, analog_sample_4));
         let mixed_stereo_pairs = self.mix(stereo_pairs);
         self.sound_buffer.push(mixed_stereo_pairs);
     }
-    fn pan(&self, samples: (f32, f32, f32)) -> (f32, f32) {
+    fn pan(&self, samples: (f32, f32, f32, f32)) -> (f32, f32) {
         let left_channel = (
             (self.sound_panning & 0b0001_0000 != 0) as u8 as f32 * samples.0 +
             (self.sound_panning & 0b0010_0000 != 0) as u8 as f32 * samples.1 +
-            (self.sound_panning & 0b0100_0000 != 0) as u8 as f32 * samples.2
-        ) / 3.0;
+            (self.sound_panning & 0b0100_0000 != 0) as u8 as f32 * samples.2 +
+            (self.sound_panning & 0b1000_0000 != 0) as u8 as f32 * samples.3
+        ) / 4.0;
         let right_channel = (
             (self.sound_panning & 0b0000_0001 != 0) as u8 as f32 * samples.0 +
             (self.sound_panning & 0b0000_0010 != 0) as u8 as f32 * samples.1 +
-            (self.sound_panning & 0b0000_0100 != 0) as u8 as f32 * samples.2
-        ) / 3.0;
+            (self.sound_panning & 0b0000_0100 != 0) as u8 as f32 * samples.2 +
+            (self.sound_panning & 0b0000_1000 != 0) as u8 as f32 * samples.3
+        ) / 4.0;
 
         (left_channel, right_channel)
     }
@@ -115,10 +126,14 @@ impl APU {
         if self.channel_3.length_timer.tick() {
             self.channel_3.enabled = false;
         }
+        if self.channel_4.length_timer.tick() {
+            self.channel_4.enabled = false;
+        }
     }
     fn tick_envelope(&mut self) {
         self.channel_1.envelope.tick();
         self.channel_2.envelope.tick();
+        self.channel_4.envelope.tick();
     }
     fn tick_sweep(&mut self) {
         let (new_frequency, disable) = self.channel_1.sweep.tick();
@@ -135,6 +150,7 @@ impl APU {
             0x10..=0x14 => self.channel_1.read_byte(address),
             0x16..=0x19 => self.channel_2.read_byte(address),
             0x1a..=0x1e => self.channel_3.read_byte(address),
+            0x20..=0x23 => self.channel_4.read_byte(address),
             0x24 => self.master_volume,
             0x25 => self.sound_panning,
             0x26 => self.audio_master_control(),
@@ -154,6 +170,7 @@ impl APU {
             0x10..=0x14 => self.channel_1.write_byte(address, value),
             0x16..=0x19 => self.channel_2.write_byte(address, value),
             0x1a..=0x1e => self.channel_3.write_byte(address, value),
+            0x20..=0x23 => self.channel_4.write_byte(address, value),
             0x24 => self.master_volume = value & 0b0111_0111,
             0x25 => self.sound_panning = value,
             0x26 => self.enabled = value & 0b1000_0000 != 0,
@@ -168,6 +185,7 @@ impl APU {
     }
     fn audio_master_control(&self) -> u8 {
         0b1111_0000
+        | (self.channel_4.enabled as u8) << 3
         | (self.channel_3.enabled as u8) << 2
         | (self.channel_2.enabled as u8) << 1
         | self.channel_1.enabled as u8
