@@ -128,16 +128,26 @@ async fn run(game_title: String, rom_data: Vec<u8>) {
                         next_start_time = now + 0.05;
                     }
                     let number_of_audio_samples = left_channel.len() as u32;
-                    let audio_buffer_options = AudioBufferOptions::new(number_of_audio_samples, audio_sample_rate);
-                    audio_buffer_options.set_number_of_channels(2);
-                    let buffer = AudioBuffer::new(&audio_buffer_options).unwrap();
-                    buffer.copy_to_channel(&left_channel, 0).unwrap();
-                    buffer.copy_to_channel(&right_channel, 1).unwrap();
 
-                    let source = audio_context.create_buffer_source().unwrap();
-                    source.set_buffer(Some(&buffer));
-                    source.connect_with_audio_node(&audio_context.destination()).unwrap();
-                    source.start_with_when(next_start_time).unwrap();
+                    let muted = web_sys::window()
+                        .and_then(|win| win.document())
+                        .and_then(|doc| doc.body())
+                        .and_then(|body| body.dataset().get("muted"))
+                        .map(|value| value == "true")
+                        .unwrap_or(false);
+
+                    if !muted {
+                        let audio_buffer_options = AudioBufferOptions::new(number_of_audio_samples, audio_sample_rate);
+                        audio_buffer_options.set_number_of_channels(2);
+                        let buffer = AudioBuffer::new(&audio_buffer_options).unwrap();
+                        buffer.copy_to_channel(&left_channel, 0).unwrap();
+                        buffer.copy_to_channel(&right_channel, 1).unwrap();
+
+                        let source = audio_context.create_buffer_source().unwrap();
+                        source.set_buffer(Some(&buffer));
+                        source.connect_with_audio_node(&audio_context.destination()).unwrap();
+                        source.start_with_when(next_start_time).unwrap();
+                    }
 
                     next_start_time += number_of_audio_samples as f64 / audio_sample_rate as f64;
                 }

@@ -16,6 +16,18 @@ for (const type of ["keydown", "keyup"]) {
 const romDropZone = document.getElementById("rom-drop-zone");
 const fileInput = document.getElementById("game-pak-input");
 
+const muteButton = document.getElementById("mute-button");
+function setMuted(muted) {
+  document.body.dataset.muted = muted ? "true" : "false";
+  localStorage.setItem("muted", muted ? "true" : "false");
+  muteButton.textContent = muted ? "Skru på lyd" : "Skru av lyd";
+}
+setMuted(localStorage.getItem("muted") === "true");
+muteButton.addEventListener("click", () => {
+  document.getElementById("game-menu").hidePopover();
+  setMuted(document.body.dataset.muted !== "true");
+});
+
 const romTitleFromLocalStorage = localStorage.getItem('rom-title');
 const romDataFromLocalStorage = localStorage.getItem('rom-data');
 if (romTitleFromLocalStorage && romDataFromLocalStorage) {
