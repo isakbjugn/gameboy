@@ -38,12 +38,20 @@
           }
         }
         #rom-drop-zone {
-          background-color: white;
+          background: #1a1a2e;
+          color: #a0a0c0;
           display: flex;
           width: 480px;
           height: 432px;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
+          gap: 12px;
+          font-size: 16px;
+          cursor: pointer;
+        }
+        #rom-drop-zone .upload-icon {
+          color: #d0d0e8;
         }
         #start-overlay {
           background: #1a1a2e;
@@ -114,7 +122,12 @@
                 <span>Trykk for å starte</span>
             </button>
             <label id="rom-drop-zone">
-                Last opp Game Boy-spillet ditt her
+                <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="16 10 12 6 8 10"></polyline>
+                    <line x1="12" y1="6" x2="12" y2="18"></line>
+                    <line x1="5" y1="21" x2="19" y2="21"></line>
+                </svg>
+                <span>Last opp Game Boy-spill</span>
                 <input type="file" id="game-pak-input" accept=".gb" />
             </label>
         </div>
