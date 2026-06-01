@@ -20,20 +20,30 @@ use gameboy_core::joypad::JoypadKey;
 use crate::local_storage_battery_save::LocalStorageBatterySave;
 
 #[wasm_bindgen]
-pub fn main(game_title: String, rom_data: Vec<u8>) {
-    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
-    console_log::init_with_level(log::Level::Info).expect("error initializing logger");
-    wasm_bindgen_futures::spawn_local(run(game_title, rom_data))
+extern "C" {
+    fn showEmulatorError(message: &str);
 }
 
-async fn run(game_title: String, rom_data: Vec<u8>) {
+#[wasm_bindgen]
+pub fn main(game_title: String, rom_data: Vec<u8>) {
+    std::panic::set_hook(Box::new(|info| {
+        console_error_panic_hook::hook(info);
+        showEmulatorError(&info.to_string());
+    }));
+    console_log::init_with_level(log::Level::Info).expect("error initializing logger");
+    wasm_bindgen_futures::spawn_local(async move {
+        if let Err(e) = run(game_title, rom_data).await {
+            showEmulatorError(&e);
+        }
+    });
+}
+
+async fn run(game_title: String, rom_data: Vec<u8>) -> Result<(), String> {
     let local_storage_battery_save = LocalStorageBatterySave::new(&game_title)
         .map(|battery_save| Box::new(battery_save) as Box<dyn BatterySave>);
 
-    let mut game_boy = match GameBoy::new(rom_data, local_storage_battery_save) {
-        Ok(game_boy) => game_boy,
-        Err(error_str) => panic!("{}", error_str),
-    };
+    let mut game_boy = GameBoy::new(rom_data, local_storage_battery_save)
+        .map_err(|e| format!("Kunne ikke laste ROM: {}", e))?;
 
     let event_loop = EventLoop::new().unwrap();
     let scale = 3;
@@ -58,7 +68,7 @@ async fn run(game_title: String, rom_data: Vec<u8>) {
                 .append_child(&web_sys::Element::from(window.canvas().unwrap()))
                 .ok()
         })
-        .expect("Kunne ikke legge canvas til DOM");
+        .ok_or("Kunne ikke legge canvas til DOM")?;
 
     let mut pixels = {
         let surface_width = SCREEN_WIDTH * scale;
@@ -68,7 +78,7 @@ async fn run(game_title: String, rom_data: Vec<u8>) {
             .texture_format(pixels::wgpu::TextureFormat::Rgba8Unorm)
             .surface_texture_format(pixels::wgpu::TextureFormat::Rgba8Unorm);
 
-        builder.build_async().await.expect("Pixels error")
+        builder.build_async().await.map_err(|e| format!("WebGPU-feil: {}", e))?
     };
 
     info!("Pixels opprettet");
@@ -80,13 +90,14 @@ async fn run(game_title: String, rom_data: Vec<u8>) {
 
     let audio_context_options = AudioContextOptions::new();
     audio_context_options.set_sample_rate(AUDIO_SAMPLE_RATE as f32);
-    let audio_context = AudioContext::new_with_context_options(&audio_context_options).unwrap();
+    let audio_context = AudioContext::new_with_context_options(&audio_context_options)
+        .map_err(|_| "Kunne ikke opprette AudioContext".to_string())?;
     let audio_sample_rate = audio_context.sample_rate();
     let mut next_start_time = audio_context.current_time() + 0.05;
 
     let performance = web_sys::window()
         .and_then(|w| w.performance())
-        .expect("performance.now() ikke tilgjengelig");
+        .ok_or("performance.now() ikke tilgjengelig")?;
     let frame_duration_ms = NANOSECONDS_PER_FRAME as f64 / 1_000_000.0;
     let mut next_frame_ms = performance.now() + frame_duration_ms;
 
@@ -190,7 +201,7 @@ async fn run(game_title: String, rom_data: Vec<u8>) {
             _ => {}
         }
     });
-    res.unwrap();
+    res.map_err(|e| format!("Event loop-feil: {}", e))
 }
 
 fn winit_to_joypad(key: Key<&str>) -> Option<JoypadKey> {

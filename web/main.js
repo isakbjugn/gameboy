@@ -1,5 +1,11 @@
 import init, { main } from "./pkg/gameboy_web.js";
 
+window.showEmulatorError = (message) => {
+  const overlay = document.getElementById("error-overlay");
+  document.getElementById("error-details").textContent = message;
+  overlay.style.display = "flex";
+};
+
 await init();
 
 // Videresend tastatur-events til canvas slik at winit
@@ -91,7 +97,9 @@ async function loadRom(romTitle, romData) {
   romDropZone.style.display = "none";
   localStorage.setItem('rom-title', romTitle);
   localStorage.setItem('rom-data', JSON.stringify(Array.from(romData)));
-  main(romTitle, romData);
+  // SIMULERT FEIL – fjern denne linjen for å teste feilvisning:
+  window.showEmulatorError("WebGPU-feil: No suitable adapter found\n  (simulert feil for testing)");
+  // main(romTitle, romData);
 }
 
 // Knapper: multi-touch-støtte for å kunne trykke flere knapper samtidig.

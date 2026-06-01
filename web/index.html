@@ -79,6 +79,37 @@
           font-size: 56px;
           color: #d0d0e8;
         }
+        #error-overlay {
+          background: #2e1a1a;
+          display: none;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          color: #c08080;
+          font-size: 14px;
+          font-family: sans-serif;
+          padding: 24px;
+          box-sizing: border-box;
+          text-align: center;
+        }
+        #error-overlay .error-icon {
+          font-size: 48px;
+          color: #e08080;
+        }
+        #error-overlay .error-title {
+          font-size: 16px;
+          font-weight: bold;
+          color: #e0a0a0;
+        }
+        #error-overlay .error-details {
+          font-size: 12px;
+          font-family: monospace;
+          color: #906060;
+          max-width: 100%;
+          overflow-wrap: break-word;
+          white-space: pre-wrap;
+        }
         #game-pak-input {
           display: none;
         }
@@ -120,6 +151,11 @@
         <div class="bezel">
             <div id="screen-container">
                 <div id="screen"></div>
+                <div id="error-overlay" role="alert">
+                    <span class="error-icon">&#9888;</span>
+                    <span class="error-title">Noe gikk galt</span>
+                    <span class="error-details" id="error-details"></span>
+                </div>
                 <button id="start-overlay" aria-label="Start spillet">
                     <span class="play-icon">&#9654;</span>
                     <span>Trykk for å starte</span>
