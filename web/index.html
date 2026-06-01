@@ -37,13 +37,47 @@
             max-width: fit-content;
           }
         }
-        #rom-drop-zone {
-          background-color: white;
-          display: flex;
+        #screen-container {
+          position: relative;
           width: 480px;
           height: 432px;
+        }
+        #screen, #rom-drop-zone, #start-overlay {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+        }
+        #rom-drop-zone {
+          background: #1a1a2e;
+          color: #a0a0c0;
+          display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
+          gap: 12px;
+          font-size: 16px;
+          cursor: pointer;
+        }
+        #rom-drop-zone .upload-icon {
+          color: #d0d0e8;
+        }
+        #start-overlay {
+          background: #1a1a2e;
+          border: none;
+          cursor: pointer;
+          display: none;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          color: #a0a0c0;
+          font-size: 16px;
+          font-family: sans-serif;
+        }
+        #start-overlay .play-icon {
+          font-size: 56px;
+          color: #d0d0e8;
         }
         #game-pak-input {
           display: none;
@@ -63,7 +97,7 @@
             display: flex;
             flex-direction: column;
           }
-          #rom-drop-zone {
+          #screen-container {
             width: 100%;
             height: auto;
             aspect-ratio: 10 / 9;
@@ -84,11 +118,22 @@
             <button class="menu-item" id="eject-button">Løs ut kassett</button>
         </div>
         <div class="bezel">
-            <div id="screen"></div>
-            <label id="rom-drop-zone">
-                Last opp Game Boy-spillet ditt her
-                <input type="file" id="game-pak-input" accept=".gb" />
-            </label>
+            <div id="screen-container">
+                <div id="screen"></div>
+                <button id="start-overlay" aria-label="Start spillet">
+                    <span class="play-icon">&#9654;</span>
+                    <span>Trykk for å starte</span>
+                </button>
+                <label id="rom-drop-zone">
+                    <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="16 10 12 6 8 10"></polyline>
+                        <line x1="12" y1="6" x2="12" y2="18"></line>
+                        <line x1="5" y1="21" x2="19" y2="21"></line>
+                    </svg>
+                    <span>Last opp Game Boy-spill</span>
+                    <input type="file" id="game-pak-input" accept=".gb" />
+                </label>
+            </div>
         </div>
         <div class="controls-upper-row">
             <div class="dpad">

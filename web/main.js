@@ -28,11 +28,18 @@ muteButton.addEventListener("click", () => {
   setMuted(document.body.dataset.muted !== "true");
 });
 
+const startOverlay = document.getElementById("start-overlay");
+
 const romTitleFromLocalStorage = localStorage.getItem('rom-title');
 const romDataFromLocalStorage = localStorage.getItem('rom-data');
 if (romTitleFromLocalStorage && romDataFromLocalStorage) {
-  const romFile = new Uint8Array(JSON.parse(romDataFromLocalStorage));
-  await loadRom(romTitleFromLocalStorage, romFile);
+  romDropZone.style.display = "none";
+  startOverlay.style.display = "flex";
+  startOverlay.addEventListener("click", async () => {
+    startOverlay.style.display = "none";
+    const romFile = new Uint8Array(JSON.parse(romDataFromLocalStorage));
+    await loadRom(romTitleFromLocalStorage, romFile);
+  }, { once: true });
 }
 
 window.addEventListener("drop", (e) => {
