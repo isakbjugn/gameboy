@@ -45,6 +45,25 @@
           align-items: center;
           justify-content: center;
         }
+        #start-overlay {
+          background: #1a1a2e;
+          border: none;
+          cursor: pointer;
+          display: none;
+          width: 480px;
+          height: 432px;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          color: #a0a0c0;
+          font-size: 16px;
+          font-family: sans-serif;
+        }
+        #start-overlay .play-icon {
+          font-size: 56px;
+          color: #d0d0e8;
+        }
         #game-pak-input {
           display: none;
         }
@@ -68,6 +87,11 @@
             height: auto;
             aspect-ratio: 10 / 9;
           }
+          #start-overlay {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 10 / 9;
+          }
           #screen canvas {
             width: 100% !important;
             height: auto !important;
@@ -85,6 +109,10 @@
         </div>
         <div class="bezel">
             <div id="screen"></div>
+            <button id="start-overlay" aria-label="Start spillet">
+                <span class="play-icon">&#9654;</span>
+                <span>Trykk for å starte</span>
+            </button>
             <label id="rom-drop-zone">
                 Last opp Game Boy-spillet ditt her
                 <input type="file" id="game-pak-input" accept=".gb" />
